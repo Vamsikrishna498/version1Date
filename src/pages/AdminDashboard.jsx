@@ -2530,6 +2530,7 @@ const AdminDashboard = () => {
             <span>KYC Overview</span>
           </div>
 
+
           <div 
             className={`nav-item ${activeTab === 'bulk-operations' ? 'active' : ''}`}
             onClick={() => setActiveTab('bulk-operations')}

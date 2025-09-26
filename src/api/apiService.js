@@ -1719,4 +1719,214 @@ export const idCardAPI = {
   }
 };
 
+// RBAC API calls
+export const rbacAPI = {
+  // Role Management
+  getAllRoles: async () => {
+    const response = await api.get('/users-roles-management/roles');
+    return response.data;
+  },
+
+  getActiveRoles: async () => {
+    const response = await api.get('/users-roles-management/roles/active');
+    return response.data;
+  },
+
+  getRoleById: async (id) => {
+    const response = await api.get(`/users-roles-management/roles/${id}`);
+    return response.data;
+  },
+
+  createRole: async (roleData) => {
+    const response = await api.post('/users-roles-management/roles', roleData);
+    return response.data;
+  },
+
+  updateRole: async (id, roleData) => {
+    const response = await api.put(`/users-roles-management/roles/${id}`, roleData);
+    return response.data;
+  },
+
+  deleteRole: async (id) => {
+    const response = await api.delete(`/users-roles-management/roles/${id}`);
+    return response.data;
+  },
+
+  activateRole: async (id) => {
+    const response = await api.post(`/users-roles-management/roles/${id}/activate`);
+    return response.data;
+  },
+
+  deactivateRole: async (id) => {
+    const response = await api.post(`/users-roles-management/roles/${id}/deactivate`);
+    return response.data;
+  },
+
+  searchRoles: async (searchTerm) => {
+    const response = await api.get(`/users-roles-management/roles/search?searchTerm=${searchTerm}`);
+    return response.data;
+  },
+  
+  // User Management
+  getAllUsers: async () => {
+    const response = await api.get('/admin/registration-list');
+    return response.data;
+  },
+  
+  // User Role Assignment
+  assignRoleToUser: async (assignmentData) => {
+    const response = await api.post('/users-roles-management/assign-role', assignmentData);
+    return response.data;
+  },
+  
+  // Dashboard Data
+  getDashboardData: async () => {
+    const response = await api.get('/users-roles-management/dashboard-data');
+    return response.data;
+  }
+};
+
+// Configuration API calls
+export const configAPI = {
+  // UserRole operations
+  getAllUserRoles: async () => {
+    const response = await api.get('/config/user-roles');
+    return response.data;
+  },
+  
+  getUserRoleById: async (id) => {
+    const response = await api.get(`/config/user-roles/${id}`);
+    return response.data;
+  },
+  
+  createUserRole: async (roleData) => {
+    const response = await api.post('/config/user-roles', roleData);
+    return response.data;
+  },
+  
+  updateUserRole: async (id, roleData) => {
+    const response = await api.put(`/config/user-roles/${id}`, roleData);
+    return response.data;
+  },
+  
+  deleteUserRole: async (id) => {
+    const response = await api.delete(`/config/user-roles/${id}`);
+    return response.data;
+  },
+  
+  // CodeFormat operations
+  getAllCodeFormats: async () => {
+    const response = await api.get('/config/code-formats');
+    return response.data;
+  },
+  
+  getCodeFormatByType: async (codeType) => {
+    const response = await api.get(`/config/code-formats/${codeType}`);
+    return response.data;
+  },
+  
+  createCodeFormat: async (formatData) => {
+    const response = await api.post('/config/code-formats', formatData);
+    return response.data;
+  },
+  
+  updateCodeFormat: async (id, formatData) => {
+    const response = await api.put(`/config/code-formats/${id}`, formatData);
+    return response.data;
+  },
+  
+  generateNextCode: async (codeType) => {
+    const response = await api.post(`/config/code-formats/generate/${codeType}`);
+    return response.data;
+  },
+  
+  // Template operations
+  getAllTemplates: async () => {
+    const response = await api.get('/config/templates');
+    return response.data;
+  },
+  
+  getTemplatesByTypeAndModule: async (templateType, moduleType) => {
+    const response = await api.get(`/config/templates/${templateType}/${moduleType}`);
+    return response.data;
+  },
+  
+  createTemplate: async (templateData) => {
+    const response = await api.post('/config/templates', templateData);
+    return response.data;
+  },
+  
+  updateTemplate: async (id, templateData) => {
+    const response = await api.put(`/config/templates/${id}`, templateData);
+    return response.data;
+  },
+  
+  deleteTemplate: async (id) => {
+    const response = await api.delete(`/config/templates/${id}`);
+    return response.data;
+  },
+  
+  // SystemSetting operations
+  getAllSystemSettings: async () => {
+    const response = await api.get('/config/settings');
+    return response.data;
+  },
+  
+  getSystemSettingsByCategory: async (category) => {
+    const response = await api.get(`/config/settings/${category}`);
+    return response.data;
+  },
+  
+  getSystemSettingByKey: async (settingKey) => {
+    const response = await api.get(`/config/settings/key/${settingKey}`);
+    return response.data;
+  },
+  
+  createSystemSetting: async (settingData) => {
+    const response = await api.post('/config/settings', settingData);
+    return response.data;
+  },
+  
+  updateSystemSetting: async (id, settingData) => {
+    const response = await api.put(`/config/settings/${id}`, settingData);
+    return response.data;
+  },
+  
+  deleteSystemSetting: async (id) => {
+    const response = await api.delete(`/config/settings/${id}`);
+    return response.data;
+  },
+  
+  // SystemPreference operations
+  getAllSystemPreferences: async () => {
+    const response = await api.get('/config/preferences');
+    return response.data;
+  },
+  
+  getSystemPreferencesByType: async (preferenceType) => {
+    const response = await api.get(`/config/preferences/${preferenceType}`);
+    return response.data;
+  },
+  
+  getSystemPreferenceByKey: async (preferenceKey) => {
+    const response = await api.get(`/config/preferences/key/${preferenceKey}`);
+    return response.data;
+  },
+  
+  createSystemPreference: async (preferenceData) => {
+    const response = await api.post('/config/preferences', preferenceData);
+    return response.data;
+  },
+  
+  updateSystemPreference: async (id, preferenceData) => {
+    const response = await api.put(`/config/preferences/${id}`, preferenceData);
+    return response.data;
+  },
+  
+  deleteSystemPreference: async (id) => {
+    const response = await api.delete(`/config/preferences/${id}`);
+    return response.data;
+  }
+};
+
 export default api; 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import IdCardContentViewer from '../components/IdCardContentViewer';
 import { idCardAPI } from '../api/apiService';
 import { useAuth } from '../contexts/AuthContext';
-import { farmersAPI, employeesAPI, superAdminAPI, adminAPI, fpoAPI } from '../api/apiService';
+import { farmersAPI, employeesAPI, superAdminAPI, adminAPI, fpoAPI, configAPI } from '../api/apiService';
 import DataTable from '../components/DataTable';
 
 // import RegistrationApprovalModal from '../components/RegistrationApprovalModal';
@@ -40,6 +40,8 @@ import FPOProductsView from '../components/FPOProductsView';
 import FPOUsersModal from '../components/FPOUsersModal';
 import FPOUsersView from '../components/FPOUsersView';
 import FPODashboard from '../pages/FPODashboard';
+import ConfigurationDashboard from '../components/ConfigurationDashboard';
+import PersonalizationTab from '../components/config/PersonalizationTab';
 import '../styles/Dashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -72,6 +74,7 @@ const SuperAdminDashboard = () => {
   const [fpos, setFpos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [codeFormats, setCodeFormats] = useState([]);
   
   // State for unique IDs (persisted to localStorage to avoid flicker)
   const [farmerUniqueIds, setFarmerUniqueIds] = useState(() => {
@@ -119,8 +122,9 @@ const SuperAdminDashboard = () => {
     ];
     const firstNonEmpty = candidates.find(v => v !== undefined && v !== null && String(v).trim() !== '');
     if (firstNonEmpty) return String(firstNonEmpty);
-    const fallbackNumeric = row?.id ? String(row.id).padStart(6, '0') : '000000';
-    return `EMP${fallbackNumeric}`;
+    // Dynamic fallback using configured EMPLOYEE format
+    const fallbackNumeric = row?.id ? String(row.id).padStart(5, '0') : '00000';
+    return getConfiguredEmployeePrefix() + '-' + fallbackNumeric;
   };
 
   // Helper: robustly compute a display ID for farmers
@@ -139,8 +143,34 @@ const SuperAdminDashboard = () => {
     ];
     const firstNonEmpty = candidates.find(v => v !== undefined && v !== null && String(v).trim() !== '');
     if (firstNonEmpty) return String(firstNonEmpty);
-    const fallbackNumeric = row?.id ? String(row.id).padStart(6, '0') : '000000';
-    return `FAM${fallbackNumeric}`;
+    
+    // Dynamic fallback using configured format
+    const fallbackNumeric = row?.id ? String(row.id).padStart(5, '0') : '00000';
+    return getConfiguredFarmerPrefix() + '-' + fallbackNumeric;
+  };
+
+  // Get configured farmer prefix from state or default
+  const getConfiguredFarmerPrefix = () => {
+    // Try to get from codeFormats state if available
+    if (codeFormats && codeFormats.length > 0) {
+      const farmerFormat = codeFormats.find(f => f.codeType === 'FARMER' && f.isActive);
+      if (farmerFormat && farmerFormat.prefix) {
+        return farmerFormat.prefix;
+      }
+    }
+    // Fallback to a generic format if not available
+    return 'FARMER';
+  };
+
+  // Get configured employee prefix from state or default
+  const getConfiguredEmployeePrefix = () => {
+    if (codeFormats && codeFormats.length > 0) {
+      const employeeFormat = codeFormats.find(f => f.codeType === 'EMPLOYEE' && f.isActive);
+      if (employeeFormat && employeeFormat.prefix) {
+        return employeeFormat.prefix;
+      }
+    }
+    return 'EMP';
   };
 
   // Greeting function based on time of day
@@ -530,6 +560,16 @@ const SuperAdminDashboard = () => {
       setRegistrations(finalRegistrationsData);
       const fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
       setFpos(fpoList || []);
+
+      // Load code formats for dynamic prefix
+      try {
+        const codeFormatsData = await configAPI.getAllCodeFormats();
+        setCodeFormats(codeFormatsData || []);
+        console.log('📊 Code formats loaded:', codeFormatsData?.length || 0, 'formats');
+      } catch (codeFormatError) {
+        console.error('❌ Failed to load code formats:', codeFormatError);
+        setCodeFormats([]);
+      }
       
       console.log('Fetched data:', { farmersData, employeesData, registrationsData });
       console.log('Final employees data:', finalEmployeesData);
@@ -902,6 +942,16 @@ const SuperAdminDashboard = () => {
       console.log('✅ Manual refresh - farmers data:', refreshedFarmers);
       console.log('🔍 Manual refresh - first farmer assignedEmployee:', refreshedFarmers[0]?.assignedEmployee);
       setFarmers(refreshedFarmers);
+      
+      // Also refresh code formats
+      try {
+        const codeFormatsData = await configAPI.getAllCodeFormats();
+        setCodeFormats(codeFormatsData || []);
+        console.log('📊 Code formats refreshed:', codeFormatsData?.length || 0, 'formats');
+      } catch (codeFormatError) {
+        console.error('❌ Failed to refresh code formats:', codeFormatError);
+      }
+      
       alert('Data refreshed successfully!');
     } catch (error) {
       console.error('❌ Manual refresh failed:', error);
@@ -1434,6 +1484,14 @@ const SuperAdminDashboard = () => {
           >
             <i className="fas fa-palette"></i>
             <span>Personalization</span>
+          </div>
+
+          <div 
+            className={`nav-item ${activeTab === 'configurations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('configurations')}
+          >
+            <i className="fas fa-cogs"></i>
+            <span>Configurations</span>
           </div>
 
           <div 
@@ -3030,17 +3088,22 @@ const SuperAdminDashboard = () => {
           )}
 
           {activeTab === 'personalization' && (
-            <div className="overview-section">
-              <div className="overview-header">
-                <h2 className="overview-title">Personalization</h2>
-                <p className="overview-description">Customize your dashboard and preferences.</p>
-              </div>
-              <div className="coming-soon">
-                <i className="fas fa-palette"></i>
-                <h3>Coming Soon</h3>
-                <p>Personalization features are under development.</p>
-              </div>
-            </div>
+            <PersonalizationTab 
+              isSuperAdmin={user?.role === 'SUPER_ADMIN'} 
+              onFormatsUpdated={() => {
+                // Refresh code formats when they are updated
+                configAPI.getAllCodeFormats().then(formats => {
+                  setCodeFormats(formats || []);
+                  console.log('📊 Code formats updated:', formats?.length || 0, 'formats');
+                }).catch(error => {
+                  console.error('❌ Failed to refresh code formats:', error);
+                });
+              }}
+            />
+          )}
+
+          {activeTab === 'configurations' && (
+            <ConfigurationDashboard />
           )}
 
           {activeTab === 'settings' && (

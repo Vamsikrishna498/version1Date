@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { RBACProvider } from './contexts/RBACContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
@@ -9,6 +10,7 @@ import FarmerDashboard from './pages/FarmerDashboard';
 import FPODashboard from './pages/FPODashboard';
 import FPOAdminDashboard from './pages/FPOAdminDashboard';
 import FPOEmployeeDashboard from './pages/FPOEmployeeDashboard';
+import UsersRolesManagement from './pages/UsersRolesManagement';
 
 import FarmerRegistration from './pages/FarmerRegistration';
 import EmployeeRegistration from './pages/EmployeeRegistration';
@@ -26,9 +28,10 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
+      <RBACProvider>
+        <Router>
+          <div className="App">
+            <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -64,12 +67,15 @@ function App() {
             {/* ID Card Route */}
             <Route path="/my-id-card" element={<ProtectedRoute allowedRoles={['FARMER', 'EMPLOYEE', 'ADMIN', 'SUPER_ADMIN']}><MyIdCard /></ProtectedRoute>} />
 
+            {/* Users & Roles Management Route */}
+            <Route path="/users-roles-management" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}><UsersRolesManagement /></ProtectedRoute>} />
             
             {/* Default Routes */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
-      </Router>
+        </Router>
+      </RBACProvider>
     </AuthProvider>
   );
 }
