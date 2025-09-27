@@ -42,6 +42,8 @@ import FPOUsersView from '../components/FPOUsersView';
 import FPODashboard from '../pages/FPODashboard';
 import ConfigurationDashboard from '../components/ConfigurationDashboard';
 import PersonalizationTab from '../components/config/PersonalizationTab';
+import SettingsMasterList from '../components/SettingsMasterList';
+import APITest from '../components/APITest';
 import '../styles/Dashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -1500,6 +1502,14 @@ const SuperAdminDashboard = () => {
           >
             <i className="fas fa-cog"></i>
             <span>Settings</span>
+          </div>
+
+          <div 
+            className={`nav-item ${activeTab === 'api-test' ? 'active' : ''}`}
+            onClick={() => setActiveTab('api-test')}
+          >
+            <i className="fas fa-plug"></i>
+            <span>API Test</span>
           </div>
 
           <div 
@@ -3107,17 +3117,11 @@ const SuperAdminDashboard = () => {
           )}
 
           {activeTab === 'settings' && (
-            <div className="overview-section">
-              <div className="overview-header">
-                <h2 className="overview-title">Settings</h2>
-                <p className="overview-description">Configure system settings and preferences.</p>
-              </div>
-              <div className="coming-soon">
-                <i className="fas fa-cog"></i>
-                <h3>Coming Soon</h3>
-                <p>Settings panel is under development.</p>
-              </div>
-            </div>
+            <SettingsMasterList />
+          )}
+
+          {activeTab === 'api-test' && (
+            <APITest />
           )}
 
           {activeTab === 'my-account' && (

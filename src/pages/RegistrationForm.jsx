@@ -13,7 +13,7 @@ const schema = yup.object().shape({
   name: yup
     .string()
     .required('Name is required')
-    .matches(/^[A-Za-z][A-Za-z .'-]*$/, 'Name must contain only letters and spaces'),
+    .matches(/^[A-Za-z]+( [A-Za-z]+)*$/, 'Name must contain only alphabets and spaces'),
   dateOfBirth: yup
     .string()
     .required('Date of Birth is required')
@@ -24,6 +24,7 @@ const schema = yup.object().shape({
       const ageDifMs = today - dob;
       const ageDate = new Date(ageDifMs);
       const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      // Age must be between 18 and 90 years
       return age >= 18 && age <= 90;
     }),
   gender: yup.string().required('Gender is required'),
@@ -54,10 +55,13 @@ const RegistrationForm = () => {
     handleSubmit,
     reset,
     setError,
-    formState: { errors },
+    clearErrors,
+    formState: { errors, touchedFields },
+    trigger,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: { role: initialRole },
+    mode: 'onBlur', // Validate on blur for immediate feedback
   });
 
   const [emailValue, setEmailValue] = useState('');
@@ -66,6 +70,8 @@ const RegistrationForm = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [formError, setFormError] = useState('');
+  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   useEffect(() => {
     if (!resendTimer) return;
@@ -73,9 +79,55 @@ const RegistrationForm = () => {
     return () => clearTimeout(timer);
   }, [resendTimer]);
 
+  // Email availability check function
+  const checkEmailAvailability = async (email) => {
+    console.log('Checking email availability for:', email);
+    
+    if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      console.log('Email format invalid or empty');
+      setEmailAvailabilityError('');
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    setEmailAvailabilityError('');
+
+    try {
+      console.log('Calling checkEmailAvailability API...');
+      const result = await authAPI.checkEmailAvailability(email);
+      console.log('Email availability result:', result);
+      
+      if (!result.available) {
+        console.log('Email is not available, setting error');
+        setEmailAvailabilityError(result.message || 'Email is already registered');
+        setError('email', { type: 'manual', message: result.message || 'Email is already registered' });
+      } else {
+        console.log('Email is available, clearing errors');
+        setEmailAvailabilityError('');
+        clearErrors('email');
+      }
+    } catch (error) {
+      console.error('Error checking email availability:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      // Show error for debugging
+      setEmailAvailabilityError(`Error checking email availability: ${error.message}`);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
   const handleSendOTP = async () => {
-    if (!emailValue.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    const currentEmail = document.querySelector('input[name="email"]').value;
+    
+    if (!currentEmail || !currentEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       alert('Enter a valid email first');
+      return;
+    }
+
+    if (emailAvailabilityError) {
+      alert('Please use a different email address. This email is already registered.');
       return;
     }
     
@@ -94,8 +146,8 @@ const RegistrationForm = () => {
     }
     
     try {
-      console.log('Sending OTP to:', emailValue);
-      const response = await authAPI.sendOTP(emailValue);
+      console.log('Sending OTP to:', currentEmail);
+      const response = await authAPI.sendOTP(currentEmail);
       console.log('OTP send response:', response);
       setOtpSent(true);
       setResendTimer(30);
@@ -126,11 +178,13 @@ const RegistrationForm = () => {
       return;
     }
     
+    const currentEmail = document.querySelector('input[name="email"]').value;
+    
     try {
-      console.log('Verifying OTP for:', emailValue);
+      console.log('Verifying OTP for:', currentEmail);
       console.log('OTP entered:', otp);
       const response = await authAPI.verifyOTP({
-        email: emailValue,
+        email: currentEmail,
         otp: otp,
       });
       console.log('OTP verification response:', response);
@@ -153,6 +207,11 @@ const RegistrationForm = () => {
       return;
     }
 
+    if (emailAvailabilityError) {
+      alert('Please use a different email address. This email is already registered.');
+      return;
+    }
+
     try {
       console.log('Submitting registration data:', data);
       const response = await authAPI.register(data);
@@ -168,6 +227,7 @@ const RegistrationForm = () => {
       setEmailValue('');
       setOtp('');
       setFormError('');
+      setEmailAvailabilityError('');
       
       // Don't navigate to login - user needs to wait for approval
     } catch (error) {
@@ -226,13 +286,23 @@ const RegistrationForm = () => {
             <div className="form-grid-2">
               <div className="auth-field">
                 <label>Name <span className="required">*</span></label>
-                <input type="text" {...register('name')} className={errors.name ? 'error' : ''} placeholder="Enter your first name" />
+                <input 
+                  type="text" 
+                  {...register('name')} 
+                  className={errors.name ? 'error' : ''} 
+                  placeholder="Enter your first name"
+                  onBlur={() => trigger('name')}
+                />
                 {errors.name && <div className="error">{errors.name.message}</div>}
               </div>
 
               <div className="auth-field">
                 <label>Gender <span className="required">*</span></label>
-                <select {...register('gender')} className={errors.gender ? 'error' : ''}>
+                <select 
+                  {...register('gender')} 
+                  className={errors.gender ? 'error' : ''}
+                  onBlur={() => trigger('gender')}
+                >
                   <option value="">Select gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -243,25 +313,62 @@ const RegistrationForm = () => {
 
               <div className="auth-field grid-span-2">
                 <label>Date of Birth <span className="required">*</span></label>
-                <input type="date" {...register('dateOfBirth')} className={errors.dateOfBirth ? 'error' : ''} />
+                <input 
+                  type="date" 
+                  {...register('dateOfBirth')} 
+                  className={errors.dateOfBirth ? 'error' : ''}
+                  onBlur={() => trigger('dateOfBirth')}
+                />
                 {errors.dateOfBirth && <div className="error">{errors.dateOfBirth.message}</div>}
               </div>
 
               <div className="auth-field">
                 <label>Phone Number <span className="required">*</span></label>
-                <input type="text" {...register('phoneNumber')} className={errors.phoneNumber ? 'error' : ''} placeholder="Enter 10-digit number" />
+                <input 
+                  type="text" 
+                  {...register('phoneNumber')} 
+                  className={errors.phoneNumber ? 'error' : ''} 
+                  placeholder="Enter 10-digit number"
+                  onBlur={() => trigger('phoneNumber')}
+                />
                 {errors.phoneNumber && <div className="error">{errors.phoneNumber.message}</div>}
               </div>
 
               <div className="auth-field">
                 <label>Email Address <span className="required">*</span></label>
-                <input type="email" {...register('email')} value={emailValue} onChange={(e) => { setEmailValue(e.target.value); setOtpSent(false); setEmailVerified(false); }} className={errors.email ? 'error' : ''} placeholder="Enter your email" />
-                {errors.email && <div className="error">{errors.email.message}</div>}
+                <input 
+                  type="email" 
+                  {...register('email', {
+                    onChange: (e) => { 
+                      setEmailValue(e.target.value); 
+                      setOtpSent(false); 
+                      setEmailVerified(false);
+                      setEmailAvailabilityError('');
+                    }
+                  })} 
+                  className={errors.email || emailAvailabilityError ? 'error' : ''} 
+                  placeholder="Enter your email"
+                  onBlur={(e) => {
+                    trigger('email');
+                    checkEmailAvailability(e.target.value);
+                  }}
+                />
+                {isCheckingEmail && <div style={{ color: '#666', fontSize: '12px', marginTop: '5px' }}>Checking email availability...</div>}
+                {(errors.email || emailAvailabilityError) && (
+                  <div className="error">{errors.email?.message || emailAvailabilityError}</div>
+                )}
               </div>
 
               <div className="auth-field grid-span-2">
                 <label>Password <span className="required">*</span></label>
-                <input type="password" {...register('password')} className={errors.password ? 'error' : ''} placeholder="Enter a strong password" autoComplete="new-password" />
+                <input 
+                  type="password" 
+                  {...register('password')} 
+                  className={errors.password ? 'error' : ''} 
+                  placeholder="Enter a strong password" 
+                  autoComplete="new-password"
+                  onBlur={() => trigger('password')}
+                />
                 {errors.password && <div className="error">{errors.password.message}</div>}
               </div>
             </div>

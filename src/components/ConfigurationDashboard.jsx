@@ -4,7 +4,6 @@ import { AuthContext } from '../contexts/AuthContext';
 import { configAPI } from '../api/apiService';
 import UserRolesTab from './config/UserRolesTab';
 import TemplatesTab from './config/TemplatesTab';
-import SettingsTab from './config/SettingsTab';
 import PreferencesTab from './config/PreferencesTab';
 import '../styles/ConfigurationDashboard.css';
 
@@ -20,8 +19,7 @@ const ConfigurationDashboard = () => {
 
   const tabs = [
     { id: 'user-roles', label: 'Users & Roles', icon: '👥', navigate: false },
-    { id: 'templates', label: 'Mail & SMS Templates', icon: '📧', navigate: false },
-    { id: 'settings', label: 'Settings', icon: '⚙️', navigate: false },
+    { id: 'templates', label: 'Mail Templates', icon: '📧', navigate: false },
     { id: 'preferences', label: 'Preferences', icon: '🔔', navigate: false }
   ];
 
@@ -39,8 +37,6 @@ const ConfigurationDashboard = () => {
         return <UserRolesTab />;
       case 'templates':
         return <TemplatesTab isSuperAdmin={isSuperAdmin} />;
-      case 'settings':
-        return <SettingsTab isSuperAdmin={isSuperAdmin} />;
       case 'preferences':
         return <PreferencesTab isSuperAdmin={isSuperAdmin} />;
       default:

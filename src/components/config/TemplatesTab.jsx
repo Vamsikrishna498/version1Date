@@ -14,16 +14,36 @@ const TemplatesTab = ({ isSuperAdmin }) => {
 
   const [formData, setFormData] = useState({
     templateName: '',
-    templateType: '',
+    templateType: 'EMAIL', // locked to Mail
     moduleType: '',
     subject: '',
     content: '',
     placeholders: ''
   });
 
+  // Safely parse placeholders that may be saved as JSON or comma-separated string
+  const parsePlaceholders = (value) => {
+    try {
+      if (!value) return [];
+      // If it's already an array serialized as JSON
+      const trimmed = String(value).trim();
+      if (trimmed.startsWith('[')) {
+        const arr = JSON.parse(trimmed);
+        return Array.isArray(arr) ? arr : [];
+      }
+      // Fallback: comma/space separated list
+      return trimmed
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } catch (_) {
+      return [];
+    }
+  };
+
+  // Restrict to Mail Templates only (per requirement)
   const templateTypes = [
-    { value: 'EMAIL', label: 'Email Template' },
-    { value: 'SMS', label: 'SMS Template' }
+    { value: 'EMAIL', label: 'Mail Template' }
   ];
 
   const moduleTypes = [
@@ -61,11 +81,17 @@ const TemplatesTab = ({ isSuperAdmin }) => {
     e.preventDefault();
     try {
       setLoading(true);
+      // Normalize placeholders to a JSON array string
+      const normalized = { ...formData };
+      if (normalized.placeholders && typeof normalized.placeholders === 'string') {
+        const arr = parsePlaceholders(normalized.placeholders);
+        normalized.placeholders = JSON.stringify(arr);
+      }
       
       if (editingTemplate) {
-        await configAPI.updateTemplate(editingTemplate.id, formData);
+        await configAPI.updateTemplate(editingTemplate.id, normalized);
       } else {
-        await configAPI.createTemplate(formData);
+        await configAPI.createTemplate(normalized);
       }
       
       setShowModal(false);
@@ -114,7 +140,7 @@ const TemplatesTab = ({ isSuperAdmin }) => {
   const resetForm = () => {
     setFormData({
       templateName: '',
-      templateType: '',
+      templateType: 'EMAIL',
       moduleType: '',
       subject: '',
       content: '',
@@ -151,7 +177,7 @@ const TemplatesTab = ({ isSuperAdmin }) => {
   return (
     <div className="config-tab">
       <div className="tab-header">
-        <h2>📧 Mail & SMS Templates</h2>
+        <h2>📧 Mail Templates</h2>
         <div className="header-actions">
           <input
             type="text"
@@ -249,8 +275,8 @@ const TemplatesTab = ({ isSuperAdmin }) => {
               <div className="template-placeholders">
                 <strong>Available Placeholders:</strong>
                 <div className="placeholder-tags">
-                  {JSON.parse(template.placeholders || '[]').map(placeholder => (
-                    <span key={placeholder} className="placeholder-tag">{placeholder}</span>
+                  {parsePlaceholders(template.placeholders).map((ph) => (
+                    <span key={ph} className="placeholder-tag">{ph}</span>
                   ))}
                 </div>
               </div>

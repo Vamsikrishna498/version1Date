@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input.error {
+            border-color: #e74c3c;
+        }
+        input.success {
+            border-color: #27ae60;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .success-message {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .checking-message {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .validation-info {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Email Validation Test</h1>
+        
+        <div class="validation-info">
+            <h3>Email Validation Features:</h3>
+            <ul>
+                <li><strong>Real-time validation:</strong> Checks email availability on blur</li>
+                <li><strong>Format validation:</strong> Validates email format</li>
+                <li><strong>Duplicate check:</strong> Checks if email is already registered</li>
+                <li><strong>Visual feedback:</strong> Red border for errors, green for success</li>
+                <li><strong>Loading state:</strong> Shows "Checking..." while validating</li>
+            </ul>
+        </div>
+
+        <form id="emailTestForm">
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="Enter your email address"
+                    autocomplete="off"
+                >
+                <div id="email-status" class="checking-message" style="display: none;"></div>
+                <div id="email-error" class="error-message" style="display: none;"></div>
+                <div id="email-success" class="success-message" style="display: none;"></div>
+            </div>
+
+            <button type="submit" id="submitBtn" disabled>Test Email Validation</button>
+        </form>
+
+        <div class="test-results" id="testResults" style="display: none;">
+            <h3>Test Results:</h3>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const emailStatus = document.getElementById('email-status');
+        const emailError = document.getElementById('email-error');
+        const emailSuccess = document.getElementById('email-success');
+        const submitBtn = document.getElementById('submitBtn');
+        const testResults = document.getElementById('testResults');
+        const resultsContent = document.getElementById('resultsContent');
+
+        let isCheckingEmail = false;
+        let emailValidationResult = null;
+
+        // Email validation function
+        function validateEmailFormat(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Simulate API call to check email availability
+        async function checkEmailAvailability(email) {
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Simulate different responses based on email
+            const testEmails = {
+                'test@example.com': { available: true, message: 'Email is available' },
+                'admin@agristack.com': { available: false, message: 'Email is already registered' },
+                'user@test.com': { available: true, message: 'Email is available' },
+                'existing@email.com': { available: false, message: 'Email is already registered' }
+            };
+
+            if (testEmails[email]) {
+                return testEmails[email];
+            }
+
+            // Default response for other emails
+            return { available: true, message: 'Email is available' };
+        }
+
+        // Show/hide messages
+        function showMessage(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideMessage(element) {
+            element.style.display = 'none';
+        }
+
+        function clearAllMessages() {
+            hideMessage(emailStatus);
+            hideMessage(emailError);
+            hideMessage(emailSuccess);
+        }
+
+        // Update input styling
+        function updateInputStyle(isValid, isError) {
+            emailInput.classList.remove('error', 'success');
+            if (isError) {
+                emailInput.classList.add('error');
+            } else if (isValid) {
+                emailInput.classList.add('success');
+            }
+        }
+
+        // Email validation on blur
+        emailInput.addEventListener('blur', async function() {
+            const email = this.value.trim();
+            
+            if (!email) {
+                clearAllMessages();
+                updateInputStyle(false, false);
+                emailValidationResult = null;
+                submitBtn.disabled = true;
+                return;
+            }
+
+            if (!validateEmailFormat(email)) {
+                clearAllMessages();
+                showMessage(emailError, 'Please enter a valid email address');
+                updateInputStyle(false, true);
+                emailValidationResult = { valid: false, available: false };
+                submitBtn.disabled = true;
+                return;
+            }
+
+            // Check email availability
+            isCheckingEmail = true;
+            clearAllMessages();
+            showMessage(emailStatus, 'Checking email availability...');
+            updateInputStyle(false, false);
+
+            try {
+                const result = await checkEmailAvailability(email);
+                isCheckingEmail = false;
+                clearAllMessages();
+
+                if (result.available) {
+                    showMessage(emailSuccess, result.message);
+                    updateInputStyle(true, false);
+                    emailValidationResult = { valid: true, available: true };
+                    submitBtn.disabled = false;
+                } else {
+                    showMessage(emailError, result.message);
+                    updateInputStyle(false, true);
+                    emailValidationResult = { valid: true, available: false };
+                    submitBtn.disabled = true;
+                }
+            } catch (error) {
+                isCheckingEmail = false;
+                clearAllMessages();
+                showMessage(emailError, 'Error checking email availability. Please try again.');
+                updateInputStyle(false, true);
+                emailValidationResult = { valid: false, available: false };
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Form submission
+        document.getElementById('emailTestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            
+            if (!emailValidationResult) {
+                alert('Please enter and validate an email address first.');
+                return;
+            }
+
+            if (!emailValidationResult.valid) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            if (!emailValidationResult.available) {
+                alert('This email is already registered. Please use a different email address.');
+                return;
+            }
+
+            // Show test results
+            testResults.style.display = 'block';
+            resultsContent.innerHTML = `
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Format:</strong> ✅ Valid</p>
+                <p><strong>Availability:</strong> ✅ Available</p>
+                <p><strong>Status:</strong> Ready for registration</p>
+                <p style="color: #27ae60; font-weight: bold;">✅ Email validation passed!</p>
+            `;
+        });
+
+        // Clear messages on input change
+        emailInput.addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                clearAllMessages();
+                updateInputStyle(false, false);
+                emailValidationResult = null;
+                submitBtn.disabled = true;
+                testResults.style.display = 'none';
+            }
+        });
+
+        // Test with predefined emails
+        function testWithEmail(email) {
+            emailInput.value = email;
+            emailInput.dispatchEvent(new Event('blur'));
+        }
+
+        // Add test buttons
+        const testButtons = document.createElement('div');
+        testButtons.innerHTML = `
+            <h4>Quick Tests:</h4>
+            <button type="button" onclick="testWithEmail('test@example.com')" style="margin: 5px; padding: 8px 12px; font-size: 14px;">Test Available Email</button>
+            <button type="button" onclick="testWithEmail('admin@agristack.com')" style="margin: 5px; padding: 8px 12px; font-size: 14px;">Test Existing Email</button>
+            <button type="button" onclick="testWithEmail('invalid-email')" style="margin: 5px; padding: 8px 12px; font-size: 14px;">Test Invalid Format</button>
+        `;
+        testButtons.style.marginTop = '20px';
+        testButtons.style.padding = '15px';
+        testButtons.style.backgroundColor = '#f8f9fa';
+        testButtons.style.borderRadius = '5px';
+        document.querySelector('.form-container').appendChild(testButtons);
+    </script>
+</body>
+</html>

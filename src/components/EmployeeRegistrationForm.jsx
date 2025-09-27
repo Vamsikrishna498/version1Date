@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import AddressForm from './AddressForm';
+import { validateAge, validateAgeSync } from '../utils/ageValidation';
+import { configAPI } from '../api/apiService';
 import '../styles/EmployeeRegistration.css';
 
 const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onClose, onSubmit: onSubmitProp }) => {
@@ -8,10 +11,71 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   const [currentStep, setCurrentStep] = useState(0);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [selectedDoc, setSelectedDoc] = useState('');
+  const [ageSettings, setAgeSettings] = useState([]);
+  const [ageValidationError, setAgeValidationError] = useState('');
+  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
 
   const totalSteps = 8;
 
+  // Load age settings
+  useEffect(() => {
+    const loadAgeSettings = async () => {
+      try {
+        const settings = await configAPI.getAgeSettings();
+        setAgeSettings(settings);
+      } catch (error) {
+        console.error('Failed to load age settings:', error);
+      }
+    };
+    loadAgeSettings();
+  }, []);
+
+  // Age validation function
+  const handleAgeValidation = async (dateOfBirth) => {
+    if (!dateOfBirth) {
+      setAgeValidationError('');
+      return;
+    }
+
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const validation = validateAgeSync(age, 'EMPLOYEE', ageSettings);
+    setAgeValidationError(validation.isValid ? '' : validation.message);
+  };
+
+  // Email availability check function
+  const checkEmailAvailability = async (email) => {
+    if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setEmailAvailabilityError('');
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    setEmailAvailabilityError('');
+
+    try {
+      const result = await configAPI.checkEmailAvailability(email);
+      if (!result.available) {
+        setEmailAvailabilityError(result.message || 'Email is already registered');
+      } else {
+        setEmailAvailabilityError('');
+      }
+    } catch (error) {
+      console.error('Error checking email availability:', error);
+      // Don't show error for network issues, just log it
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
 
   const methods = useForm({
     defaultValues: {
@@ -76,6 +140,25 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   });
 
   const { register, handleSubmit, watch, setValue, trigger, clearErrors, formState: { errors } } = methods;
+
+  // Validators: names alphabet-only, DOB age >=18 and <19
+  const alphaOnly = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+  const validateAlpha = (v) => !v || alphaOnly.test(v) || 'Only alphabets and spaces allowed';
+  const validateDob = (v) => {
+    if (!v) return 'Date of Birth is required';
+    
+    const today = new Date();
+    const birthDate = new Date(v);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const validation = validateAgeSync(age, 'EMPLOYEE', ageSettings);
+    return validation.isValid || validation.message;
+  };
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -266,7 +349,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       className="input"
                       placeholder="First Name"
-                      {...register("firstName", { required: "First Name is required" })}
+                      {...register("firstName", { required: "First Name is required", validate: validateAlpha })}
                     />
                     {!isInDashboard && errors.firstName && <p className="error">{errors.firstName.message}</p>}
                   </div>
@@ -279,7 +362,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       className="input"
                       placeholder="Middle Name"
-                      {...register("middleName", { required: "Middle Name is required" })}
+                      {...register("middleName", { required: "Middle Name is required", validate: validateAlpha })}
                     />
                     {!isInDashboard && errors.middleName && <p className="error">{errors.middleName.message}</p>}
                   </div>
@@ -292,7 +375,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       className="input"
                       placeholder="Last Name"
-                      {...register("lastName", { required: "Last Name is required" })}
+                      {...register("lastName", { required: "Last Name is required", validate: validateAlpha })}
                     />
                     {!isInDashboard && errors.lastName && <p className="error">{errors.lastName.message}</p>}
                   </div>
@@ -325,9 +408,13 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       type="date"
                       className="input"
-                      {...register("dob", { required: "Date of Birth is required" })}
+                      {...register("dob", { 
+                        validate: validateDob,
+                        onChange: (e) => handleAgeValidation(e.target.value)
+                      })}
                     />
                     {!isInDashboard && errors.dob && <p className="error">{errors.dob.message}</p>}
+                    {ageValidationError && <p className="error">{ageValidationError}</p>}
                   </div>
 
                   {/* 7. Nationality */}
@@ -465,75 +552,43 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
 
             {currentStep === 3 && (
               <div className="emp-form-three">
-                <div>
-                  <label className="label">
-                    Country <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="Enter Country"
-                    {...register("country", { required: "Country is required" })}
-                  />
-                  {!isInDashboard && errors.country && (
-                    <p className="error">{errors.country?.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="label">State <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="Enter State"
-                    {...register("state", { required: "State is required" })}
-                  />
-                  {!isInDashboard && <p className="error">{errors.state?.message}</p>}
-                </div>
-
-                <div>
-                  <label className="label">District <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="Enter District"
-                    {...register("district", { required: "District is required" })}
-                  />
-                  {!isInDashboard && <p className="error">{errors.district?.message}</p>}
-                </div>
-
-                <div>
-                  <label className="label">Block (mandal) <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="Enter Block"
-                    {...register("block", { required: "Block is required" })}
-                  />
-                  {!isInDashboard && <p className="error">{errors.block?.message}</p>}
-                </div>
-
-                <div>
-                  <label className="label">Village <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="Enter Village"
-                    {...register("village", { required: "Village is required" })}
-                  />
-                  {!isInDashboard && <p className="error">{errors.village?.message}</p>}
-                </div>
-
-                <div>
-                  <label className="label">Zipcode <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    placeholder="56xxxx"
-                    className="input"
-                    {...register("zipcode", { required: "Zipcode is required" })}
-                  />
-                  {!isInDashboard && <p className="error">{errors.zipcode?.message}</p>}
-                </div>
+                <AddressForm
+                  formData={{
+                    country: watch('country') || '',
+                    state: watch('state') || '',
+                    district: watch('district') || '',
+                    block: watch('block') || '',
+                    village: watch('village') || '',
+                    zipcode: watch('zipcode') || ''
+                  }}
+                  onFormDataChange={(data) => {
+                    setValue('country', data.country);
+                    setValue('state', data.state);
+                    setValue('district', data.district);
+                    setValue('block', data.block);
+                    setValue('village', data.village);
+                    setValue('zipcode', data.zipcode);
+                    // Clear any existing errors
+                    clearErrors(['country', 'state', 'district', 'block', 'village', 'zipcode']);
+                  }}
+                  showTitle={false}
+                />
+                
+                {/* Hidden inputs for form validation */}
+                <input type="hidden" {...register("country", { required: "Country is required" })} />
+                <input type="hidden" {...register("state", { required: "State is required" })} />
+                <input type="hidden" {...register("district", { required: "District is required" })} />
+                <input type="hidden" {...register("block", { required: "Block is required" })} />
+                <input type="hidden" {...register("village", { required: "Village is required" })} />
+                <input type="hidden" {...register("zipcode", { required: "Zipcode is required" })} />
+                
+                {/* Display validation errors */}
+                {!isInDashboard && errors.country?.message && <p className="error">{errors.country.message}</p>}
+                {!isInDashboard && errors.state?.message && <p className="error">{errors.state.message}</p>}
+                {!isInDashboard && errors.district?.message && <p className="error">{errors.district.message}</p>}
+                {!isInDashboard && errors.block?.message && <p className="error">{errors.block.message}</p>}
+                {!isInDashboard && errors.village?.message && <p className="error">{errors.village.message}</p>}
+                {!isInDashboard && errors.zipcode?.message && <p className="error">{errors.zipcode.message}</p>}
               </div>
             )}
 

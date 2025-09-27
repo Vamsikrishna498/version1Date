@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import AddressForm from './AddressForm';
+import { validateAge, validateAgeSync } from '../utils/ageValidation';
+import { configAPI } from '../api/apiService';
 import '../styles/FarmerRegistration.css';
 
 const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClose, onSubmit: onSubmitProp }) => {
@@ -15,6 +18,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const [selectedIrrigationTab, setSelectedIrrigationTab] = useState('Current');
   const [farmerData] = useState(editData);
   const [photoPreview] = useState(editData?.photo || null);
+  const [ageSettings, setAgeSettings] = useState([]);
+  const [ageValidationError, setAgeValidationError] = useState('');
 
   // Initialize photo name if editing
   useEffect(() => {
@@ -22,6 +27,39 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       setSelectedPhotoName(editData.photoFileName);
     }
   }, [editData]);
+
+  // Load age settings
+  useEffect(() => {
+    const loadAgeSettings = async () => {
+      try {
+        const settings = await configAPI.getAgeSettings();
+        setAgeSettings(settings);
+      } catch (error) {
+        console.error('Failed to load age settings:', error);
+      }
+    };
+    loadAgeSettings();
+  }, []);
+
+  // Age validation function
+  const handleAgeValidation = async (dateOfBirth) => {
+    if (!dateOfBirth) {
+      setAgeValidationError('');
+      return;
+    }
+
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const validation = validateAgeSync(age, 'FARMER', ageSettings);
+    setAgeValidationError(validation.isValid ? '' : validation.message);
+  };
 
   const totalSteps = 8;
 
@@ -43,12 +81,12 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       photo: editData?.photo || null,
 
       // Step 1 - Address
-      country: editData?.country || 'India',
+      country: editData?.country || '',
       state: editData?.state || '',
       district: editData?.district || '',
       block: editData?.block || '',
       village: editData?.village || '',
-      pincode: editData?.pincode || '',
+      zipcode: editData?.zipcode || editData?.pincode || '',
 
       // Step 2 - Professional Details
       education: editData?.education || '',
@@ -283,9 +321,13 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                 <input
                   type="date"
                   placeholder="YYYY-MM-DD"
-                  {...register("dateOfBirth")}
+                  {...register("dateOfBirth", {
+                    required: "Date of Birth is required",
+                    onChange: (e) => handleAgeValidation(e.target.value)
+                  })}
                 />
                 {errors.dateOfBirth?.message && <p className="reg-error">{errors.dateOfBirth.message}</p>}
+                {ageValidationError && <p className="reg-error">{ageValidationError}</p>}
  
          <label>
         Contact Number <span className="optional"></span>
@@ -345,82 +387,46 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
  
  
       {currentStep === 1 && (
-  <div className="address-field">
-    {/* Country */}
-<label>
- 
-  Country <span className="required">*</span>
-</label>
-<input
- 
-  type="text"
- 
-  {...register("country", { required: "Country is required" })}
- 
-  placeholder="Enter your country"
- 
-/>
-{errors.country?.message && <p className="error">{errors.country.message}</p>}
- 
-{/* State */}
-<label>
- 
-  State <span className="required">*</span>
-</label>
-<input
- 
-  type="text"
- 
-  {...register("state", { required: "State is required" })}
- 
-  placeholder="Enter your state"
- 
-/>
-{errors.state?.message && <p className="error">{errors.state.message}</p>}
- 
- 
-   <label>
-  District <span className="required">*</span>
-</label>
-<input
-  type="text"
-  {...register("district", { required: "District is required" })}
-  placeholder="Enter your district"
-/>
-{errors.district?.message && <p className="error">{errors.district.message}</p>}
- 
-{/* Mandal */}
-<label>
-  Mandal <span className="required">*</span>
-</label>
-<input
-  type="text"
-  {...register("block", { required: "block is required" })}
-  placeholder="Enter your block"
-/>
-{errors.mandal?.message && <p className="error">{errors.mandal.message}</p>}
- 
-{/* Village */}
-<label>
-  Village <span className="required">*</span>
-</label>
-<input
-  type="text"
-  {...register("village", { required: "Village is required" })}
-  placeholder="Enter your village"
-/>
-{errors.village?.message && <p className="error">{errors.village.message}</p>}
- 
-    {/* Pincode */}
-    <label>Pincode <span className="required">*</span></label>
-    <input
-      type="text"
-      {...register("pincode", { required: "Pincode is required" })}
-      placeholder="e.g. 500001"
-    />
-    {errors.pincode?.message && <p className="error">{errors.pincode.message}</p>}
-  </div>
-)}
+        <div className="address-field">
+          <AddressForm
+            formData={{
+              country: watch('country') || '',
+              state: watch('state') || '',
+              district: watch('district') || '',
+              block: watch('block') || '',
+              village: watch('village') || '',
+              zipcode: watch('zipcode') || ''
+            }}
+            onFormDataChange={(data) => {
+              setValue('country', data.country);
+              setValue('state', data.state);
+              setValue('district', data.district);
+              setValue('block', data.block);
+              setValue('village', data.village);
+              setValue('zipcode', data.zipcode);
+              // Clear any existing errors
+              clearErrors(['country', 'state', 'district', 'block', 'village', 'zipcode']);
+            }}
+            showTitle={false}
+          />
+          
+          {/* Hidden inputs for form validation */}
+          <input type="hidden" {...register("country", { required: "Country is required" })} />
+          <input type="hidden" {...register("state", { required: "State is required" })} />
+          <input type="hidden" {...register("district", { required: "District is required" })} />
+          <input type="hidden" {...register("block", { required: "Block is required" })} />
+          <input type="hidden" {...register("village", { required: "Village is required" })} />
+          <input type="hidden" {...register("zipcode", { required: "Zipcode is required" })} />
+          
+          {/* Display validation errors */}
+          {errors.country?.message && <p className="error">{errors.country.message}</p>}
+          {errors.state?.message && <p className="error">{errors.state.message}</p>}
+          {errors.district?.message && <p className="error">{errors.district.message}</p>}
+          {errors.block?.message && <p className="error">{errors.block.message}</p>}
+          {errors.village?.message && <p className="error">{errors.village.message}</p>}
+          {errors.zipcode?.message && <p className="error">{errors.zipcode.message}</p>}
+        </div>
+      )}
  
  
 {currentStep === 2 && (

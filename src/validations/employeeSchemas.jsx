@@ -8,7 +8,18 @@ const employeeSchemas = [
     middleName: Yup.string().required("Middle name is required"),
     lastName: Yup.string().required("Last name is required"),
     gender: Yup.string().required("Gender is required"),
-    dob: Yup.string().required("Date of Birth is required"),
+    dob: Yup.string()
+      .required("Date of Birth is required")
+      .test('age-range', 'Age must be between 18 and 90 years', function (value) {
+        if (!value) return false;
+        const dob = new Date(value);
+        const today = new Date();
+        const ageDifMs = today - dob;
+        const ageDate = new Date(ageDifMs);
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        // Age must be between 18 and 90 years
+        return age >= 18 && age <= 90;
+      }),
     nationality: Yup.string().required("Nationality is required"),
   }),
 

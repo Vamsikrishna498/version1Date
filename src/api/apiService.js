@@ -175,6 +175,20 @@ export const authAPI = {
   getAddressByPincode: async (pincode) => {
     const response = await api.get(`/auth/pincode/${pincode}`);
     return response.data;
+  },
+
+  // Check email availability
+  checkEmailAvailability: async (email) => {
+    try {
+      const response = await api.post('/auth/check-email', { email });
+      return response.data;
+    } catch (error) {
+      // If email exists, backend might return 409 or 400
+      if (error.response?.status === 409 || error.response?.status === 400) {
+        return { available: false, message: 'Email is already registered' };
+      }
+      throw error;
+    }
   }
 };
 
@@ -1926,6 +1940,166 @@ export const configAPI = {
   deleteSystemPreference: async (id) => {
     const response = await api.delete(`/config/preferences/${id}`);
     return response.data;
+  },
+
+  // Country Settings operations
+  getAllCountries: async () => {
+    const response = await api.get('/country-settings/countries');
+    return response.data;
+  },
+
+  getStatesByCountryId: async (countryId) => {
+    const response = await api.get(`/country-settings/states/${countryId}`);
+    return response.data;
+  },
+
+  getDistrictsByStateId: async (stateId) => {
+    const response = await api.get(`/country-settings/districts/${stateId}`);
+    return response.data;
+  },
+
+  getBlocksByDistrictId: async (districtId) => {
+    const response = await api.get(`/country-settings/blocks/${districtId}`);
+    return response.data;
+  },
+
+  getVillagesByBlockId: async (blockId) => {
+    const response = await api.get(`/country-settings/villages/${blockId}`);
+    return response.data;
+  },
+
+  getZipcodesByVillageId: async (villageId) => {
+    const response = await api.get(`/country-settings/zipcodes/${villageId}`);
+    return response.data;
+  },
+
+  searchZipcodeWithHierarchy: async (code) => {
+    const response = await api.get(`/country-settings/zipcodes/search/${code}`);
+    return response.data;
+  },
+
+  // CRUD operations for Country Settings
+  createCountry: async (countryData) => {
+    const response = await api.post('/country-settings/country', countryData);
+    return response.data;
+  },
+
+  createState: async (stateData) => {
+    const response = await api.post('/country-settings/state', stateData);
+    return response.data;
+  },
+
+  createDistrict: async (districtData) => {
+    const response = await api.post('/country-settings/district', districtData);
+    return response.data;
+  },
+
+  createBlock: async (blockData) => {
+    const response = await api.post('/country-settings/block', blockData);
+    return response.data;
+  },
+
+  createVillage: async (villageData) => {
+    const response = await api.post('/country-settings/village', villageData);
+    return response.data;
+  },
+
+  createZipcode: async (zipcodeData) => {
+    const response = await api.post('/country-settings/zipcode', zipcodeData);
+    return response.data;
+  },
+
+  // Global Area Settings operations
+  getAgeSettings: async () => {
+    const response = await api.get('/config/global-area/age');
+    return response.data;
+  },
+  
+  createAgeSetting: async (ageSettingData) => {
+    const response = await api.post('/config/global-area/age', ageSettingData);
+    return response.data;
+  },
+  
+  validateAge: async (age, userType) => {
+    const response = await api.get(`/config/validate-age?age=${age}&userType=${userType}`);
+    return response.data;
+  },
+
+  getEducationTypes: async () => {
+    const response = await api.get('/config/global-area/education');
+    return response.data;
+  },
+
+  getEducationCategories: async () => {
+    const response = await api.get('/config/global-area/education-categories');
+    return response.data;
+  },
+
+  createGlobalAreaSetting: async (settingData) => {
+    const response = await api.post('/config/global-area', settingData);
+    return response.data;
+  },
+
+  updateGlobalAreaSetting: async (id, settingData) => {
+    const response = await api.put(`/config/global-area/${id}`, settingData);
+    return response.data;
+  },
+
+  deleteGlobalAreaSetting: async (id) => {
+    const response = await api.delete(`/config/global-area/${id}`);
+    return response.data;
+  },
+
+  // Crop Settings operations
+  getCropNames: async () => {
+    const response = await api.get('/config/crop/names');
+    return response.data;
+  },
+
+  getCropTypes: async () => {
+    const response = await api.get('/config/crop/types');
+    return response.data;
+  },
+
+  createCropSetting: async (cropData) => {
+    const response = await api.post('/config/crop', cropData);
+    return response.data;
+  },
+
+  updateCropSetting: async (id, cropData) => {
+    const response = await api.put(`/config/crop/${id}`, cropData);
+    return response.data;
+  },
+
+  deleteCropSetting: async (id) => {
+    const response = await api.delete(`/config/crop/${id}`);
+    return response.data;
+  },
+
+  // Pincode API for auto-fill functionality
+  getAddressByPincode: async (pincode) => {
+    const response = await api.get(`/config/address/pincode/${pincode}`);
+    return response.data;
+  },
+
+  // Test endpoint to verify API integration
+  testCountries: async () => {
+    const response = await api.get('/config/test/countries');
+    return response.data;
+  },
+
+  // Check email availability
+  checkEmailAvailability: async (email) => {
+    try {
+      const response = await api.post('/auth/check-email', { email });
+      return response.data;
+    } catch (error) {
+      // If email exists, backend might return 409 or 400
+      if (error.response?.status === 409 || error.response?.status === 400) {
+        return { available: false, message: 'Email is already registered' };
+      }
+      throw error;
+    }
   }
 };
 
