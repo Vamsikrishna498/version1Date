@@ -29,9 +29,8 @@ const UserRolesTab = () => {
     isActive: true
   });
 
-  // Limit to modules shown in the screenshot
-  const availableModules = ['EMPLOYEE', 'FARMER'];
-  const availablePermissions = ['ADD', 'VIEW', 'EDIT', 'DELETE'];
+  const availableModules = ['FARMER', 'EMPLOYEE', 'FPO', 'CONFIGURATION'];
+  const availablePermissions = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
 
   useEffect(() => {
     loadRoles();
@@ -152,20 +151,6 @@ const UserRolesTab = () => {
     setFormData({ ...formData, permissions: updatedPermissions });
   };
 
-  const handleModuleSelectChange = (e) => {
-    const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-    setFormData({ ...formData, allowedModules: selected });
-  };
-
-  const handlePermissionSelectChange = (e) => {
-    const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-    setFormData({ ...formData, permissions: selected });
-  };
-
-  const handleRoleRadioChange = (value) => {
-    setFormData({ ...formData, roleName: value });
-  };
-
   const handleAssignRole = async (assignmentData) => {
     try {
       setLoading(true);
@@ -228,13 +213,13 @@ const UserRolesTab = () => {
             className={`sub-tab-button ${activeSubTab === 'roles' ? 'active' : ''}`}
             onClick={() => setActiveSubTab('roles')}
           >
-            🛡️ Role
+            🛡️ Role Management
           </button>
           <button
             className={`sub-tab-button ${activeSubTab === 'assignments' ? 'active' : ''}`}
             onClick={() => setActiveSubTab('assignments')}
           >
-            👤 User
+            👤 User Assignments
           </button>
         </div>
       </div>
@@ -334,31 +319,11 @@ const UserRolesTab = () => {
         <>
           {/* User Assignment Form */}
           <div className="assignment-form">
-            <h4 className="form-title">User</h4>
+            <h4 className="form-title">Assign Role to User</h4>
             <div className="form-row">
               <div className="form-group">
                 <label>User Details *</label>
-                <div className="radio-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="radio"
-                      name="userSelectMode"
-                      checked={!showEmployeeForm}
-                      onChange={() => { setShowEmployeeForm(false); }}
-                    />
-                    Select from list
-                  </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="radio"
-                      name="userSelectMode"
-                      checked={showEmployeeForm}
-                      onChange={() => { setShowEmployeeForm(true); setSelectedUser(''); }}
-                    />
-                    Add new
-                  </label>
-                </div>
-                {!showEmployeeForm && (
+                <div className="input-with-button">
                   <select
                     value={selectedUser}
                     onChange={(e) => setSelectedUser(e.target.value)}
@@ -372,7 +337,14 @@ const UserRolesTab = () => {
                       </option>
                     ))}
                   </select>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setShowEmployeeForm(true)}
+                    className="btn btn-secondary btn-add-user"
+                  >
+                    ➕ Add User
+                  </button>
+                </div>
               </div>
               
               <div className="form-group">
@@ -429,20 +401,18 @@ const UserRolesTab = () => {
             <div className="form-actions">
               <button
                 onClick={async () => {
-                  if (!showEmployeeForm && (!selectedUser || !selectedRole)) {
+                  if (!selectedUser || !selectedRole) {
                     setError('Please select both a user and a role');
                     return;
                   }
-                  if (!showEmployeeForm) {
-                    await handleAssignRole({ userId: selectedUser, roleId: selectedRole });
-                    setSelectedUser('');
-                    setSelectedRole('');
-                  }
+                  await handleAssignRole({ userId: selectedUser, roleId: selectedRole });
+                  setSelectedUser('');
+                  setSelectedRole('');
                 }}
-                disabled={!showEmployeeForm && (!selectedUser || !selectedRole)}
+                disabled={!selectedUser || !selectedRole}
                 className="btn btn-primary"
               >
-                Submit
+                ➕ Assign Role
               </button>
             </div>
           </div>
@@ -495,57 +465,55 @@ const UserRolesTab = () => {
             <form onSubmit={handleSubmit} className="role-form">
               <div className="form-group">
                 <label>Role Name *</label>
-                <div className="radio-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="radio"
-                      name="roleName"
-                      checked={formData.roleName === 'MANAGER'}
-                      onChange={() => handleRoleRadioChange('MANAGER')}
-                      required
-                    />
-                    Manager
-                  </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="radio"
-                      name="roleName"
-                      checked={formData.roleName === 'EMPLOYEE'}
-                      onChange={() => handleRoleRadioChange('EMPLOYEE')}
-                      required
-                    />
-                    Employee
-                  </label>
-                </div>
+                <input
+                  type="text"
+                  value={formData.roleName}
+                  onChange={(e) => setFormData({ ...formData, roleName: e.target.value })}
+                  required
+                  className="form-control"
+                />
               </div>
               
               <div className="form-group">
-                <label>Description *</label>
+                <label>Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="form-control"
                   rows="3"
-                  required
                 />
               </div>
               
               <div className="form-group">
-                <label>Select Modules *</label>
-                <select multiple className="form-control" value={formData.allowedModules} onChange={handleModuleSelectChange} size="3" required>
-                  <option value="EMPLOYEE">Employee</option>
-                  <option value="FARMER">Farmer</option>
-                </select>
+                <label>Allowed Modules</label>
+                <div className="checkbox-group">
+                  {availableModules.map(module => (
+                    <label key={module} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={formData.allowedModules.includes(module)}
+                        onChange={() => handleModuleChange(module)}
+                      />
+                      {module}
+                    </label>
+                  ))}
+                </div>
               </div>
               
               <div className="form-group">
-                <label>Define Access *</label>
-                <select multiple className="form-control" value={formData.permissions} onChange={handlePermissionSelectChange} size="4" required>
-                  <option value="ADD">Add</option>
-                  <option value="VIEW">View</option>
-                  <option value="EDIT">Edit</option>
-                  <option value="DELETE">Delete</option>
-                </select>
+                <label>Permissions</label>
+                <div className="checkbox-group">
+                  {availablePermissions.map(permission => (
+                    <label key={permission} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.includes(permission)}
+                        onChange={() => handlePermissionChange(permission)}
+                      />
+                      {permission}
+                    </label>
+                  ))}
+                </div>
               </div>
               
               <div className="form-group">
