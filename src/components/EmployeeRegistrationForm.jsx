@@ -13,7 +13,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   const [selectedDoc, setSelectedDoc] = useState('');
   const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
-  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');  
+  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [educationTypes, setEducationTypes] = useState([]);
 

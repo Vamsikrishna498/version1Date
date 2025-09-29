@@ -11,3 +11,62 @@
 .auth-card { width: 100%; max-width: 520px; }
 
 
+
+/* Stabilize field heights by reserving space for messages */
+.auth-field { position: relative; }
+.field-feedback { min-height: 18px; margin-top: 6px; }
+.field-feedback .error { margin: 0; }
+.checking-inline { color: #666; font-size: 12px; margin-top: 5px; }
+
+/* Consistent input/button sizing for a professional look */
+.auth-form { display: grid; gap: 16px; }
+.auth-field label { font-size: 0.9rem; font-weight: 600; color: #111827; }
+.auth-field input,
+.auth-field select {
+  height: 44px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  background: rgba(255,255,255,0.96);
+  transition: box-shadow .2s ease, border-color .2s ease;
+  box-sizing: border-box;
+}
+.auth-field input:focus,
+.auth-field select:focus {
+  outline: none;
+  border-color: #22a35a;
+  box-shadow: 0 0 0 4px rgba(34,197,94,0.15);
+}
+.auth-field input.error,
+.auth-field select.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220,38,38,0.12);
+}
+.auth-actions { display: grid; gap: 10px; }
+.auth-submit {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1f8e50 0%, #166f3e 100%);
+  color: #fff;
+  border: none;
+  font-weight: 800;
+  letter-spacing: .5px;
+  cursor: pointer;
+}
+.auth-submit:hover { background: linear-gradient(180deg, #22a35a 0%, #1f8e50 100%); }
+.auth-secondary {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid #166f3e;
+  color: #166f3e;
+  background: transparent;
+  font-weight: 700;
+}
+
+/* Make grid stable on narrow screens */
+@media (max-width: 900px) {
+  .auth-card { max-width: 720px; }
+}

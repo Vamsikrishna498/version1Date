@@ -27,11 +27,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+    const hasToken = !!localStorage.getItem('token');
+    const onLoginPage = typeof window !== 'undefined' && window.location?.pathname === '/login';
+
+    // Avoid full-page reload for intentional 401s on login endpoints
+    const isAuthAttempt = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/fpo-login');
+
+    if (status === 401 && hasToken && !isAuthAttempt && !onLoginPage) {
+      // Session expired while authenticated → clean up and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+      return; // stop further propagation
     }
+    // For login failures and requests without a token, let callers handle the error (no reload)
     return Promise.reject(error);
   }
 );
