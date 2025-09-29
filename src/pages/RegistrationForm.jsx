@@ -291,9 +291,11 @@ const RegistrationForm = () => {
                   {...register('name')} 
                   className={errors.name ? 'error' : ''} 
                   placeholder="Enter your first name"
+                  inputMode="text"
+                  autoComplete="name"
                   onBlur={() => trigger('name')}
                 />
-                {errors.name && <div className="error">{errors.name.message}</div>}
+                <div className="field-feedback">{errors.name && <div className="error">{errors.name.message}</div>}</div>
               </div>
 
               <div className="auth-field">
@@ -308,7 +310,7 @@ const RegistrationForm = () => {
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
-                {errors.gender && <div className="error">{errors.gender.message}</div>}
+                <div className="field-feedback">{errors.gender && <div className="error">{errors.gender.message}</div>}</div>
               </div>
 
               <div className="auth-field grid-span-2">
@@ -319,7 +321,7 @@ const RegistrationForm = () => {
                   className={errors.dateOfBirth ? 'error' : ''}
                   onBlur={() => trigger('dateOfBirth')}
                 />
-                {errors.dateOfBirth && <div className="error">{errors.dateOfBirth.message}</div>}
+                <div className="field-feedback">{errors.dateOfBirth && <div className="error">{errors.dateOfBirth.message}</div>}</div>
               </div>
 
               <div className="auth-field">
@@ -331,7 +333,7 @@ const RegistrationForm = () => {
                   placeholder="Enter 10-digit number"
                   onBlur={() => trigger('phoneNumber')}
                 />
-                {errors.phoneNumber && <div className="error">{errors.phoneNumber.message}</div>}
+                <div className="field-feedback">{errors.phoneNumber && <div className="error">{errors.phoneNumber.message}</div>}</div>
               </div>
 
               <div className="auth-field">
@@ -353,10 +355,10 @@ const RegistrationForm = () => {
                     checkEmailAvailability(e.target.value);
                   }}
                 />
-                {isCheckingEmail && <div style={{ color: '#666', fontSize: '12px', marginTop: '5px' }}>Checking email availability...</div>}
-                {(errors.email || emailAvailabilityError) && (
+                {isCheckingEmail && <div className="checking-inline">Checking email availability...</div>}
+                <div className="field-feedback">{(errors.email || emailAvailabilityError) && (
                   <div className="error">{errors.email?.message || emailAvailabilityError}</div>
-                )}
+                )}</div>
               </div>
 
               <div className="auth-field grid-span-2">
@@ -369,7 +371,7 @@ const RegistrationForm = () => {
                   autoComplete="new-password"
                   onBlur={() => trigger('password')}
                 />
-                {errors.password && <div className="error">{errors.password.message}</div>}
+                <div className="field-feedback">{errors.password && <div className="error">{errors.password.message}</div>}</div>
               </div>
             </div>
 
@@ -406,4 +408,4 @@ const RegistrationForm = () => {
   );
 };
 
-export default RegistrationForm; 
+export default RegistrationForm;
