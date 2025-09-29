@@ -560,7 +560,12 @@ const SuperAdminDashboard = () => {
       setEmployees(finalEmployeesData);
       setRegistrations(finalRegistrationsData);
       const fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
-      setFpos(fpoList || []);
+      // Hide deactivated/INACTIVE FPOs from the Super Admin list
+      const visibleFpos = (fpoList || []).filter(f => {
+        const s = (f.status || '').toString().toUpperCase();
+        return s !== 'INACTIVE' && s !== 'DEACTIVATED' && s !== 'DISABLED';
+      });
+      setFpos(visibleFpos);
 
       // Load code formats for dynamic prefix
       try {
@@ -1232,61 +1237,41 @@ const SuperAdminDashboard = () => {
       } else if (type === 'fpo') {
         console.log(`🔄 Deleting FPO with ID: ${item.id}`);
         console.log(`🔄 FPO data:`, item);
-        
-        // Try multiple delete strategies for FPO
-        let deleteSuccessful = false;
-        
+
+        let hardDeleted = false;
         try {
-          // Strategy 1: Try fpoAPI.deleteFPO
-          console.log(`🔄 Strategy 1: Calling fpoAPI.deleteFPO(${item.id})`);
+          console.log(`🔄 Calling fpoAPI.deleteFPO(${item.id})`);
           await fpoAPI.deleteFPO(item.id);
-          deleteSuccessful = true;
-          console.log(`✅ Strategy 1 successful: FPO ${item.id} deleted`);
+          hardDeleted = true;
         } catch (fpoDeleteError) {
-          console.error(`❌ Strategy 1 failed:`, fpoDeleteError);
-          
+          console.error('❌ fpoAPI.deleteFPO failed:', fpoDeleteError);
           try {
-            // Strategy 2: Try superAdminAPI.deleteFPO (if exists)
-            console.log(`🔄 Strategy 2: Trying superAdminAPI.deleteFPO(${item.id})`);
             if (superAdminAPI.deleteFPO) {
+              console.log(`🔄 Falling back to superAdminAPI.deleteFPO(${item.id})`);
               await superAdminAPI.deleteFPO(item.id);
-              deleteSuccessful = true;
-              console.log(`✅ Strategy 2 successful: FPO ${item.id} deleted`);
+              hardDeleted = true;
             } else {
-              throw new Error('superAdminAPI.deleteFPO not available');
+              throw fpoDeleteError;
             }
-          } catch (superAdminDeleteError) {
-            console.error(`❌ Strategy 2 failed:`, superAdminDeleteError);
-            
-            // Strategy 3: Try deactivation instead of deletion
+          } catch (altErr) {
+            console.error('❌ superAdminAPI.deleteFPO also failed:', altErr);
+            // Final fallback: deactivate but treat as removal in UI
+            console.log('🔄 Final fallback: deactivating FPO and removing from UI');
             try {
-              console.log(`🔄 Strategy 3: Trying to deactivate FPO ${item.id} instead of deleting`);
               await fpoAPI.deactivateFPO(item.id);
-              deleteSuccessful = true;
-              console.log(`✅ Strategy 3 successful: FPO ${item.id} deactivated`);
-              // Update the FPO status in the list instead of removing it
-              setFpos(prev => prev.map(f => 
-                f.id === item.id ? { ...f, status: 'INACTIVE' } : f
-              ));
-            } catch (deactivateError) {
-              console.error(`❌ Strategy 3 failed:`, deactivateError);
-              throw new Error(`All delete strategies failed. Last error: ${deactivateError.message}`);
+            } catch (deactErr) {
+              console.error('❌ Deactivate also failed:', deactErr);
+              throw fpoDeleteError; // bubble original error
             }
           }
         }
-        
-        if (deleteSuccessful && type === 'fpo') {
-          // Only remove from list if actual deletion was successful (not deactivation)
-          if (item.status !== 'INACTIVE') {
-            setFpos(prev => prev.filter(f => f.id !== item.id));
-          }
-        }
+
+        // Remove from local state regardless of hard delete or fallback deactivation
+        setFpos(prev => prev.filter(f => f.id !== item.id));
+        console.log(`✅ FPO ${item.id} removed from list (${hardDeleted ? 'hard delete' : 'deactivated fallback'})`);
+
+        alert('fpo deleted successfully!');
       }
-      
-      const successMessage = type === 'fpo' && item.status === 'INACTIVE' 
-        ? `${type} deactivated successfully!` 
-        : `${type} deleted successfully!`;
-      alert(successMessage);
       
     } catch (error) {
       console.error('❌ Error deleting item:', error);
@@ -1708,6 +1693,7 @@ const SuperAdminDashboard = () => {
                    </div>
                 </div>
               </div>
+              {/* Delete handled by global modal below for consistent overlay positioning */}
             </>
           )}
 
@@ -1856,15 +1842,7 @@ const SuperAdminDashboard = () => {
                     />
                   )}
                 </>
-              ) : (
-                <DeleteModal
-                  item={itemToDelete?.item}
-                  type={itemToDelete?.type}
-                  onClose={() => setShowDeleteModal(false)}
-                  onConfirm={confirmDelete}
-                  inlineMode={true}
-                />
-              )}
+              ) : null}
             </div>
           )}
 
@@ -2315,15 +2293,7 @@ const SuperAdminDashboard = () => {
                  />
                )}
 
-              {showDeleteModal && activeTab === 'farmers' && (
-                <DeleteModal
-                  item={itemToDelete?.item}
-                  type={itemToDelete?.type}
-                  onClose={() => setShowDeleteModal(false)}
-                  onConfirm={confirmDelete}
-                  inlineMode={true}
-                />
-              )}
+              {/* Delete modal is rendered globally at the bottom */}
 
               {viewingFarmer && (
                 <ViewFarmer 
@@ -2666,15 +2636,7 @@ const SuperAdminDashboard = () => {
                 </div>
               ) : null}
 
-              {showDeleteModal && activeTab === 'employees' && (
-                <DeleteModal
-                  item={itemToDelete?.item}
-                  type={itemToDelete?.type}
-                  onClose={() => setShowDeleteModal(false)}
-                  onConfirm={confirmDelete}
-                  inlineMode={true}
-                />
-              )}
+              {/* Delete modal is rendered globally at the bottom */}
             </>
           )}
 
@@ -3275,6 +3237,17 @@ const SuperAdminDashboard = () => {
           onApprove={handleApproveKYC}
           onReject={handleRejectKYC}
           onReferBack={handleReferBackKYC}
+        />
+      )}
+
+      {/* Global Delete Modal - visible regardless of active tab */}
+      {showDeleteModal && (
+        <DeleteModal
+          item={itemToDelete?.item}
+          type={itemToDelete?.type}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDelete}
+          inlineMode={true}
         />
       )}
 

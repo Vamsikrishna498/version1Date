@@ -73,66 +73,68 @@ const DeleteModal = ({ item, type, onClose, onConfirm, inlineMode = false }) => 
 
   if (inlineMode) {
     return (
-      <div className="delete-confirmation-inline">
-        <div className="delete-confirmation-header">
-          <h2>Confirm Delete</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
-        </div>
-
-        <div className="delete-warning">
-          <div className="warning-icon">⚠️</div>
-          <h3>Are you sure you want to delete this {type}?</h3>
-          <p>This action cannot be undone.</p>
-        </div>
-
-        <div className="item-details">
-          <h4>{getItemName()} Details:</h4>
-          <div className="details-grid">
-            {Object.entries(details).map(([key, value]) => (
-              <div key={key} className="detail-item">
-                <span className="label">{key.charAt(0).toUpperCase() + key.slice(1)}:</span>
-                <span className="value">{value || 'N/A'}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="form">
-          <div className="form-group">
-            <label htmlFor="reason">Reason for Deletion (Optional)</label>
-            <textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Enter reason for deletion..."
-              rows="3"
-            />
+      <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', zIndex: 1100 }}>
+        <div className="modal-content" style={{ marginTop: 24, width: '100%', maxWidth: 1100 }}>
+          <div className="modal-header">
+            <h2>Confirm Delete</h2>
+            <button className="close-btn" onClick={onClose}>×</button>
           </div>
 
-          <div className="form-actions">
-            <button 
-              type="button" 
-              className="btn-secondary" 
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="btn-danger"
-              disabled={loading}
-            >
-              {loading ? 'Deleting...' : `Delete ${getItemName()}`}
-            </button>
+          <div className="delete-warning">
+            <div className="warning-icon">⚠️</div>
+            <h3>Are you sure you want to delete this {type}?</h3>
+            <p>This action cannot be undone.</p>
           </div>
-        </form>
+
+          <div className="item-details">
+            <h4>{getItemName()} Details:</h4>
+            <div className="details-grid">
+              {Object.entries(details).map(([key, value]) => (
+                <div key={key} className="detail-item">
+                  <span className="label">{key.charAt(0).toUpperCase() + key.slice(1)}:</span>
+                  <span className="value">{value || 'N/A'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="form">
+            <div className="form-group">
+              <label htmlFor="reason">Reason for Deletion (Optional)</label>
+              <textarea
+                id="reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Enter reason for deletion..."
+                rows="3"
+              />
+            </div>
+
+            <div className="form-actions">
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="btn-danger"
+                disabled={loading}
+              >
+                {loading ? 'Deleting...' : `Delete ${getItemName()}`}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', zIndex: 1100 }}>
+      <div className="modal-content" style={{ marginTop: 24 }}>
         <div className="modal-header">
           <h2>Confirm Delete</h2>
           <button className="close-btn" onClick={onClose}>×</button>

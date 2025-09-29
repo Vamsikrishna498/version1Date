@@ -77,7 +77,7 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
       setError('');
 
       // Validate required fields
-      if (!addressFormData.country || !addressFormData.state || !addressFormData.district ||
+      if (!addressFormData.country || !addressFormData.state || !addressFormData.district || 
           !addressFormData.block || !addressFormData.village || !addressFormData.zipcode) {
         setError('Please fill in all required fields');
         return;
@@ -116,11 +116,11 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
         // Create new address entry with ID
         const newAddressEntry = {
           id: Date.now(), // Simple ID generation
-          country: addressFormData.country,
-          state: addressFormData.state,
-          district: addressFormData.district,
-          block: addressFormData.block,
-          village: addressFormData.village,
+        country: addressFormData.country,
+        state: addressFormData.state,
+        district: addressFormData.district,
+        block: addressFormData.block,
+        village: addressFormData.village,
           zipcode: addressFormData.zipcode,
           createdAt: new Date().toISOString()
         };
@@ -135,14 +135,14 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
       localStorage.setItem('countrySettingsData', JSON.stringify(updatedData));
       
       // Reset form
-      setAddressFormData({
-        country: '',
-        state: '',
-        district: '',
-        block: '',
-        village: '',
-        zipcode: ''
-      });
+        setAddressFormData({
+          country: '',
+          state: '',
+          district: '',
+          block: '',
+          village: '',
+          zipcode: ''
+        });
       
       // Hide form
       setShowForm(false);
