@@ -334,7 +334,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       {...register("photo")}
                       onChange={handlePhotoChange}
                     />
-                    {!isInDashboard && errors.photo && <p className="error">{errors.photo.message}</p>}
+                    {errors.photo && <p className="error">{errors.photo.message}</p>}
                   </div>
                 </div>
 
@@ -356,7 +356,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       <option value="Miss.">Miss.</option>
                       <option value="Dr.">Dr.</option>
                     </select>
-                    {!isInDashboard && errors.salutation && <p className="error">{errors.salutation.message}</p>}
+                    {errors.salutation && <p className="error">{errors.salutation.message}</p>}
                   </div>
 
                   {/* 2. First Name */}
@@ -369,7 +369,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       placeholder="First Name"
                       {...register("firstName", { required: "First Name is required", validate: validateAlpha })}
                     />
-                    {!isInDashboard && errors.firstName && <p className="error">{errors.firstName.message}</p>}
+                    {errors.firstName && <p className="error">{errors.firstName.message}</p>}
                   </div>
 
                   {/* 3. Middle Name */}
@@ -382,7 +382,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       placeholder="Middle Name"
                       {...register("middleName", { required: "Middle Name is required", validate: validateAlpha })}
                     />
-                    {!isInDashboard && errors.middleName && <p className="error">{errors.middleName.message}</p>}
+                    {errors.middleName && <p className="error">{errors.middleName.message}</p>}
                   </div>
 
                   {/* 4. Last Name */}
@@ -395,7 +395,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       placeholder="Last Name"
                       {...register("lastName", { required: "Last Name is required", validate: validateAlpha })}
                     />
-                    {!isInDashboard && errors.lastName && <p className="error">{errors.lastName.message}</p>}
+                    {errors.lastName && <p className="error">{errors.lastName.message}</p>}
                   </div>
                 </div>
 
@@ -415,7 +415,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       <option value="Female">Female</option>
                       <option value="Transgender">Transgender</option>
                     </select>
-                    {!isInDashboard && errors.gender && <p className="error">{errors.gender.message}</p>}
+                    {errors.gender && <p className="error">{errors.gender.message}</p>}
                   </div>
 
                   {/* 6. DOB */}
@@ -431,7 +431,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                         onChange: (e) => handleAgeValidation(e.target.value)
                       })}
                     />
-                    {!isInDashboard && errors.dob && <p className="error">{errors.dob.message}</p>}
+                    {errors.dob && <p className="error">{errors.dob.message}</p>}
                     {ageValidationError && <p className="error">{ageValidationError}</p>}
                   </div>
 
@@ -447,7 +447,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       <option value="">Select</option>
                       <option value="Indian">Indian</option>
                     </select>
-                    {!isInDashboard && errors.nationality && <p className="error">{errors.nationality.message}</p>}
+                    {errors.nationality && <p className="error">{errors.nationality.message}</p>}
                   </div>
                 </div>
               </div>
@@ -471,7 +471,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     })}
                     placeholder=""
                   />
-                  {!isInDashboard && <p className="error">{errors.contactNumber?.message}</p>}
+                  <p className="error">{errors.contactNumber?.message}</p>
                 </div>
 
                 <div>
@@ -489,7 +489,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     })}
                     placeholder=""
                   />
-                  {!isInDashboard && <p className="error">{errors.email?.message}</p>}
+                  <p className="error">{errors.email?.message}</p>
                 </div>
               </div>
             )}
@@ -511,7 +511,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <option value="so">S/O</option>
                     <option value="wo">W/O</option>
                   </select>
-                  {!isInDashboard && errors.relationType && <p className="error">{errors.relationType.message}</p>}
+                  {errors.relationType && <p className="error">{errors.relationType.message}</p>}
                 </div>
 
                 {/* Relation Name */}
@@ -523,7 +523,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     className="input"
                     {...register("relationName", { required: "Relation Name is required" })}
                   />
-                  {!isInDashboard && errors.relationName && <p className="error">{errors.relationName.message}</p>}
+                  {errors.relationName && <p className="error">{errors.relationName.message}</p>}
                 </div>
 
                 {/* Alternative Number */}
@@ -540,7 +540,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       },
                     })}
                   />
-                  {!isInDashboard && errors.altNumber && <p className="error">{errors.altNumber.message}</p>}
+                  {errors.altNumber && <p className="error">{errors.altNumber.message}</p>}
                 </div>
 
                 {/* Alternative Type */}
@@ -563,7 +563,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <option value="Spouse">Spouse</option>
                     <option value="Other">Other</option>
                   </select>
-                  {!isInDashboard && errors.altNumberType && <p className="error">{errors.altNumberType.message}</p>}
+                  {errors.altNumberType && <p className="error">{errors.altNumberType.message}</p>}
                 </div>
               </div>
             )}
@@ -590,6 +590,14 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     clearErrors(['country', 'state', 'district', 'block', 'village', 'zipcode']);
                   }}
                   showTitle={false}
+                  errors={{
+                    country: errors.country,
+                    state: errors.state,
+                    district: errors.district,
+                    block: errors.block,
+                    village: errors.village,
+                    zipcode: errors.zipcode
+                  }}
                 />
                 
                 {/* Hidden inputs for form validation */}
@@ -600,13 +608,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                 <input type="hidden" {...register("village", { required: "Village is required" })} />
                 <input type="hidden" {...register("zipcode", { required: "Zipcode is required" })} />
                 
-                {/* Display validation errors */}
-                {!isInDashboard && errors.country?.message && <p className="error">{errors.country.message}</p>}
-                {!isInDashboard && errors.state?.message && <p className="error">{errors.state.message}</p>}
-                {!isInDashboard && errors.district?.message && <p className="error">{errors.district.message}</p>}
-                {!isInDashboard && errors.block?.message && <p className="error">{errors.block.message}</p>}
-                {!isInDashboard && errors.village?.message && <p className="error">{errors.village.message}</p>}
-                {!isInDashboard && errors.zipcode?.message && <p className="error">{errors.zipcode.message}</p>}
+                {/* Field-level errors are shown inline by AddressForm */}
               </div>
             )}
 
@@ -817,7 +819,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   <label className="label">
                     Role/Designation <span className="required">*</span>
                   </label>
-                  <select className="input" {...register("role", { required: true })}>
+                  <select className="input" {...register("role", { required: "Role is required" })}>
                     <option value="">Select</option>
                     <option value="employee">Employee</option>
                   </select>
@@ -830,7 +832,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   <label className="label">
                     Access <span className="required">*</span>
                   </label>
-                  <select className="input" {...register("accessStatus", { required: true })}>
+                  <select className="input" {...register("accessStatus", { required: "Access is required" })}>
                     <option value="">Select</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>

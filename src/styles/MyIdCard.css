@@ -20,18 +20,18 @@
   font-size: 1.1rem;
 }
 
-.loading,
-.error {
+.my-id-card .loading,
+.my-id-card .error {
   text-align: center;
   padding: 40px;
   font-size: 1.1rem;
 }
 
-.loading {
+.my-id-card .loading {
   color: #666;
 }
 
-.error {
+.my-id-card .error {
   color: #e74c3c;
 }
 

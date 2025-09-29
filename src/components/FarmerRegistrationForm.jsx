@@ -448,6 +448,14 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               clearErrors(['country', 'state', 'district', 'block', 'village', 'zipcode']);
             }}
             showTitle={false}
+            errors={{
+              country: errors.country,
+              state: errors.state,
+              district: errors.district,
+              block: errors.block,
+              village: errors.village,
+              zipcode: errors.zipcode
+            }}
           />
           
           {/* Hidden inputs for form validation */}
@@ -458,13 +466,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           <input type="hidden" {...register("village", { required: "Village is required" })} />
           <input type="hidden" {...register("zipcode", { required: "Zipcode is required" })} />
           
-          {/* Display validation errors */}
-          {errors.country?.message && <p className="error">{errors.country.message}</p>}
-          {errors.state?.message && <p className="error">{errors.state.message}</p>}
-          {errors.district?.message && <p className="error">{errors.district.message}</p>}
-          {errors.block?.message && <p className="error">{errors.block.message}</p>}
-          {errors.village?.message && <p className="error">{errors.village.message}</p>}
-          {errors.zipcode?.message && <p className="error">{errors.zipcode.message}</p>}
+          {/* Error messages now shown inline per field in AddressForm */}
         </div>
       )}
  

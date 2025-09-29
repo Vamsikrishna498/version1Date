@@ -6,7 +6,8 @@ const AddressForm = ({
   onFormDataChange, 
   disabled = false, 
   showTitle = true,
-  title = "Address Information"
+  title = "Address Information",
+  errors = {}
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -74,11 +75,14 @@ const AddressForm = ({
               type="text"
               value={formData.country || ''}
               onChange={(e) => handleFieldChange('country', e.target.value)}
-              className="form-control"
+              className={`form-control ${errors?.country?.message ? 'error' : ''}`}
               placeholder="Enter Country"
               disabled={disabled}
               required
             />
+            {errors?.country?.message && (
+              <p className="error-text">{errors.country.message}</p>
+            )}
           </div>
           
           <div className="form-group">
@@ -87,11 +91,14 @@ const AddressForm = ({
               type="text"
               value={formData.state || ''}
               onChange={(e) => handleFieldChange('state', e.target.value)}
-              className="form-control"
+              className={`form-control ${errors?.state?.message ? 'error' : ''}`}
               placeholder="Enter State"
               disabled={disabled}
               required
             />
+            {errors?.state?.message && (
+              <p className="error-text">{errors.state.message}</p>
+            )}
           </div>
         </div>
         
@@ -102,11 +109,14 @@ const AddressForm = ({
               type="text"
               value={formData.district || ''}
               onChange={(e) => handleFieldChange('district', e.target.value)}
-              className="form-control"
+              className={`form-control ${errors?.district?.message ? 'error' : ''}`}
               placeholder="Enter District"
               disabled={disabled}
               required
             />
+            {errors?.district?.message && (
+              <p className="error-text">{errors.district.message}</p>
+            )}
           </div>
           
           <div className="form-group">
@@ -115,11 +125,14 @@ const AddressForm = ({
               type="text"
               value={formData.block || ''}
               onChange={(e) => handleFieldChange('block', e.target.value)}
-              className="form-control"
+              className={`form-control ${errors?.block?.message ? 'error' : ''}`}
               placeholder="Enter Block (Mandal)"
               disabled={disabled}
               required
             />
+            {errors?.block?.message && (
+              <p className="error-text">{errors.block.message}</p>
+            )}
           </div>
         </div>
         
@@ -130,11 +143,14 @@ const AddressForm = ({
               type="text"
               value={formData.village || ''}
               onChange={(e) => handleFieldChange('village', e.target.value)}
-              className="form-control"
+              className={`form-control ${errors?.village?.message ? 'error' : ''}`}
               placeholder="Enter Village"
               disabled={disabled}
               required
             />
+            {errors?.village?.message && (
+              <p className="error-text">{errors.village.message}</p>
+            )}
           </div>
           
           <div className="form-group">
@@ -143,11 +159,14 @@ const AddressForm = ({
               type="text"
               value={formData.zipcode || ''}
               onChange={(e) => handleFieldChange('zipcode', e.target.value)}
-              className="form-control"
+              className={`form-control ${errors?.zipcode?.message ? 'error' : ''}`}
               placeholder="Enter Zipcode"
               disabled={disabled}
               required
             />
+            {errors?.zipcode?.message && (
+              <p className="error-text">{errors.zipcode.message}</p>
+            )}
           </div>
         </div>
       </div>
