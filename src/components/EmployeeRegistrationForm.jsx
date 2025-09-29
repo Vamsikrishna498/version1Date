@@ -13,8 +13,9 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   const [selectedDoc, setSelectedDoc] = useState('');
   const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
-  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
+  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');  
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [educationTypes, setEducationTypes] = useState([]);
 
 
   const totalSteps = 8;
@@ -32,6 +33,23 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
     loadAgeSettings();
   }, []);
 
+  // Load education types for employees from super admin settings
+  useEffect(() => {
+    const loadEducationTypes = async () => {
+      try {
+        const educationData = await configAPI.getEducationTypes();
+        // Use all education types from super admin settings
+        setEducationTypes(educationData || []);
+        console.log('Education types loaded from settings:', educationData);
+      } catch (error) {
+        console.error('Failed to load education types:', error);
+        // Show empty array if API fails - no fallback to hardcoded data
+        setEducationTypes([]);
+      }
+    };
+    loadEducationTypes();
+  }, []);
+
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
     if (!dateOfBirth) {
@@ -41,7 +59,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
 
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
-    const age = today.getFullYear() - birthDate.getFullYear();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -149,7 +167,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
     
     const today = new Date();
     const birthDate = new Date(v);
-    const age = today.getFullYear() - birthDate.getFullYear();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -599,12 +617,11 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   <label className="label">Education <span className="required">*</span></label>
                   <select className="input" {...register("professional.education")}>
                     <option value="">Select</option>
-                    <option value="Primary Schooling">Primary Schooling</option>
-                    <option value="High School">High School</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Degree">Degree</option>
-                    <option value="Graduate">Graduate</option>
-                    <option value="Post-Graduate">Post-Graduate</option>
+                    {educationTypes.map((edu) => (
+                      <option key={edu.id} value={edu.name}>
+                        {edu.name}
+                      </option>
+                    ))}
                   </select>
                                      {!isInDashboard && errors.professional?.education && (
                      <p className="error">{errors.education?.message}</p>

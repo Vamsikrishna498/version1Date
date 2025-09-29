@@ -80,7 +80,7 @@ const CropSettings = ({ isSuperAdmin, isAdmin }) => {
           code: formData.code,
           description: formData.description,
           isActive: formData.isActive,
-          type: 'CROP_FEATURE'
+          type: 'CROP_NAME'
         };
       } else if (activeSection === 'crop-type') {
         submitData = {
@@ -89,7 +89,7 @@ const CropSettings = ({ isSuperAdmin, isAdmin }) => {
           description: formData.description,
           parentId: formData.parentId,
           isActive: formData.isActive,
-          type: 'CROP_VARIETY'
+          type: 'CROP_TYPE'
         };
       }
 

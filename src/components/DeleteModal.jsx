@@ -25,6 +25,10 @@ const DeleteModal = ({ item, type, onClose, onConfirm, inlineMode = false }) => 
       return item?.name || 'Farmer';
     } else if (type === 'employee') {
       return item?.name || 'Employee';
+    } else if (type === 'fpo') {
+      return item?.fpoName || item?.name || 'FPO';
+    } else if (type === 'registration') {
+      return item?.name || 'Registration';
     }
     return 'Item';
   };
@@ -43,6 +47,23 @@ const DeleteModal = ({ item, type, onClose, onConfirm, inlineMode = false }) => 
         email: item?.email,
         phone: item?.phone,
         designation: item?.designation
+      };
+    } else if (type === 'fpo') {
+      return {
+        'FPO ID': item?.fpoId,
+        'FPO Name': item?.fpoName,
+        'CEO Name': item?.ceoName,
+        'Phone Number': item?.phoneNumber,
+        'Join Date': item?.joinDate,
+        'Status': item?.status
+      };
+    } else if (type === 'registration') {
+      return {
+        name: item?.name,
+        email: item?.email,
+        phone: item?.phoneNumber,
+        role: item?.role,
+        status: item?.status
       };
     }
     return {};

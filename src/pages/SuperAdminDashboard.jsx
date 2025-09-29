@@ -43,7 +43,6 @@ import FPODashboard from '../pages/FPODashboard';
 import ConfigurationDashboard from '../components/ConfigurationDashboard';
 import PersonalizationTab from '../components/config/PersonalizationTab';
 import SettingsMasterList from '../components/SettingsMasterList';
-import APITest from '../components/APITest';
 import '../styles/Dashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -1504,13 +1503,6 @@ const SuperAdminDashboard = () => {
             <span>Settings</span>
           </div>
 
-          <div 
-            className={`nav-item ${activeTab === 'api-test' ? 'active' : ''}`}
-            onClick={() => setActiveTab('api-test')}
-          >
-            <i className="fas fa-plug"></i>
-            <span>API Test</span>
-          </div>
 
           <div 
             className={`nav-item ${activeTab === 'my-account' ? 'active' : ''}`}
@@ -3120,9 +3112,6 @@ const SuperAdminDashboard = () => {
             <SettingsMasterList />
           )}
 
-          {activeTab === 'api-test' && (
-            <APITest />
-          )}
 
           {activeTab === 'my-account' && (
             <div className="overview-section">

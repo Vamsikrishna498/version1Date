@@ -19,21 +19,18 @@ const SettingsMasterList = () => {
     { 
       id: 'country-settings', 
       label: 'Country Settings', 
-      icon: '🌍',
       description: 'Manage country, state, district, block, village, and zipcode mappings',
       accessLevel: 'Administrator'
     },
     { 
       id: 'global-area', 
       label: 'Global Area', 
-      icon: '🌐',
       description: 'Configure age limits, education types, and global settings',
       accessLevel: 'Administrator'
     },
     { 
       id: 'crop-settings', 
       label: 'Crop Settings', 
-      icon: '🌾',
       description: 'Manage crop names, varieties, and crop-related configurations',
       accessLevel: 'Administrator'
     }
@@ -60,7 +57,7 @@ const SettingsMasterList = () => {
     return (
       <div className="settings-master-list">
         <div className="access-denied">
-          <h2>🚫 Access Denied</h2>
+          <h2>Access Denied</h2>
           <p>You don't have permission to access settings.</p>
           <p>Only Administrator and Super Admin users can access this module.</p>
         </div>
@@ -71,7 +68,7 @@ const SettingsMasterList = () => {
   return (
     <div className="settings-master-list">
       <div className="settings-header">
-        <h1>⚙️ Settings Master List</h1>
+        <h1>Settings Master List</h1>
         <p>Configure system-wide settings and master data for the DATE Digital Agristack platform</p>
       </div>
 
@@ -82,9 +79,9 @@ const SettingsMasterList = () => {
             className={`settings-card ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => handleTabClick(tab.id)}
           >
-            <div className="card-icon">{tab.icon}</div>
             <div className="card-content">
               <h3 className="card-title">{tab.label}</h3>
+              <p className="card-description">{tab.description}</p>
             </div>
           </div>
         ))}
@@ -100,7 +97,7 @@ const SettingsMasterList = () => {
 
         {error && (
           <div className="error-message">
-            <span className="error-icon">❌</span>
+            <span className="error-icon">Error:</span>
             <span>{error}</span>
             <button onClick={() => setError('')} className="close-error">×</button>
           </div>

@@ -21,7 +21,6 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
     maxValue: '',
     description: '',
     parentId: '',
-    userType: '',
     isActive: true
   });
 
@@ -30,7 +29,7 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
       id: 'age', 
       label: 'Age', 
       icon: '👥', 
-      description: 'Define age limit in between numbers',
+      description: 'Define global age limit for entire DATE project',
       fieldType: 'number'
     },
     { 
@@ -61,21 +60,42 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
       switch (activeSection) {
         case 'age':
           const ageData = await configAPI.getAgeSettings();
+          console.log('Age API Response:', ageData);
           setAgeSettings(ageData?.data || ageData || []);
           break;
         case 'education':
           const educationData = await configAPI.getEducationTypes();
-          setEducationTypes(educationData?.data || educationData || []);
+          console.log('Education API Response:', educationData);
+          console.log('Education Data Details:', JSON.stringify(educationData, null, 2));
+          const processedData = educationData?.data || educationData || [];
+          console.log('Processed Education Data:', processedData);
+          setEducationTypes(processedData);
           break;
         case 'type':
           const typeData = await configAPI.getEducationCategories();
+          console.log('Type API Response:', typeData);
           setEducationCategories(typeData?.data || typeData || []);
           break;
         default:
           break;
       }
     } catch (error) {
-      setError(`Failed to load ${activeSection} data: ${error.message}`);
+      console.error(`API Error for ${activeSection}:`, error);
+      setError(`Failed to load ${activeSection} data: ${error.message}. The backend API endpoint may not be implemented yet.`);
+      // Set empty arrays to clear any mock data
+      switch (activeSection) {
+        case 'age':
+          setAgeSettings([]);
+          break;
+        case 'education':
+          setEducationTypes([]);
+          break;
+        case 'type':
+          setEducationCategories([]);
+          break;
+        default:
+          break;
+      }
     } finally {
       setLoading(false);
     }
@@ -94,12 +114,17 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
           minValue: parseInt(formData.minValue),
           maxValue: parseInt(formData.maxValue),
           description: formData.description,
-          userType: formData.userType || 'FARMER',
           isActive: formData.isActive
         };
         
-        // Use the new age setting API
-        await configAPI.createAgeSetting(submitData);
+        // Use the specific age setting API
+        if (editingItem) {
+          // For age settings, we need to use the general update endpoint with type
+          submitData.type = 'AGE_SETTING';
+          await configAPI.updateGlobalAreaSetting(editingItem.id, submitData);
+        } else {
+          await configAPI.createAgeSetting(submitData);
+        }
       } else if (activeSection === 'education') {
         submitData = {
           name: formData.name,
@@ -107,6 +132,12 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
           isActive: formData.isActive,
           type: 'EDUCATION_TYPE'
         };
+        
+        if (editingItem) {
+          await configAPI.updateGlobalAreaSetting(editingItem.id, submitData);
+        } else {
+          await configAPI.createGlobalAreaSetting(submitData);
+        }
       } else if (activeSection === 'type') {
         submitData = {
           name: formData.name,
@@ -115,12 +146,12 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
           isActive: formData.isActive,
           type: 'EDUCATION_CATEGORY'
         };
-      }
-
-      if (editingItem) {
-        await configAPI.updateGlobalAreaSetting(editingItem.id, submitData);
-      } else {
-        await configAPI.createGlobalAreaSetting(submitData);
+        
+        if (editingItem) {
+          await configAPI.updateGlobalAreaSetting(editingItem.id, submitData);
+        } else {
+          await configAPI.createGlobalAreaSetting(submitData);
+        }
       }
       
       setShowModal(false);
@@ -156,9 +187,34 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
     if (window.confirm(`Are you sure you want to delete this ${activeSection} setting?`)) {
       try {
         setLoading(true);
-        await configAPI.deleteGlobalAreaSetting(itemId);
-        loadData();
+        console.log('Attempting to delete item:', itemId, 'from section:', activeSection);
+        console.log('Current data before delete:', currentData);
+        const deleteResponse = await configAPI.deleteGlobalAreaSetting(itemId);
+        console.log('Delete API response:', deleteResponse);
+        console.log('Delete successful, reloading data...');
+        
+        // Force clear the current state first
+        switch (activeSection) {
+          case 'age':
+            setAgeSettings([]);
+            break;
+          case 'education':
+            setEducationTypes([]);
+            break;
+          case 'type':
+            setEducationCategories([]);
+            break;
+        }
+        
+        // Small delay to ensure state update is processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Then reload the data
+        await loadData();
+        console.log('Data reloaded after delete');
       } catch (error) {
+        console.error('Delete error:', error);
+        console.error('Delete error details:', error.response?.data || error.message);
         setError(`Failed to delete ${activeSection}: ${error.message}`);
       } finally {
         setLoading(false);
@@ -168,9 +224,9 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      minValue: '',
-      maxValue: '',
+      name: activeSection === 'age' ? 'DATE Application' : '',
+      minValue: activeSection === 'age' ? '18' : '',
+      maxValue: activeSection === 'age' ? '90' : '',
       description: '',
       parentId: '',
       isActive: true
@@ -197,7 +253,7 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
     <div className="global-area-settings">
       <div className="settings-header">
         <h2>🌐 Global Area Settings</h2>
-        <p>Configure global settings including age limits, education types, and categories</p>
+        <p>Configure global settings including age limits for entire DATE project, education types, and categories</p>
       </div>
 
       <div className="section-navigation">
@@ -234,20 +290,26 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
         </div>
 
         <div className="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                {activeSection === 'age' && <th>Min Value</th>}
-                {activeSection === 'age' && <th>Max Value</th>}
-                {activeSection === 'type' && <th>Education Type</th>}
-                <th>Description</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentData.map((item) => (
+          {currentData.length === 0 ? (
+            <div className="no-data-message">
+              <p>No {activeSection} data available. The backend API endpoint may not be implemented yet.</p>
+              <p>Please check the browser console for API error details.</p>
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  {activeSection === 'age' && <th>Min Value</th>}
+                  {activeSection === 'age' && <th>Max Value</th>}
+                  {activeSection === 'type' && <th>Education Type</th>}
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.name}</td>
                   {activeSection === 'age' && <td>{item.minValue}</td>}
@@ -280,9 +342,10 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
                     )}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
@@ -305,27 +368,12 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                   className="form-control"
-                  placeholder={`Enter ${activeSection} name`}
+                  placeholder={activeSection === 'age' ? 'Enter project name (e.g., DATE Application)' : `Enter ${activeSection} name`}
                 />
               </div>
               
               {activeSection === 'age' && (
                 <>
-                  <div className="form-group">
-                    <label>User Type *</label>
-                    <select
-                      value={formData.userType}
-                      onChange={(e) => setFormData({ ...formData, userType: e.target.value })}
-                      required
-                      className="form-control"
-                    >
-                      <option value="">Select User Type</option>
-                      <option value="FARMER">Farmer</option>
-                      <option value="EMPLOYEE">Employee</option>
-                      <option value="ADMIN">Admin</option>
-                      <option value="SUPER_ADMIN">Super Admin</option>
-                    </select>
-                  </div>
                   
                   <div className="form-group">
                     <label>Minimum Age *</label>

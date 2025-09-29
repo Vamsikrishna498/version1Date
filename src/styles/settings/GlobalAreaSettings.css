@@ -85,6 +85,18 @@
   overflow: hidden;
 }
 
+.no-data-message {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.no-data-message p {
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .content-header {
   padding: 25px;
   border-bottom: 1px solid #e9ecef;

@@ -20,6 +20,9 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const [photoPreview] = useState(editData?.photo || null);
   const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
+  const [cropNames, setCropNames] = useState([]);
+  const [cropTypes, setCropTypes] = useState([]);
+  const [educationTypes, setEducationTypes] = useState([]);
 
   // Initialize photo name if editing
   useEffect(() => {
@@ -41,6 +44,40 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     loadAgeSettings();
   }, []);
 
+  // Load crop data
+  useEffect(() => {
+    const loadCropData = async () => {
+      try {
+        const [cropNamesData, cropTypesData] = await Promise.all([
+          configAPI.getCropNames(),
+          configAPI.getCropTypes()
+        ]);
+        setCropNames(cropNamesData || []);
+        setCropTypes(cropTypesData || []);
+      } catch (error) {
+        console.error('Failed to load crop data:', error);
+      }
+    };
+    loadCropData();
+  }, []);
+
+  // Load education types for farmers from super admin settings
+  useEffect(() => {
+    const loadEducationTypes = async () => {
+      try {
+        const educationData = await configAPI.getEducationTypes();
+        // Use all education types from super admin settings
+        setEducationTypes(educationData || []);
+        console.log('Education types loaded from settings:', educationData);
+      } catch (error) {
+        console.error('Failed to load education types:', error);
+        // Show empty array if API fails - no fallback to hardcoded data
+        setEducationTypes([]);
+      }
+    };
+    loadEducationTypes();
+  }, []);
+
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
     if (!dateOfBirth) {
@@ -50,7 +87,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
 
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
-    const age = today.getFullYear() - birthDate.getFullYear();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -136,14 +173,17 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
 
   const { register, handleSubmit, watch, setValue, trigger, clearErrors, formState: { errors } } = methods;
 
-  const cropOptions = {
-    'Cereals': ['Rice', 'Wheat', 'Maize', 'Sorghum', 'Pearl Millet', 'Finger Millet'],
-    'Pulses': ['Chickpea', 'Pigeon Pea', 'Lentil', 'Mung Bean', 'Urad Bean', 'Cowpea'],
-    'Oilseeds': ['Groundnut', 'Soybean', 'Sunflower', 'Sesame', 'Mustard', 'Safflower'],
-    'Vegetables': ['Tomato', 'Onion', 'Potato', 'Brinjal', 'Cabbage', 'Cauliflower'],
-    'Fruits': ['Mango', 'Banana', 'Orange', 'Apple', 'Grape', 'Pomegranate'],
-    'Cash Crops': ['Cotton', 'Sugarcane', 'Tobacco', 'Jute', 'Tea', 'Coffee']
-  };
+  // Dynamic crop options from API
+  const cropOptions = cropNames.reduce((acc, crop) => {
+    const category = crop.name || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    // Add crop types (varieties) for this crop
+    const varieties = cropTypes.filter(type => type.parentId === crop.id);
+    acc[category] = varieties.map(variety => variety.name);
+    return acc;
+  }, {});
 
   const waterSourceOptions = [
     'Borewell',
@@ -443,11 +483,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                 <label>Education <span className="optional"></span></label>
                 <select {...register("education")} className="input-large">
                   <option value="">Select</option>
-                  <option value="Illiterate">Illiterate</option>
-                  <option value="Primary Schooling">Primary Schooling</option>
-                  <option value="High School">High School</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Degree">Degree</option>
+                  {educationTypes.map((edu) => (
+                    <option key={edu.id} value={edu.name}>
+                      {edu.name}
+                    </option>
+                  ))}
                  </select>
                 <p>{errors.education?.message}</p>
               </div>
