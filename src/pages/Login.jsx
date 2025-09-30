@@ -24,6 +24,8 @@ const Login = () => {
   const [captchaValue, setCaptchaValue] = useState(generateCaptcha());
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [userNameError, setUserNameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const navigate = useNavigate();
@@ -79,7 +81,16 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setUserNameError('');
+    setPasswordError('');
     setLoading(true);
+    // Frontend validation: username is registered email address
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test((userName || '').trim())) {
+      setUserNameError('Invalid email address');
+      setLoading(false);
+      return;
+    }
     if (captcha.trim().toLowerCase() !== captchaValue.toLowerCase()) {
       setError('Captcha does not match.');
       setLoading(false);
@@ -449,7 +460,24 @@ const Login = () => {
       console.error('Login error:', err);
       console.error('Login error response:', err.response);
       console.error('Login error message:', err.message);
-      setError(`Login failed: ${err.response?.data?.message || err.message || 'Invalid credentials or server error.'}`);
+      const status = err?.response?.status;
+      const rawMsg = (err?.response?.data && (err.response.data.message || err.response.data.error || err.response.data.detail)) || err?.message || '';
+      const bodyLower = JSON.stringify(err?.response?.data || '').toLowerCase();
+
+      const looksLikeUserMissing = status === 404 || bodyLower.includes('user not found') || bodyLower.includes('username not found') || bodyLower.includes('no such user') || bodyLower.includes('user does not exist');
+      const looksLikeBadPassword = status === 401 || bodyLower.includes('bad credentials') || bodyLower.includes('invalid credentials') || bodyLower.includes('password');
+
+      if (looksLikeUserMissing && !looksLikeBadPassword) {
+        setUserNameError('Invalid username');
+        setError('');
+      } else if (looksLikeBadPassword && !looksLikeUserMissing) {
+        setPasswordError('Incorrect password');
+        setError('');
+      } else {
+        const msg = rawMsg || 'Invalid credentials or server error.';
+        const finalMsg = msg.toLowerCase().includes('login failed') ? msg : `Login failed: ${msg}`;
+        setError(finalMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -560,7 +588,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="auth-form">
               {/* Username Field */}
               <div className="auth-field">
-                <label>Insert Registered Mobile Number as Username</label>
+                <label>Insert Registered Email Address</label>
                 <input
                   type="text"
                   value={userName}
@@ -569,6 +597,7 @@ const Login = () => {
                   disabled={loading}
                   placeholder="Enter username"
                 />
+                {userNameError && <div className="auth-error">{userNameError}</div>}
               </div>
 
               {/* Password Field */}
@@ -591,6 +620,7 @@ const Login = () => {
                     👁️
                   </button>
                 </div>
+                {passwordError && <div className="auth-error">{passwordError}</div>}
               </div>
 
               {/* Forgot Password Link */}

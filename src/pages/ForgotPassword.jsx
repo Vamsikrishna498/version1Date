@@ -7,32 +7,18 @@ import { useNavigate, Link } from 'react-router-dom';
 import logo from "../assets/rightlogo.png";
 import "../styles/Login.css";
  
-// ✅ Schema validation
+// ✅ Schema validation (email only)
 const schema = Yup.object().shape({
   userInput: Yup.string()
-    .required("Email / Phone / ID is required")
-    .test(
-      "valid-userInput",
-      "Enter a valid Email (with '@' and '.'), 10-digit Phone number, or ID (min 6 characters)",
-      function (value) {
-        if (!value) return false;
- 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[0-9]{10}$/;
- 
-        const isEmail = emailRegex.test(value);
-        const isPhone = phoneRegex.test(value);
-        const isId = !isEmail && !isPhone && value.length >= 6;
- 
-        return isEmail || isPhone || isId;
-      }
-    ),
+    .required('Email is required')
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Enter a valid Email (with '@' and '.')"),
 });
  
 const ForgotPassword = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
  
@@ -40,15 +26,43 @@ const ForgotPassword = () => {
   const [target, setTarget] = useState("");
  
    const navigate = useNavigate();
-   const onSubmit = async (data) => {
+  const onSubmit = async (data) => {
     try {
-      await authAPI.forgotPassword(data.userInput);
+      const value = (data.userInput || '').trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        setError('userInput', { type: 'manual', message: "Enter a valid Email (with '@' and '.')" });
+        return;
+      }
+      // If it's an email, first verify it exists in the system
+      if (emailRegex.test(value)) {
+        try {
+          const availability = await authAPI.checkEmailAvailability(value);
+          // API returns available=false when email is registered
+          if (availability?.available !== false) {
+            setError('userInput', { type: 'server', message: 'Email not found' });
+            return;
+          }
+        } catch (_) {
+          // If the availability check fails, continue to backend which should validate again
+        }
+      }
+
+      await authAPI.forgotPassword(value);
  
-      setTarget(data.userInput);
+      setTarget(value);
       setShowPopup(true); // Show popup on success
     } catch (error) {
       console.error("Error sending reset request:", error);
-      alert("Failed to send reset link. Please try again.");
+      const status = error?.response?.status;
+      const body = JSON.stringify(error?.response?.data || '').toLowerCase();
+      const msg = (error?.response?.data && (error.response.data.message || error.response.data.error)) || '';
+      const looksNotFound = status === 404 || body.includes('not found') || body.includes('user not found') || body.includes('email not found');
+      if (looksNotFound) {
+        setError('userInput', { type: 'server', message: 'Email not found' });
+      } else {
+        alert(msg || "Failed to send reset link. Please try again.");
+      }
     }
   };
  

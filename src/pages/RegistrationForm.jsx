@@ -39,11 +39,15 @@ const schema = yup.object().shape({
   password: yup
     .string()
     .required('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .matches(/[0-9]/, 'Password must contain at least one number')
-    .matches(/[@$!%*?&#^()_+\-=[\]{};':"\\|,.<>/?]/, 'Password must contain at least one special character'),
+    .test(
+      'strong-password',
+      'Password must be 8+ chars with uppercase, lowercase, number and special character',
+      (value) => {
+        if (!value) return false;
+        const strong = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+        return strong.test(value);
+      }
+    ),
 });
 
 const RegistrationForm = () => {
