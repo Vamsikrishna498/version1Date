@@ -84,9 +84,10 @@ const Login = () => {
     setUserNameError('');
     setPasswordError('');
     setLoading(true);
-    // Frontend validation: username is registered mobile number (10 digits)
-    if (!/^\d{10}$/.test((userName || '').trim())) {
-      setUserNameError('Invalid username');
+    // Frontend validation: username is registered email address
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test((userName || '').trim())) {
+      setUserNameError('Invalid email address');
       setLoading(false);
       return;
     }
@@ -587,7 +588,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="auth-form">
               {/* Username Field */}
               <div className="auth-field">
-                <label>Insert Registered Mobile Number as Username</label>
+                <label>Insert Registered Email Address</label>
                 <input
                   type="text"
                   value={userName}
