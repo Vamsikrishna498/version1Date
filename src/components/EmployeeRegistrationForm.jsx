@@ -4,51 +4,23 @@ import { useNavigate } from 'react-router-dom';
 import AddressForm from './AddressForm';
 import { validateAge, validateAgeSync } from '../utils/ageValidation';
 import { configAPI } from '../api/apiService';
+import { useConfiguration } from '../contexts/ConfigurationContext';
 import '../styles/EmployeeRegistration.css';
 
 const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onClose, onSubmit: onSubmitProp }) => {
   const navigate = useNavigate();
+  const { ageSettings, getEducationTypesForUser, validateAge: validateAgeFromContext } = useConfiguration();
   const [currentStep, setCurrentStep] = useState(0);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [selectedDoc, setSelectedDoc] = useState('');
-  const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
   const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [educationTypes, setEducationTypes] = useState([]);
 
 
   const totalSteps = 8;
 
-  // Load age settings
-  useEffect(() => {
-    const loadAgeSettings = async () => {
-      try {
-        const settings = await configAPI.getAgeSettings();
-        setAgeSettings(settings);
-      } catch (error) {
-        console.error('Failed to load age settings:', error);
-      }
-    };
-    loadAgeSettings();
-  }, []);
-
-  // Load education types for employees from super admin settings
-  useEffect(() => {
-    const loadEducationTypes = async () => {
-      try {
-        const educationData = await configAPI.getEducationTypes();
-        // Use all education types from super admin settings
-        setEducationTypes(educationData || []);
-        console.log('Education types loaded from settings:', educationData);
-      } catch (error) {
-        console.error('Failed to load education types:', error);
-        // Show empty array if API fails - no fallback to hardcoded data
-        setEducationTypes([]);
-      }
-    };
-    loadEducationTypes();
-  }, []);
+  // Configuration data is now loaded automatically by ConfigurationContext
 
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
@@ -619,9 +591,9 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   <label className="label">Education <span className="required">*</span></label>
                   <select className="input" {...register("professional.education")}>
                     <option value="">Select</option>
-                    {educationTypes.map((edu) => (
-                      <option key={edu.id} value={edu.name}>
-                        {edu.name}
+                    {getEducationTypesForUser('employee').map((edu) => (
+                      <option key={edu} value={edu}>
+                        {edu}
                       </option>
                     ))}
                   </select>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOBoardMembersView.css';
 
-const FPOBoardMembersView = ({ fpo, onClose }) => {
+const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
   const [boardMembers, setBoardMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -134,10 +134,10 @@ const FPOBoardMembersView = ({ fpo, onClose }) => {
         loadBoardMembers();
       }, 500);
       
-      alert('Board member created successfully!');
+      onToast && onToast('success', 'Board member created successfully!');
     } catch (error) {
       console.error('Error creating board member:', error);
-      alert('Error creating board member: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating board member: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -204,10 +204,10 @@ const FPOBoardMembersView = ({ fpo, onClose }) => {
         loadBoardMembers();
       }, 500);
       
-      alert('Board member updated successfully!');
+      onToast && onToast('success', 'Board member updated successfully!');
     } catch (error) {
       console.error('Error updating board member:', error);
-      alert('Error updating board member: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating board member: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -223,7 +223,7 @@ const FPOBoardMembersView = ({ fpo, onClose }) => {
       // Find the member to get their current data
       const member = boardMembers.find(m => m.id === memberId);
       if (!member) {
-        alert('Board member not found!');
+        onToast && onToast('error', 'Board member not found!');
         return;
       }
 
@@ -248,11 +248,11 @@ const FPOBoardMembersView = ({ fpo, onClose }) => {
       const response = await fpoAPI.updateBoardMember(fpo.id, memberId, updateData);
       console.log('Update response:', response);
       
-      alert(`Board member status updated to ${newStatus}!`);
+      onToast && onToast('success', `Board member status updated to ${newStatus}!`);
       
     } catch (error) {
       console.error('Error updating board member status:', error);
-      alert('Error updating board member status: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating board member status: ' + (error.response?.data?.message || error.message));
       
       // Revert the local state on error
       setBoardMembers(prev => prev.map(m => 
@@ -271,10 +271,10 @@ const FPOBoardMembersView = ({ fpo, onClose }) => {
           loadBoardMembers();
         }, 500);
         
-        alert('Board member deleted successfully!');
+        onToast && onToast('success', 'Board member deleted successfully!');
       } catch (error) {
         console.error('Error deleting board member:', error);
-        alert('Error deleting board member: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting board member: ' + (error.response?.data?.message || error.message));
       }
     }
   };

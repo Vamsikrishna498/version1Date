@@ -43,6 +43,7 @@ import FPODashboard from '../pages/FPODashboard';
 import ConfigurationDashboard from '../components/ConfigurationDashboard';
 import PersonalizationTab from '../components/config/PersonalizationTab';
 import SettingsMasterList from '../components/SettingsMasterList';
+import ConfigurationManagement from '../components/config/ConfigurationManagement';
 import '../styles/Dashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -2729,6 +2730,8 @@ const SuperAdminDashboard = () => {
                     setShowUsersView(false);
                     setSelectedFPOUsers(null);
                   }}
+                  onToast={(type, message) => setToast({ type, message })}
+                  userRole="SUPER_ADMIN"
                 />
               ) : (
                 <div className="superadmin-overview-section">
@@ -3067,7 +3070,10 @@ const SuperAdminDashboard = () => {
           )}
 
           {activeTab === 'configurations' && (
-            <ConfigurationDashboard />
+            <div>
+              <ConfigurationManagement />
+              <ConfigurationDashboard />
+            </div>
           )}
 
           {activeTab === 'settings' && (

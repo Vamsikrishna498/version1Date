@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoUsersAPI } from '../api/apiService';
 import '../styles/FPOUsersView.css';
 
-const FPOUsersView = ({ fpo, onClose }) => {
+const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,13 +15,25 @@ const FPOUsersView = ({ fpo, onClose }) => {
   const [passwordUser, setPasswordUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
-  // User types available for selection
-  const USER_TYPES = [
-    { value: 'ADMIN', label: 'Admin', icon: 'fas fa-user-shield', color: '#ef4444' },
-    { value: 'EMPLOYEE', label: 'Employee', icon: 'fas fa-user-tie', color: '#3b82f6' },
-    { value: 'FARMER', label: 'Farmer', icon: 'fas fa-seedling', color: '#10b981' },
-    { value: 'FPO', label: 'FPO', icon: 'fas fa-building', color: '#8b5cf6' }
-  ];
+  // User types available for selection based on user role
+  const getUserTypes = () => {
+    const allUserTypes = [
+      { value: 'ADMIN', label: 'Admin', icon: 'fas fa-user-shield', color: '#ef4444' },
+      { value: 'EMPLOYEE', label: 'Employee', icon: 'fas fa-user-tie', color: '#3b82f6' },
+      { value: 'FARMER', label: 'Farmer', icon: 'fas fa-seedling', color: '#10b981' },
+      { value: 'FPO', label: 'FPO', icon: 'fas fa-building', color: '#8b5cf6' }
+    ];
+    
+    // For employees, only allow FPO-scoped roles
+    if (userRole === 'EMPLOYEE') {
+      return allUserTypes.filter(type => ['EMPLOYEE', 'FARMER', 'FPO'].includes(type.value));
+    }
+    
+    // For admins and super admins, allow all roles
+    return allUserTypes;
+  };
+  
+  const USER_TYPES = getUserTypes();
 
   // Form state for creating/editing users
   const [formData, setFormData] = useState({
@@ -97,6 +109,16 @@ const FPOUsersView = ({ fpo, onClose }) => {
       errors.role = 'User type is required';
     }
     
+    // When opened from Employee Dashboard, restrict disallowed roles explicitly
+    if (userRole === 'EMPLOYEE') {
+      const allowedRolesForEmployee = ['EMPLOYEE', 'FARMER', 'FPO'];
+      if (formData.role && !allowedRolesForEmployee.includes(formData.role)) {
+        // Surface a clear toast and block submit
+        onToast && onToast('error', 'Only FPO, EMPLOYEE or FARMER user types can be created from this screen');
+        errors.role = errors.role || 'Invalid user type for this screen';
+      }
+    }
+    
     if (!formData.password.trim()) {
       errors.password = 'Password is required';
     } else if (formData.password.length < 6) {
@@ -116,7 +138,15 @@ const FPOUsersView = ({ fpo, onClose }) => {
     
     try {
       console.log('Creating user with data:', formData);
-      await fpoUsersAPI.create(fpo.id, formData);
+      
+      // Use appropriate API method based on user role
+      if (userRole === 'EMPLOYEE') {
+        await fpoUsersAPI.createEmployee(fpo.id, formData);
+      } else {
+        // For admins and super admins, use the regular create method
+        await fpoUsersAPI.create(fpo.id, formData);
+      }
+      
       console.log('User created successfully');
       
       setShowCreateForm(false);
@@ -135,10 +165,19 @@ const FPOUsersView = ({ fpo, onClose }) => {
         loadUsers();
       }, 500);
       
-      alert('User created successfully!');
+      onToast && onToast('success', 'User created successfully!');
     } catch (error) {
       console.error('Error creating user:', error);
-      alert('Error creating user: ' + (error.response?.data?.message || error.message));
+      let errorMessage = 'Failed to create user. Please try again.';
+      
+      if (error.response?.data?.message) {
+        // Use the backend message if available
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      onToast && onToast('error', errorMessage);
     }
   };
 
@@ -179,11 +218,11 @@ const FPOUsersView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('User updated successfully!');
+      onToast && onToast('success', 'User updated successfully!');
       loadUsers();
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error updating user: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating user: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -198,7 +237,7 @@ const FPOUsersView = ({ fpo, onClose }) => {
       console.log('User status toggled successfully');
     } catch (error) {
       console.error('Error toggling user status:', error);
-      alert('Error updating status: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating status: ' + (error.response?.data?.message || error.message));
       // Revert optimistic update
       loadUsers();
     }
@@ -208,7 +247,7 @@ const FPOUsersView = ({ fpo, onClose }) => {
     e.preventDefault();
     
     if (!newPassword.trim()) {
-      alert('Password is required');
+      onToast && onToast('warning', 'Password is required');
       return;
     }
     
@@ -216,10 +255,10 @@ const FPOUsersView = ({ fpo, onClose }) => {
       await fpoUsersAPI.updatePassword(fpo.id, passwordUser.id, newPassword);
       setShowPasswordModal(false);
       setNewPassword('');
-      alert('Password updated successfully!');
+      onToast && onToast('success', 'Password updated successfully!');
     } catch (error) {
       console.error('Error updating password:', error);
-      alert('Error updating password: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating password: ' + (error.response?.data?.message || error.message));
     }
   };
 

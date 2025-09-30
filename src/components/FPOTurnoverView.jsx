@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOTurnoverView.css';
 
-const FPOTurnoverView = ({ fpo, onClose }) => {
+const FPOTurnoverView = ({ fpo, onClose, onToast }) => {
   const [turnovers, setTurnovers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -112,10 +112,10 @@ const FPOTurnoverView = ({ fpo, onClose }) => {
         loadTurnovers();
       }, 500);
       
-      alert('Turnover created successfully!');
+      onToast && onToast('success', 'Turnover created successfully!');
     } catch (error) {
       console.error('Error creating turnover:', error);
-      alert('Error creating turnover: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating turnover: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -161,11 +161,11 @@ const FPOTurnoverView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('Turnover updated successfully!');
+      onToast && onToast('success', 'Turnover updated successfully!');
       loadTurnovers();
     } catch (error) {
       console.error('Error updating turnover:', error);
-      alert('Error updating turnover: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating turnover: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -173,11 +173,11 @@ const FPOTurnoverView = ({ fpo, onClose }) => {
     if (window.confirm('Are you sure you want to delete this turnover record?')) {
       try {
         await fpoAPI.deleteTurnover(fpo.id, turnoverId);
-        alert('Turnover deleted successfully!');
+        onToast && onToast('success', 'Turnover deleted successfully!');
         loadTurnovers();
       } catch (error) {
         console.error('Error deleting turnover:', error);
-        alert('Error deleting turnover: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting turnover: ' + (error.response?.data?.message || error.message));
       }
     }
   };

@@ -76,6 +76,7 @@ const RegistrationForm = () => {
   const [formError, setFormError] = useState('');
   const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!resendTimer) return;
@@ -367,14 +368,52 @@ const RegistrationForm = () => {
 
               <div className="auth-field grid-span-2">
                 <label>Password <span className="required">*</span></label>
-                <input 
-                  type="password" 
-                  {...register('password')} 
-                  className={errors.password ? 'error' : ''} 
-                  placeholder="Enter a strong password" 
-                  autoComplete="new-password"
-                  onBlur={() => trigger('password')}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    {...register('password')} 
+                    className={errors.password ? 'error' : ''} 
+                    placeholder="Enter a strong password" 
+                    autoComplete="new-password"
+                    onBlur={() => trigger('password')}
+                    style={{ paddingRight: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: 8,
+                      top: 0,
+                      bottom: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#475569',
+                      padding: 2,
+                      lineHeight: 0
+                    }}
+                  >
+                    {showPassword ? (
+                      // Eye-slash SVG
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3 3l18 18" stroke="#475569" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M10.58 10.58A3 3 0 0012 15a3 3 0 001.42-.38M9.88 4.24A10.53 10.53 0 0012 4c5 0 9.27 3.11 10.5 7.5-.43 1.53-1.26 2.9-2.38 4.03M6.11 6.11C4.3 7.33 2.93 9.17 2 11.5c.74 2.11 2.18 3.93 4.01 5.17A11.33 11.33 0 0012 20c1.26 0 2.47-.2 3.59-.58" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    ) : (
+                      // Eye SVG
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M1 12C2.73 7.61 7.06 4 12 4s9.27 3.61 11 8c-1.73 4.39-6.06 8-11 8S2.73 16.39 1 12z" stroke="#475569" strokeWidth="2" fill="none"/>
+                        <circle cx="12" cy="12" r="3" stroke="#475569" strokeWidth="2" fill="none"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 <div className="field-feedback">{errors.password && <div className="error">{errors.password.message}</div>}</div>
               </div>
             </div>

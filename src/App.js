@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { RBACProvider } from './contexts/RBACContext';
+import { ConfigurationProvider } from './contexts/ConfigurationContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
@@ -29,7 +30,8 @@ function App() {
   return (
     <AuthProvider>
       <RBACProvider>
-        <Router>
+        <ConfigurationProvider>
+          <Router>
           <div className="App">
             <Routes>
             {/* Public Routes */}
@@ -75,6 +77,7 @@ function App() {
           </Routes>
         </div>
         </Router>
+        </ConfigurationProvider>
       </RBACProvider>
     </AuthProvider>
   );

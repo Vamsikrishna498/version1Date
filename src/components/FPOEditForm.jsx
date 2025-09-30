@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOEditForm.css';
 
-const FPOEditForm = ({ fpo, onClose, onUpdated }) => {
+const FPOEditForm = ({ fpo, onClose, onUpdated, onCancel }) => {
   const [form, setForm] = useState({
     fpoName: '',
     registrationNumber: '',
@@ -85,7 +85,7 @@ const FPOEditForm = ({ fpo, onClose, onUpdated }) => {
       }
 
       console.log('Data to be sent to API:', next);
-      const updated = await fpoAPI.updateFPO(fpo.id, next);
+      const updated = await fpoAPI.updateFPOEmployee(fpo.id, next);
       console.log('✅ FPO updated successfully:', updated);
       
       if (onUpdated) {
@@ -114,7 +114,11 @@ const FPOEditForm = ({ fpo, onClose, onUpdated }) => {
   };
 
   const handleCancel = () => {
-    onClose && onClose();
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
   };
 
   return (

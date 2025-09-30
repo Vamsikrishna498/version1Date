@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOProductsView.css';
 
-const FPOProductsView = ({ fpo, onClose }) => {
+const FPOProductsView = ({ fpo, onClose, onToast }) => {
   const [products, setProducts] = useState([]);
   const [shops, setShops] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -147,10 +147,10 @@ const FPOProductsView = ({ fpo, onClose }) => {
         loadProducts();
       }, 500);
       
-      alert('Product created successfully!');
+      onToast && onToast('success', 'Product created successfully!');
     } catch (error) {
       console.error('Error creating product:', error);
-      alert('Error creating product: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating product: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -207,11 +207,11 @@ const FPOProductsView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('Product updated successfully!');
+      onToast && onToast('success', 'Product updated successfully!');
       loadProducts();
     } catch (error) {
       console.error('Error updating product:', error);
-      alert('Error updating product: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating product: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -219,11 +219,11 @@ const FPOProductsView = ({ fpo, onClose }) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await fpoAPI.deleteProduct(fpo.id, productId);
-        alert('Product deleted successfully!');
+        onToast && onToast('success', 'Product deleted successfully!');
         loadProducts();
       } catch (error) {
         console.error('Error deleting product:', error);
-        alert('Error deleting product: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting product: ' + (error.response?.data?.message || error.message));
       }
     }
   };

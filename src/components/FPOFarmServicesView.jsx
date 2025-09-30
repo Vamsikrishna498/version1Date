@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOFarmServicesView.css';
 
-const FPOFarmServicesView = ({ fpo, onClose }) => {
+const FPOFarmServicesView = ({ fpo, onClose, onToast }) => {
   const [farmServices, setFarmServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -104,10 +104,10 @@ const FPOFarmServicesView = ({ fpo, onClose }) => {
         loadFarmServices();
       }, 500);
       
-      alert('Farm service created successfully!');
+      onToast && onToast('success', 'Farm service created successfully!');
     } catch (error) {
       console.error('Error creating farm service:', error);
-      alert('Error creating farm service: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating farm service: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -151,11 +151,11 @@ const FPOFarmServicesView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('Farm service updated successfully!');
+      onToast && onToast('success', 'Farm service updated successfully!');
       loadFarmServices();
     } catch (error) {
       console.error('Error updating farm service:', error);
-      alert('Error updating farm service: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating farm service: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -172,7 +172,7 @@ const FPOFarmServicesView = ({ fpo, onClose }) => {
       const response = await fpoAPI.updateServiceStatus(fpo.id, serviceId, newStatus);
       console.log('Status update response:', response);
       
-      alert(`Farm service status updated to ${newStatus}!`);
+      onToast && onToast('success', `Farm service status updated to ${newStatus}!`);
       
       // Reload to ensure data consistency
       setTimeout(() => {
@@ -180,7 +180,7 @@ const FPOFarmServicesView = ({ fpo, onClose }) => {
       }, 1000);
     } catch (error) {
       console.error('Error updating farm service status:', error);
-      alert('Error updating farm service status: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating farm service status: ' + (error.response?.data?.message || error.message));
       
       // Revert the local state on error
       setFarmServices(prev => prev.map(s => 
@@ -193,11 +193,11 @@ const FPOFarmServicesView = ({ fpo, onClose }) => {
     if (window.confirm('Are you sure you want to delete this farm service?')) {
       try {
         await fpoAPI.removeService(fpo.id, serviceId);
-        alert('Farm service deleted successfully!');
+        onToast && onToast('success', 'Farm service deleted successfully!');
         loadFarmServices();
       } catch (error) {
         console.error('Error deleting farm service:', error);
-        alert('Error deleting farm service: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting farm service: ' + (error.response?.data?.message || error.message));
       }
     }
   };
