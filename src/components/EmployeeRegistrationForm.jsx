@@ -13,12 +13,33 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   const [selectedDoc, setSelectedDoc] = useState('');
   const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
-  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
+  const [emailAvailabilityError, setEmailAvailabilityError] = useState('');  
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [educationTypes, setEducationTypes] = useState([]);
+  const [focusedField, setFocusedField] = useState('');
 
 
   const totalSteps = 8;
+
+  // Map of field names per step so we only validate what's visible
+  const stepFieldNames = [
+    // Step 0 - Personal Details
+    ['salutation', 'firstName', 'middleName', 'lastName', 'gender', 'nationality', 'dob'],
+    // Step 1 - Contact Details
+    ['contactNumber', 'email'],
+    // Step 2 - Relation Details
+    ['relationType', 'relationName', 'altNumber', 'altNumberType'],
+    // Step 3 - Address Details
+    ['country', 'state', 'district', 'block', 'village', 'zipcode'],
+    // Step 4 - Professional Details
+    ['professional.education', 'professional.experience'],
+    // Step 5 - Bank Details
+    ['bank.bankName', 'bank.accountNumber', 'bank.branchName', 'bank.ifscCode', 'bank.passbook'],
+    // Step 6 - Documents
+    ['documentType', 'voterId', 'voterFile', 'aadharNumber', 'aadharFile', 'panNumber', 'panFile', 'ppbNumber', 'ppbFile'],
+    // Step 7 - Role & Access
+    ['role', 'accessStatus']
+  ];
 
   // Load age settings
   useEffect(() => {
@@ -38,13 +59,33 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
     const loadEducationTypes = async () => {
       try {
         const educationData = await configAPI.getEducationTypes();
-        // Use all education types from super admin settings
-        setEducationTypes(educationData || []);
+        // Fallback list if API returns empty/undefined
+        const fallback = [
+          { id: 'edu_primary', name: 'Primary' },
+          { id: 'edu_secondary', name: 'Secondary' },
+          { id: 'edu_intermediate', name: 'Intermediate' },
+          { id: 'edu_diploma', name: 'Diploma' },
+          { id: 'edu_graduate', name: 'Graduate' },
+          { id: 'edu_post_graduate', name: 'Post Graduate' },
+          { id: 'edu_phd', name: 'PhD' }
+        ];
+        const normalized = Array.isArray(educationData) && educationData.length > 0
+          ? educationData
+          : fallback;
+        setEducationTypes(normalized);
         console.log('Education types loaded from settings:', educationData);
       } catch (error) {
         console.error('Failed to load education types:', error);
-        // Show empty array if API fails - no fallback to hardcoded data
-        setEducationTypes([]);
+        // Use fallback on error as well
+        setEducationTypes([
+          { id: 'edu_primary', name: 'Primary' },
+          { id: 'edu_secondary', name: 'Secondary' },
+          { id: 'edu_intermediate', name: 'Intermediate' },
+          { id: 'edu_diploma', name: 'Diploma' },
+          { id: 'edu_graduate', name: 'Graduate' },
+          { id: 'edu_post_graduate', name: 'Post Graduate' },
+          { id: 'edu_phd', name: 'PhD' }
+        ]);
       }
     };
     loadEducationTypes();
@@ -96,6 +137,8 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   };
 
   const methods = useForm({
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       // Step 0 - Personal Details
       salutation: editData?.salutation || '',
@@ -157,25 +200,30 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
     }
   });
 
-  const { register, handleSubmit, watch, setValue, trigger, clearErrors, formState: { errors } } = methods;
+  const { register, handleSubmit, watch, setValue, trigger, clearErrors, setError, clearErrors: clearFieldErrors, formState: { errors } } = methods;
 
   // Validators: names alphabet-only, DOB age >=18 and <19
   const alphaOnly = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
   const validateAlpha = (v) => !v || alphaOnly.test(v) || 'Only alphabets and spaces allowed';
   const validateDob = (v) => {
     if (!v) return 'Date of Birth is required';
-    
-    const today = new Date();
-    const birthDate = new Date(v);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    // Normalize date string (support yyyy-mm-dd or dd-mm-yyyy)
+    let birthDate;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      birthDate = new Date(v);
+    } else if (/^\d{2}-\d{2}-\d{4}$/.test(v)) {
+      const [dd, mm, yyyy] = v.split('-');
+      birthDate = new Date(`${yyyy}-${mm}-${dd}`);
+    } else {
+      birthDate = new Date(v);
     }
-
-    const validation = validateAgeSync(age, 'EMPLOYEE', ageSettings);
-    return validation.isValid || validation.message;
+    if (isNaN(birthDate.getTime())) return 'Enter valid date of birth';
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    if (age < 18 || age > 90) return 'Age must be between 18 and 90 years';
+    return true;
   };
 
   const handlePhotoChange = (e) => {
@@ -212,58 +260,6 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   return (
     <div className={isInDashboard ? "employee-wrapper dashboard-mode" : "employee-wrapper"}>
       <div className="form-full">
-        {/* Form Header with Close Button */}
-        <div className="form-header" style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '20px',
-          padding: '0 20px'
-        }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600', color: '#1a202c' }}>
-              {editData ? 'Edit Employee' : 'Add New Employee'}
-            </h2>
-            <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>
-              {editData ? 'Update employee information' : 'Register a new employee in the system'}
-            </p>
-          </div>
-          {isInDashboard && onClose && (
-            <button 
-              className="close-btn"
-              onClick={onClose}
-              style={{
-                background: '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '600',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = '#dc2626';
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = '#ef4444';
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.3)';
-              }}
-              title="Close Form"
-            >
-              <i className="fas fa-times" style={{ fontSize: '14px' }}></i>
-            </button>
-          )}
-        </div>
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} className="employee-form">
             {currentStep === 0 && (
@@ -348,6 +344,8 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <select
                       className="input"
                       {...register("salutation", { required: "Salutation is required" })}
+                      onFocus={() => setFocusedField('salutation')}
+                      onBlur={() => setFocusedField('')}
                     >
                       <option value="">Select</option>
                       <option value="Mr">Mr</option>
@@ -356,6 +354,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       <option value="Miss.">Miss.</option>
                       <option value="Dr.">Dr.</option>
                     </select>
+                    {focusedField === 'salutation' && !watch("salutation") && <p className="field-hint">Please select salutation</p>}
                     {errors.salutation && <p className="error">{errors.salutation.message}</p>}
                   </div>
 
@@ -368,7 +367,19 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       className="input"
                       placeholder="First Name"
                       {...register("firstName", { required: "First Name is required", validate: validateAlpha })}
+                      onFocus={() => setFocusedField('firstName')}
+                      onBlur={() => setFocusedField('')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setValue('firstName', v, { shouldValidate: true, shouldDirty: true });
+                        if (v && !alphaOnly.test(v)) {
+                          setError('firstName', { type: 'pattern', message: 'Only alphabets and spaces allowed' });
+                        } else {
+                          clearFieldErrors('firstName');
+                        }
+                      }}
                     />
+                    {focusedField === 'firstName' && !watch("firstName") && <p className="field-hint">Please enter first name</p>}
                     {errors.firstName && <p className="error">{errors.firstName.message}</p>}
                   </div>
 
@@ -381,7 +392,19 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       className="input"
                       placeholder="Middle Name"
                       {...register("middleName", { required: "Middle Name is required", validate: validateAlpha })}
+                      onFocus={() => setFocusedField('middleName')}
+                      onBlur={() => setFocusedField('')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setValue('middleName', v, { shouldValidate: true, shouldDirty: true });
+                        if (v && !alphaOnly.test(v)) {
+                          setError('middleName', { type: 'pattern', message: 'Only alphabets and spaces allowed' });
+                        } else {
+                          clearFieldErrors('middleName');
+                        }
+                      }}
                     />
+                    {focusedField === 'middleName' && !watch("middleName") && <p className="field-hint">Please enter middle name</p>}
                     {errors.middleName && <p className="error">{errors.middleName.message}</p>}
                   </div>
 
@@ -394,7 +417,19 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       className="input"
                       placeholder="Last Name"
                       {...register("lastName", { required: "Last Name is required", validate: validateAlpha })}
+                      onFocus={() => setFocusedField('lastName')}
+                      onBlur={() => setFocusedField('')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setValue('lastName', v, { shouldValidate: true, shouldDirty: true });
+                        if (v && !alphaOnly.test(v)) {
+                          setError('lastName', { type: 'pattern', message: 'Only alphabets and spaces allowed' });
+                        } else {
+                          clearFieldErrors('lastName');
+                        }
+                      }}
                     />
+                    {focusedField === 'lastName' && !watch("lastName") && <p className="field-hint">Please enter last name</p>}
                     {errors.lastName && <p className="error">{errors.lastName.message}</p>}
                   </div>
                 </div>
@@ -409,12 +444,15 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <select
                       className="input"
                       {...register("gender", { required: "Gender is required" })}
+                      onFocus={() => setFocusedField('gender')}
+                      onBlur={() => setFocusedField('')}
                     >
                       <option value="">Select</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Transgender">Transgender</option>
                     </select>
+                    {focusedField === 'gender' && !watch("gender") && <p className="field-hint">Please select gender</p>}
                     {errors.gender && <p className="error">{errors.gender.message}</p>}
                   </div>
 
@@ -426,11 +464,15 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       type="date"
                       className="input"
-                      {...register("dob", { 
-                        validate: validateDob,
-                        onChange: (e) => handleAgeValidation(e.target.value)
-                      })}
+                      {...register("dob", { validate: validateDob })}
+                      onFocus={() => setFocusedField('dob')}
+                      onBlur={() => setFocusedField('')}
+                      onChange={(e) => {
+                        setValue('dob', e.target.value, { shouldValidate: true, shouldDirty: true });
+                        handleAgeValidation(e.target.value);
+                      }}
                     />
+                    {focusedField === 'dob' && !watch("dob") && <p className="field-hint">Please enter date of birth</p>}
                     {errors.dob && <p className="error">{errors.dob.message}</p>}
                     {ageValidationError && <p className="error">{ageValidationError}</p>}
                   </div>
@@ -443,10 +485,13 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <select
                       className="input"
                       {...register("nationality", { required: "Nationality is required" })}
+                      onFocus={() => setFocusedField('nationality')}
+                      onBlur={() => setFocusedField('')}
                     >
                       <option value="">Select</option>
                       <option value="Indian">Indian</option>
                     </select>
+                    {focusedField === 'nationality' && !watch("nationality") && <p className="field-hint">Please select nationality</p>}
                     {errors.nationality && <p className="error">{errors.nationality.message}</p>}
                   </div>
                 </div>
@@ -470,7 +515,11 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       },
                     })}
                     placeholder=""
+                    onFocus={() => setFocusedField('contactNumber')}
+                    onBlur={() => setFocusedField('')}
+                    onChange={(e) => setValue('contactNumber', e.target.value, { shouldValidate: true, shouldDirty: true })}
                   />
+                  {focusedField === 'contactNumber' && !watch("contactNumber") && <p className="field-hint">Please enter 10-digit contact number</p>}
                   <p className="error">{errors.contactNumber?.message}</p>
                 </div>
 
@@ -488,7 +537,14 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       },
                     })}
                     placeholder=""
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField('')}
+                    onChange={(e) => {
+                      setValue('email', e.target.value, { shouldValidate: true, shouldDirty: true });
+                      checkEmailAvailability(e.target.value);
+                    }}
                   />
+                  {focusedField === 'email' && !watch("email") && <p className="field-hint">Please enter email address</p>}
                   <p className="error">{errors.email?.message}</p>
                 </div>
               </div>
@@ -617,7 +673,10 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                 {/* Education Field */}
                 <div>
                   <label className="label">Education <span className="required">*</span></label>
-                  <select className="input" {...register("professional.education")}>
+                  <select
+                    className="input"
+                    {...register("professional.education", { required: "Education is required" })}
+                  >
                     <option value="">Select</option>
                     {educationTypes.map((edu) => (
                       <option key={edu.id} value={edu.name}>
@@ -625,9 +684,9 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                       </option>
                     ))}
                   </select>
-                                     {!isInDashboard && errors.professional?.education && (
-                     <p className="error">{errors.education?.message}</p>
-                   )}
+                  {errors.professional?.education && (
+                    <p className="error">{errors.professional.education.message}</p>
+                  )}
                 </div>
 
                 {/* Experience Field */}
@@ -637,11 +696,20 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     type="text"
                     placeholder="15 Years"
                     className="input"
-                    {...register("professional.experience")}
+                    {...register("professional.experience", {
+                      required: "Experience is required",
+                      validate: (v) => {
+                        if (!v) return "Experience is required";
+                        const num = parseInt(String(v).replace(/[^0-9]/g, ''), 10);
+                        if (Number.isNaN(num)) return "Enter years as a number";
+                        if (num < 0 || num > 60) return "Experience must be between 0 and 60 years";
+                        return true;
+                      }
+                    })}
                   />
-                                     {!isInDashboard && errors.professional?.experience && (
-                     <p className="error">{errors.experience?.message}</p>
-                   )}
+                  {errors.professional?.experience && (
+                    <p className="error">{errors.professional.experience.message}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -849,7 +917,8 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                 <button
                   type="button"
                   onClick={async () => {
-                    const isValid = await trigger();
+                    const fieldsToValidate = stepFieldNames[currentStep] || [];
+                    const isValid = await trigger(fieldsToValidate);
                     if (isValid) setCurrentStep(currentStep + 1);
                   }}
                 >
@@ -870,7 +939,8 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   <button
                     type="button"
                     onClick={async () => {
-                      const isValid = await trigger();
+                      const fieldsToValidate = stepFieldNames[currentStep] || [];
+                      const isValid = await trigger(fieldsToValidate);
                       if (isValid) setCurrentStep(currentStep + 1);
                     }}
                   >

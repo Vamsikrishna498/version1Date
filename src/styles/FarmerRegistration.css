@@ -36,12 +36,12 @@
 }
 
 .farmer-wrapper.dashboard-mode .farmer {
-  padding: 30px;
+  padding: 20px;
   min-height: auto;
   background: white;
-  border-radius: 12px;
-  border: 2px solid #000000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
   margin: 0;
   width: 100%;
   box-sizing: border-box;
@@ -61,29 +61,30 @@
   max-width: 1200px;
   margin: 0 auto;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: none;
   overflow: hidden;
   position: relative;
 }
 
 .farmer {
-  padding: 40px;
-  min-height: 600px;
+  padding: 20px;
+  min-height: auto;
 }
 
 /* Form Grid Layout */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 20px;
+  align-items: start;
 }
 
 .field-left,
 .field-right {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* Photo Upload Styles */
@@ -186,9 +187,9 @@
 .label {
   font-weight: 600;
   color: #333;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   display: block;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .input,
@@ -198,13 +199,27 @@ input[type="tel"],
 input[type="text"],
 input[type="number"] {
   width: 100%;
-  padding: 16px 20px;
+  padding: 8px 12px;
   border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 5px;
+  font-size: 13px;
   transition: all 0.3s ease;
   background: white;
-  min-height: 55px;
+  min-height: 36px;
+}
+
+select,
+.input[type="select"],
+select.input {
+  padding-right: 35px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  cursor: pointer;
 }
 
 /* Large input fields for better visibility */
@@ -214,9 +229,9 @@ input[type="number"] {
 .input-large + input[type="tel"],
 .input-large + input[type="text"],
 .input-large + input[type="number"] {
-  padding: 14px 18px;
-  font-size: 16px;
-  min-height: 50px;
+  padding: 10px 12px;
+  font-size: 14px;
+  min-height: 40px;
 }
 
 .input:focus,
@@ -305,6 +320,20 @@ input[type="number"]:focus {
   background: #fdf2f2;
 }
 
+/* Field hint - friendly helper text that appears when field is empty */
+.farmer .field-hint {
+  color: #f39c12 !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  margin-bottom: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  display: inline-block !important;
+  font-style: italic;
+  font-weight: 400 !important;
+}
+
 /* Address Field */
 .address-field {
   display: flex;
@@ -327,13 +356,14 @@ input[type="number"]:focus {
 .currentform-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 35px;
+  gap: 20px;
 }
 
 .cropform-columnleft,
 .cropform-columnright {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 25px;
 }
 
@@ -345,7 +375,7 @@ input[type="number"]:focus {
 .proposedform-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 35px;
+  gap: 20px;
 }
 
 .proposedform-columnleft,
