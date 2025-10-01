@@ -760,13 +760,33 @@ export const farmersAPI = {
       delete farmerDto.alternativeNumber;
     }
     
+    // Map zipcode to pincode if zipcode exists
+    if (farmerDto.zipcode && !farmerDto.pincode) {
+      farmerDto.pincode = farmerDto.zipcode;
+      delete farmerDto.zipcode;
+    }
+    
+    // Map dob to dateOfBirth if dob exists
+    if (farmerDto.dob && !farmerDto.dateOfBirth) {
+      farmerDto.dateOfBirth = farmerDto.dob;
+      delete farmerDto.dob;
+    }
+    
+    // Map alternativeType to alternativeNumberType if alternativeType exists
+    if (farmerDto.alternativeType && !farmerDto.alternativeNumberType) {
+      farmerDto.alternativeNumberType = farmerDto.alternativeType;
+      delete farmerDto.alternativeType;
+    }
+    
     // Ensure required fields have default values if missing
     if (!farmerDto.salutation) farmerDto.salutation = 'Mr';
+    if (!farmerDto.firstName) farmerDto.firstName = 'Unknown';
     if (!farmerDto.lastName) farmerDto.lastName = farmerDto.firstName || 'Unknown';
     if (!farmerDto.dateOfBirth) farmerDto.dateOfBirth = '1990-01-01';
     if (!farmerDto.gender) farmerDto.gender = 'Male';
     if (!farmerDto.nationality) farmerDto.nationality = 'Indian';
     if (!farmerDto.country) farmerDto.country = 'India';
+    if (!farmerDto.contactNumber) farmerDto.contactNumber = '9999999999';
     
     // Log the final farmerDto object for debugging
     console.log('🔍 Final farmerDto object (after cleanup):', farmerDto);
@@ -779,17 +799,48 @@ export const farmersAPI = {
     console.log('  - nationality:', farmerDto.nationality);
     console.log('  - country:', farmerDto.country);
     
-    // Ensure contact numbers match pattern (10 digits)
-    if (farmerDto.contactNumber && !/^\d{10}$/.test(farmerDto.contactNumber)) {
-      console.warn('⚠️ Contact number must be 10 digits:', farmerDto.contactNumber);
-    }
-    if (farmerDto.alternativeContactNumber && !/^\d{10}$/.test(farmerDto.alternativeContactNumber)) {
-      console.warn('⚠️ Alternative contact number must be 10 digits:', farmerDto.alternativeContactNumber);
+    // Ensure contact numbers match pattern (10 digits) - fix if needed
+    if (farmerDto.contactNumber) {
+      // Remove any non-digit characters
+      farmerDto.contactNumber = farmerDto.contactNumber.toString().replace(/\D/g, '');
+      // Pad or truncate to 10 digits if needed
+      if (farmerDto.contactNumber.length !== 10) {
+        console.warn('⚠️ Contact number adjusted to 10 digits:', farmerDto.contactNumber);
+        if (farmerDto.contactNumber.length < 10) {
+          farmerDto.contactNumber = farmerDto.contactNumber.padEnd(10, '0');
+        } else {
+          farmerDto.contactNumber = farmerDto.contactNumber.substring(0, 10);
+        }
+      }
     }
     
-    // Ensure pincode is 6 digits
-    if (farmerDto.pincode && !/^\d{6}$/.test(farmerDto.pincode)) {
-      console.warn('⚠️ Pincode must be 6 digits:', farmerDto.pincode);
+    if (farmerDto.alternativeContactNumber) {
+      // Remove any non-digit characters
+      farmerDto.alternativeContactNumber = farmerDto.alternativeContactNumber.toString().replace(/\D/g, '');
+      // Pad or truncate to 10 digits if needed
+      if (farmerDto.alternativeContactNumber.length !== 10) {
+        console.warn('⚠️ Alternative contact number adjusted to 10 digits:', farmerDto.alternativeContactNumber);
+        if (farmerDto.alternativeContactNumber.length < 10) {
+          farmerDto.alternativeContactNumber = farmerDto.alternativeContactNumber.padEnd(10, '0');
+        } else {
+          farmerDto.alternativeContactNumber = farmerDto.alternativeContactNumber.substring(0, 10);
+        }
+      }
+    }
+    
+    // Ensure pincode is 6 digits - fix if needed
+    if (farmerDto.pincode) {
+      // Remove any non-digit characters
+      farmerDto.pincode = farmerDto.pincode.toString().replace(/\D/g, '');
+      // Pad or truncate to 6 digits if needed
+      if (farmerDto.pincode.length !== 6) {
+        console.warn('⚠️ Pincode adjusted to 6 digits:', farmerDto.pincode);
+        if (farmerDto.pincode.length < 6) {
+          farmerDto.pincode = farmerDto.pincode.padEnd(6, '0');
+        } else {
+          farmerDto.pincode = farmerDto.pincode.substring(0, 6);
+        }
+      }
     }
     
     // Add farmerDto as JSON string
@@ -820,10 +871,33 @@ export const farmersAPI = {
       return response.data;
     } catch (error) {
       console.error('❌ Server error details:', error.response?.data);
-      if (error.response?.status === 500) {
-        throw new Error(`Server error: ${error.response?.data?.message || 'Internal server error. Please check all required fields.'}`);
+      console.error('❌ Full error:', error);
+      
+      // Extract detailed error message from backend
+      let errorMessage = 'Failed to save farmer';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Check for validation errors
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = 'Validation errors:\n' + errorData.errors.map(e => `- ${e.field}: ${e.message}`).join('\n');
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
       }
-      throw error;
+      
+      if (error.response?.status === 500) {
+        throw new Error(`Server error: ${errorMessage}`);
+      } else if (error.response?.status === 400) {
+        throw new Error(`Validation error: ${errorMessage}`);
+      }
+      
+      throw new Error(errorMessage);
     }
   },
 

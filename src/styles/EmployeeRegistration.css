@@ -166,12 +166,25 @@
 .input,
 select {
   width: 100%;
-  padding: 12px 15px;
+  padding: 8px 10px;
   border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 5px;
+  font-size: 13px;
   transition: all 0.3s ease;
   background: white;
+  min-height: 36px;
+}
+
+select {
+  padding-right: 35px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  cursor: pointer;
 }
 
 .input:focus,
@@ -313,6 +326,20 @@ select:focus {
   padding: 20px;
 }
 
+/* Field hint - friendly helper text that appears when field is focused and empty */
+.employee-form .field-hint {
+  color: #f39c12 !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  margin-bottom: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  display: inline-block !important;
+  font-style: italic;
+  font-weight: 400 !important;
+}
+
 /* File Upload Styling */
 input[type="file"] {
   padding: 8px;
@@ -337,10 +364,21 @@ input[type="file"]:hover {
   margin-bottom: 15px;
 }
 
+/* Force Address step rows to full width inside employee form */
+.employee-form .address-form-component .address-form-fields .form-row {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 20px !important;
+}
+
+.employee-form .address-form-component .address-form-fields .form-row > * {
+  grid-column: 1 / -1 !important;
+}
+
 /* Professional and Bank Details */
 .emp-form-four,
 .emp-form-five {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 768px) {

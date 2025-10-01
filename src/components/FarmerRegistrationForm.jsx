@@ -21,7 +21,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const [farmerData] = useState(editData);
   const [photoPreview] = useState(editData?.photo || null);
   const [ageValidationError, setAgeValidationError] = useState('');
-  // Configuration data is now provided by ConfigurationContext
+  const [focusedField, setFocusedField] = useState('');
 
   // Initialize photo name if editing
   useEffect(() => {
@@ -31,6 +31,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   }, [editData]);
 
   // Configuration data is now loaded automatically by ConfigurationContext
+  // Get education types from context
+  const educationTypes = getEducationTypesForUser('FARMER');
 
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
@@ -56,6 +58,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const totalSteps = 8;
 
   const methods = useForm({
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       // Step 0 - Personal Details
       salutation: editData?.salutation || '',
@@ -126,19 +130,37 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     }
   });
 
-  const { register, handleSubmit, watch, setValue, trigger, clearErrors, formState: { errors } } = methods;
+  const { register, handleSubmit, watch, setValue, trigger, clearErrors, setError, formState: { errors } } = methods;
 
   // Dynamic crop options from API
+  // Build crop options: Crop Names are categories, Crop Types are varieties under each category
   const cropOptions = cropNames.reduce((acc, crop) => {
     const category = crop.name || 'Other';
     if (!acc[category]) {
       acc[category] = [];
     }
-    // Add crop types (varieties) for this crop
-    const varieties = cropTypes.filter(type => type.parentId === crop.id);
-    acc[category] = varieties.map(variety => variety.name);
+    // Add crop types (varieties) for this crop where parentId matches
+    const varieties = cropTypes.filter(type => type.parentId === crop.id || type.cropNameId === crop.id);
+    if (varieties && varieties.length > 0) {
+      acc[category] = varieties.map(variety => variety.name);
+    } else {
+      // If no varieties found, add the crop name itself as an option
+      acc[category] = [crop.name];
+    }
     return acc;
   }, {});
+
+  // If no data from API, provide default crop categories
+  const defaultCropOptions = Object.keys(cropOptions).length === 0 ? {
+    'Cereals': ['Rice', 'Wheat', 'Maize', 'Jowar', 'Bajra', 'Ragi'],
+    'Pulses': ['Red gram', 'Green gram', 'Black gram', 'Bengal gram', 'Lentil'],
+    'Cash Crops': ['Cotton', 'Sugarcane', 'Tobacco', 'Jute'],
+    'Oilseeds': ['Groundnut', 'Sunflower', 'Soybean', 'Mustard', 'Sesame'],
+    'Vegetables': ['Tomato', 'Potato', 'Onion', 'Brinjal', 'Cabbage', 'Cauliflower'],
+    'Fruits': ['Mango', 'Banana', 'Grapes', 'Papaya', 'Citrus', 'Pomegranate'],
+    'Spices': ['Turmeric', 'Chilli', 'Coriander', 'Cumin', 'Ginger'],
+    'Plantation': ['Coconut', 'Arecanut', 'Coffee', 'Tea', 'Rubber']
+  } : cropOptions;
 
   const waterSourceOptions = [
     'Borewell',
@@ -273,24 +295,42 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       <input
         className="input"
         placeholder="First Name"
-        {...register("firstName", { required: "First Name is required" })}
+        {...register("firstName", { 
+          required: "First Name is required",
+          pattern: { value: /^[A-Za-z\s]{2,26}$/, message: "Only letters (2-26) are allowed" }
+        })}
+        onFocus={() => setFocusedField('firstName')}
+        onBlur={() => setFocusedField('')}
       />
+      {focusedField === 'firstName' && !watch("firstName") && <p className="field-hint">Please enter first name</p>}
       {errors.firstName && <p className="error">{errors.firstName.message}</p>}
  
      <label className="label">Middle Name<span className="required">*</span></label>
       <input
         className="input"
         placeholder="Middle Name"
-        {...register("middleName", { required: "Middle Name is required" })}
+        {...register("middleName", { 
+          required: "Middle Name is required",
+          pattern: { value: /^[A-Za-z\s]{1,26}$/, message: "Only letters are allowed" }
+        })}
+        onFocus={() => setFocusedField('middleName')}
+        onBlur={() => setFocusedField('')}
       />
+      {focusedField === 'middleName' && !watch("middleName") && <p className="field-hint">Please enter middle name</p>}
       {errors.middleName && <p className="error">{errors.middleName.message}</p>}
  
       <label className="label">Last Name<span className="required">*</span></label>
       <input
         className="input"
         placeholder="Last Name"
-        {...register("lastName", { required: "Last Name is required" })}
+        {...register("lastName", { 
+          required: "Last Name is required",
+          pattern: { value: /^[A-Za-z\s]{2,26}$/, message: "Only letters (2-26) are allowed" }
+        })}
+        onFocus={() => setFocusedField('lastName')}
+        onBlur={() => setFocusedField('')}
       />
+      {focusedField === 'lastName' && !watch("lastName") && <p className="field-hint">Please enter last name</p>}
       {errors.lastName && <p className="error">{errors.lastName.message}</p>}
      </div>
  
@@ -300,22 +340,28 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       <select
         className="input"
         {...register("gender", { required: "Gender is required" })}
+        onFocus={() => setFocusedField('gender')}
+        onBlur={() => setFocusedField('')}
       >
         <option value="">Select</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
         <option value="Transgender">Transgender</option>
       </select>
+      {focusedField === 'gender' && !watch("gender") && <p className="field-hint">Please select gender</p>}
       {errors.gender && <p className="error">{errors.gender.message}</p>}
  
      <label className="label">Nationality<span className="required">*</span></label>
       <select
         className="input"
         {...register("nationality", { required: "Nationality is required" })}
+        onFocus={() => setFocusedField('nationality')}
+        onBlur={() => setFocusedField('')}
       >
         <option value="">Select</option>
         <option value="Indian">Indian</option>
       </select>
+      {focusedField === 'nationality' && !watch("nationality") && <p className="field-hint">Please select nationality</p>}
       {errors.nationality && <p className="error">{errors.nationality.message}</p>}
  
          <label>Date of Birth  <span className="required">*</span></label>
@@ -324,15 +370,44 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                   placeholder="YYYY-MM-DD"
                   {...register("dateOfBirth", {
                     required: "Date of Birth is required",
-                    onChange: (e) => handleAgeValidation(e.target.value)
+                    setValueAs: (v) => {
+                      if (typeof v === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(v)) {
+                        const [dd, mm, yyyy] = v.split('-');
+                        return `${yyyy}-${mm}-${dd}`;
+                      }
+                      return v;
+                    },
+                    validate: (v) => {
+                      if (!v) return 'Date of Birth is required';
+                      const birthDate = new Date(v);
+                      if (isNaN(birthDate.getTime())) return 'Enter valid date of birth';
+                      const today = new Date();
+                      let age = today.getFullYear() - birthDate.getFullYear();
+                      const m = today.getMonth() - birthDate.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                      return (age >= 18 && age <= 90) || 'Age must be between 18 and 90 years';
+                    }
                   })}
+                  onFocus={() => setFocusedField('dateOfBirth')}
+                  onBlur={() => { setFocusedField(''); trigger('dateOfBirth'); }}
                 />
+                {focusedField === 'dateOfBirth' && !watch("dateOfBirth") && <p className="field-hint">Please enter date of birth</p>}
                 {errors.dateOfBirth?.message && <p className="reg-error">{errors.dateOfBirth.message}</p>}
                 {ageValidationError && <p className="reg-error">{ageValidationError}</p>}
  
          <label>
         Contact Number <span className="optional"></span>
-        <input type="tel" maxLength={10} {...register("contactNumber")} placeholder="10-digit number" />
+        <input type="tel" maxLength={10} {...register("contactNumber")} placeholder="10-digit number"
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v && !/^\d{10}$/.test(v)) {
+              setError('contactNumber', { type: 'pattern', message: 'Enter a valid 10-digit number' });
+            } else {
+              clearErrors('contactNumber');
+            }
+          }}
+          onBlur={() => trigger('contactNumber')}
+        />
       </label>
       {errors.contactNumber?.message && <p className="error">{errors.contactNumber.message}</p>}
       
@@ -343,20 +418,30 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           className="input"
           {...register("email", { 
             required: "Email is required",
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Please enter a valid email address"
-            }
+            pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Please enter a valid email address" }
           })} 
-          placeholder="Enter email address" 
+          placeholder="Enter email address"
+          onFocus={() => setFocusedField('email')}
+          onBlur={() => { setFocusedField(''); trigger('email'); }}
         />
       </label>
+      {focusedField === 'email' && !watch("email") && <p className="field-hint">Please enter email address</p>}
       {errors.email?.message && <p className="error">{errors.email.message}</p>}
       
       <label>
- 
+
         Father Name <span className="optional"></span>
-        <input type="text" {...register("fatherName")} placeholder="Enter father's name" />
+        <input type="text" {...register("fatherName")} placeholder="Enter father's name"
+          onChange={(e)=>{
+            const v = e.target.value;
+            if (v && !/^[A-Za-z\s]{2,40}$/.test(v)) {
+              setError('fatherName', { type: 'pattern', message: 'Only letters are allowed' });
+            } else {
+              clearErrors('fatherName');
+            }
+          }}
+          onBlur={() => trigger('fatherName')}
+        />
       </label>
       {errors.fatherName?.message && <p className="error">{errors.fatherName.message}</p>}
  
@@ -378,7 +463,17 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
  
       <label>
         Alternative Number <span className="optional"></span>
-        <input type="tel" maxLength={10} {...register("alternativeNumber")} placeholder="10-digit number" />
+        <input type="tel" maxLength={10} {...register("alternativeNumber")} placeholder="10-digit number"
+          onChange={(e)=>{
+            const v = e.target.value;
+            if (v && !/^\d{10}$/.test(v)) {
+              setError('alternativeNumber', { type: 'pattern', message: 'Must be 10 digits' });
+            } else {
+              clearErrors('alternativeNumber');
+            }
+          }}
+          onBlur={() => trigger('alternativeNumber')}
+        />
       </label>
       {errors.alternativeNumber?.message && <p className="error">{errors.alternativeNumber.message}</p>}
      
@@ -425,7 +520,9 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           <input type="hidden" {...register("district", { required: "District is required" })} />
           <input type="hidden" {...register("block", { required: "Block is required" })} />
           <input type="hidden" {...register("village", { required: "Village is required" })} />
-          <input type="hidden" {...register("zipcode", { required: "Zipcode is required" })} />
+          <input type="hidden" {...register("zipcode", { required: "Zipcode is required",
+            pattern: { value: /^\d{5,6}$/, message: 'Enter valid 5-6 digit zipcode' }
+          })} />
           
           {/* Error messages now shown inline per field in AddressForm */}
         </div>
@@ -444,7 +541,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                 <p>{errors.experience?.message}</p>
 
                 <label>Education <span className="optional"></span></label>
-                <select {...register("education")} className="input-large">
+                <select {...register("education", { required: 'Education is required' })} className="input-large">
                   <option value="">Select</option>
                   {getEducationTypesForUser('farmer').map((edu) => (
                     <option key={edu} value={edu}>
