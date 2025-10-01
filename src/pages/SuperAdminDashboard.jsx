@@ -220,14 +220,15 @@ const SuperAdminDashboard = () => {
         try {
           const idCards = await idCardAPI.getIdCardsByHolder(employee.id.toString());
           if (idCards && idCards.length > 0) {
-            // Prefer EMPLOYEE cards only and matching holder
+            // Strictly filter: only EMPLOYEE cards for this employee
             const employeeCards = idCards.filter(card => (
-              (card.cardType === 'EMPLOYEE' || (card.cardId || '').startsWith('EMP')) &&
-              (String(card.holderId) === String(employee.id))
+              String(card.holderId) === String(employee.id) &&
+              (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
             ));
-            const byPreference = employeeCards.length > 0 ? employeeCards : idCards;
-            const activeCard = byPreference.find(card => card.status === 'ACTIVE') || byPreference[0];
-            employeeIds[employee.id] = activeCard.cardId;
+            if (employeeCards.length > 0) {
+              const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+              employeeIds[employee.id] = activeCard.cardId;
+            }
           }
         } catch (error) {
           console.warn(`Could not fetch ID card for employee ${employee.id}:`, error);
@@ -2514,19 +2515,26 @@ const SuperAdminDashboard = () => {
                                   console.log('📋 Fetched ID cards list:', list);
                                   
                                   if (Array.isArray(list) && list.length > 0) {
-                                    const activeCard = list.find(card => card.status === 'ACTIVE') || list[0];
-                                    console.log('✅ Using existing ID card:', activeCard.cardId);
-                                    setCurrentCardId(activeCard.cardId);
-                                    setShowIdCardContent(true);
-                                    return;
+                                    // Only consider EMPLOYEE cards that belong to this employee
+                                    const employeeCards = list.filter(card => (
+                                      String(card.holderId) === String(employee.id) &&
+                                      (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
+                                    ));
+                                    const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+                                    if (activeCard) {
+                                      console.log('✅ Using existing EMPLOYEE ID card:', activeCard.cardId);
+                                      setCurrentCardId(activeCard.cardId);
+                                      setShowIdCardContent(true);
+                                      return;
+                                    }
                                   }
                                   
-                                  console.log('🔄 No existing cards found, generating new one...');
+                                  console.log('🔄 No existing EMPLOYEE cards found, generating new one...');
                                   const gen = await idCardAPI.generateEmployeeIdCard(employee.id);
                                   console.log('🔄 Generated ID card response:', gen);
                                   
                                   if (gen && gen.cardId) {
-                                    console.log('✅ Successfully generated ID card:', gen.cardId);
+                                    console.log('✅ Successfully generated EMPLOYEE ID card:', gen.cardId);
                                     setCurrentCardId(gen.cardId);
                                     setShowIdCardContent(true);
                                   } else {
