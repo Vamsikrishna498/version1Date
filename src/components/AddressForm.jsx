@@ -70,102 +70,102 @@ const AddressForm = ({
       <div className="address-form-fields">
         <div className="form-row">
           <div className="form-group">
-            <label>Country *</label>
+            <label>COUNTRY <span className="required">*</span></label>
             <input
               type="text"
               value={formData.country || ''}
               onChange={(e) => handleFieldChange('country', e.target.value)}
-              className={`form-control ${errors?.country?.message ? 'error' : ''}`}
+              className={`form-control ${errors?.country ? 'error' : ''}`}
               placeholder="Enter Country"
               disabled={disabled}
               required
             />
-            {errors?.country?.message && (
-              <p className="error-text">{errors.country.message}</p>
+            {errors?.country && (
+              <p className="error-text">{errors.country.message || 'Country is required'}</p>
             )}
           </div>
           
           <div className="form-group">
-            <label>State *</label>
+            <label>STATE <span className="required">*</span></label>
             <input
               type="text"
               value={formData.state || ''}
               onChange={(e) => handleFieldChange('state', e.target.value)}
-              className={`form-control ${errors?.state?.message ? 'error' : ''}`}
+              className={`form-control ${errors?.state ? 'error' : ''}`}
               placeholder="Enter State"
               disabled={disabled}
               required
             />
-            {errors?.state?.message && (
-              <p className="error-text">{errors.state.message}</p>
+            {errors?.state && (
+              <p className="error-text">{errors.state.message || 'State is required'}</p>
             )}
           </div>
         </div>
         
         <div className="form-row">
           <div className="form-group">
-            <label>District *</label>
+            <label>DISTRICT <span className="required">*</span></label>
             <input
               type="text"
               value={formData.district || ''}
               onChange={(e) => handleFieldChange('district', e.target.value)}
-              className={`form-control ${errors?.district?.message ? 'error' : ''}`}
+              className={`form-control ${errors?.district ? 'error' : ''}`}
               placeholder="Enter District"
               disabled={disabled}
               required
             />
-            {errors?.district?.message && (
-              <p className="error-text">{errors.district.message}</p>
+            {errors?.district && (
+              <p className="error-text">{errors.district.message || 'District is required'}</p>
             )}
           </div>
           
           <div className="form-group">
-            <label>Block (Mandal) *</label>
+            <label>BLOCK (MANDAL) <span className="required">*</span></label>
             <input
               type="text"
               value={formData.block || ''}
               onChange={(e) => handleFieldChange('block', e.target.value)}
-              className={`form-control ${errors?.block?.message ? 'error' : ''}`}
+              className={`form-control ${errors?.block ? 'error' : ''}`}
               placeholder="Enter Block (Mandal)"
               disabled={disabled}
               required
             />
-            {errors?.block?.message && (
-              <p className="error-text">{errors.block.message}</p>
+            {errors?.block && (
+              <p className="error-text">{errors.block.message || 'Block is required'}</p>
             )}
           </div>
         </div>
         
         <div className="form-row">
           <div className="form-group">
-            <label>Village *</label>
+            <label>VILLAGE <span className="required">*</span></label>
             <input
               type="text"
               value={formData.village || ''}
               onChange={(e) => handleFieldChange('village', e.target.value)}
-              className={`form-control ${errors?.village?.message ? 'error' : ''}`}
+              className={`form-control ${errors?.village ? 'error' : ''}`}
               placeholder="Enter Village"
               disabled={disabled}
               required
             />
-            {errors?.village?.message && (
-              <p className="error-text">{errors.village.message}</p>
+            {errors?.village && (
+              <p className="error-text">{errors.village.message || 'Village is required'}</p>
             )}
           </div>
           
           <div className="form-group">
-            <label>Zipcode *</label>
+            <label>ZIPCODE <span className="required">*</span></label>
             <input
               type="text"
               value={formData.zipcode || ''}
               onChange={(e) => handleFieldChange('zipcode', e.target.value)}
-              className={`form-control ${errors?.zipcode?.message ? 'error' : ''}`}
+              className={`form-control ${errors?.zipcode ? 'error' : ''}`}
               placeholder="Enter Zipcode"
               disabled={disabled}
               required
             />
-            {errors?.zipcode?.message && (
-              <p className="error-text">{errors.zipcode.message}</p>
+            {errors?.zipcode && (
+              <p className="error-text">{errors.zipcode.message || 'Zipcode is required'}</p>
             )}
           </div>
         </div>

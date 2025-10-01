@@ -970,12 +970,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     <button
       type="button"
       onClick={async () => {
+        // Trigger validation for all fields in current step
         const isValid = await trigger();
-        if (ageValidationError) {
-          alert('Please fix age validation error before proceeding');
-          return;
+        if (isValid && !ageValidationError) {
+          setCurrentStep(currentStep + 1);
         }
-        if (isValid) setCurrentStep(currentStep + 1);
       }}
     >
       Next
@@ -989,11 +988,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
         type="button"
         onClick={async () => {
           const isValid = await trigger();
-          if (ageValidationError) {
-            alert('Please fix age validation error before submitting');
-            return;
-          }
-          if (isValid) {
+          if (isValid && !ageValidationError) {
             await handleSubmit(onSubmit)();
           }
         }}
@@ -1009,12 +1004,19 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       <button
         type="button"
         onClick={async () => {
-          const isValid = await trigger();
-          if (ageValidationError) {
-            alert('Please fix age validation error before proceeding');
-            return;
+          // For address step (step 1), validate address fields specifically
+          if (currentStep === 1) {
+            const addressFields = ['country', 'state', 'district', 'block', 'village', 'zipcode'];
+            const isValid = await trigger(addressFields);
+            if (isValid && !ageValidationError) {
+              setCurrentStep(currentStep + 1);
+            }
+          } else {
+            const isValid = await trigger();
+            if (isValid && !ageValidationError) {
+              setCurrentStep(currentStep + 1);
+            }
           }
-          if (isValid) setCurrentStep(currentStep + 1);
         }}
       >
         Next
