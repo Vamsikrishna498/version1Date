@@ -70,6 +70,16 @@ const EmployeeDashboard = () => {
   const [editingFPO, setEditingFPO] = useState(null);
   const [showFPOEditForm, setShowFPOEditForm] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // Auto-hide toast after 5 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
   const [showFPODetail, setShowFPODetail] = useState(false);
   const [detailFPO, setDetailFPO] = useState(null);
   const [showBoardMembers, setShowBoardMembers] = useState(false);
@@ -277,7 +287,7 @@ const EmployeeDashboard = () => {
     }
   };
 
-  // FPO Data Loading - Same logic as Admin dashboard
+  // FPO Data Loading - Filter to show only active/approved FPOs like Super Admin dashboard
   const loadFPOs = async () => {
     try {
       console.log('🔄 Employee Dashboard - Loading FPOs...');
@@ -285,9 +295,16 @@ const EmployeeDashboard = () => {
       console.log('📊 Employee Dashboard - FPO API response:', fposData);
       
       // Use the same data processing logic as Admin dashboard
-      const fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
+      let fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
+      
+      // Filter to show only active/approved FPOs to match Super Admin dashboard count
+      fpoList = fpoList.filter(fpo => {
+        const status = fpo.status?.toUpperCase();
+        return status === 'ACTIVE' || status === 'APPROVED' || status === 'APPROVED_BY_ADMIN';
+      });
+      
       setFpos(fpoList || []);
-      console.log('📊 Employee Dashboard - Processed FPOs:', fpoList?.length || 0, 'records');
+      console.log('📊 Employee Dashboard - Processed FPOs:', fpoList?.length || 0, 'records (filtered for active/approved)');
     } catch (error) {
       console.error('❌ Employee Dashboard - Error loading FPOs:', error);
       console.error('❌ Error details:', error.message);
@@ -1339,7 +1356,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#64748b', marginTop: '8px' }}>
               Filter and search through your assigned farmers by KYC status and assignment date.
             </p>
-            <div className="section-accent" style={{ background: '#64748b' }}></div>
           </div>
           
           <div className="filters-modern">
@@ -1386,7 +1402,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#0369a1', marginTop: '8px' }}>
               View the distribution of KYC status across your assigned farmers.
             </p>
-            <div className="section-accent" style={{ background: '#0ea5e9' }}></div>
           </div>
           
           <div className="kyc-tabs-modern">
@@ -1455,7 +1470,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#15803d', marginTop: '8px' }}>
               View and manage all your assigned farmers with their current KYC status.
             </p>
-            <div className="section-accent" style={{ background: '#22c55e' }}></div>
           </div>
             
             <div className="table-container-modern">
@@ -1513,7 +1527,6 @@ const EmployeeDashboard = () => {
               <p className="employee-section-description" style={{ color: '#92400e', marginTop: '8px' }}>
                 Register new farmers and assign them to your KYC verification workflow.
               </p>
-              <div className="section-accent" style={{ background: '#f59e0b' }}></div>
             </div>
             
             <div className="section-actions-modern">
@@ -1555,7 +1568,6 @@ const EmployeeDashboard = () => {
               <p className="employee-section-description" style={{ color: '#1e40af', marginTop: '8px' }}>
                 Update farmer details and information.
               </p>
-              <div className="section-accent" style={{ background: '#3b82f6' }}></div>
             </div>
             
             <div className="section-actions-modern">
@@ -1623,7 +1635,6 @@ const EmployeeDashboard = () => {
               <p className="employee-section-description" style={{ color: '#92400e', marginTop: '8px' }}>
                 Review and approve farmer KYC documents and information.
               </p>
-              <div className="section-accent" style={{ background: '#f59e0b' }}></div>
             </div>
             
             <div className="section-actions-modern">
@@ -1690,7 +1701,6 @@ const EmployeeDashboard = () => {
               <p className="employee-section-description" style={{ color: '#047857', marginTop: '8px' }}>
                 View detailed information about the selected farmer.
               </p>
-              <div className="section-accent" style={{ background: '#059669' }}></div>
             </div>
             
             <div className="section-actions-modern">
@@ -1765,7 +1775,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#15803d', marginTop: '8px' }}>
               Track your overall KYC verification progress with visual indicators.
             </p>
-            <div className="section-accent" style={{ background: '#22c55e' }}></div>
           </div>
           
           <div className="progress-overview-modern">
@@ -1829,7 +1838,6 @@ const EmployeeDashboard = () => {
                 <span className="stat-percentage">{approvedPercentage}%</span>
               </div>
             </div>
-            <div className="stat-accent" style={{ background: '#22c55e' }}></div>
           </div>
           
           <div className="stat-card-modern pending" style={{
@@ -1846,7 +1854,6 @@ const EmployeeDashboard = () => {
                 <span className="stat-percentage">{pendingPercentage}%</span>
               </div>
             </div>
-            <div className="stat-accent" style={{ background: '#f59e0b' }}></div>
           </div>
           
           <div className="stat-card-modern refer-back" style={{
@@ -1863,7 +1870,6 @@ const EmployeeDashboard = () => {
                 <span className="stat-percentage">{referBackPercentage}%</span>
               </div>
             </div>
-            <div className="stat-accent" style={{ background: '#3b82f6' }}></div>
           </div>
           
           <div className="stat-card-modern rejected" style={{
@@ -1880,7 +1886,6 @@ const EmployeeDashboard = () => {
                 <span className="stat-percentage">{rejectedPercentage}%</span>
               </div>
             </div>
-            <div className="stat-accent" style={{ background: '#ef4444' }}></div>
           </div>
         </div>
 
@@ -1895,7 +1900,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#475569', marginTop: '8px' }}>
               Monitor your KYC verification performance and efficiency metrics.
             </p>
-            <div className="section-accent" style={{ background: '#64748b' }}></div>
           </div>
           
           <div className="metrics-grid">
@@ -2007,7 +2011,6 @@ const EmployeeDashboard = () => {
                 </button>
               </div>
             </div>
-            <div className="todo-accent" style={{ background: '#f59e0b' }}></div>
           </div>
           
           <div className="todo-card-modern urgent-priority" style={{
@@ -2036,7 +2039,6 @@ const EmployeeDashboard = () => {
                 </button>
               </div>
             </div>
-            <div className="todo-accent" style={{ background: '#dc2626' }}></div>
           </div>
         </div>
 
@@ -2051,7 +2053,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#0369a1', marginTop: '8px' }}>
               Overview of your current tasks and priorities for KYC verification.
             </p>
-            <div className="section-accent" style={{ background: '#0ea5e9' }}></div>
           </div>
           
           <div className="task-stats-modern">
@@ -2098,7 +2099,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#15803d', marginTop: '8px' }}>
               Quick access to common tasks and actions for managing your workload.
             </p>
-            <div className="section-accent" style={{ background: '#22c55e' }}></div>
           </div>
           
           <div className="quick-actions-modern">
@@ -2213,7 +2213,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#475569', marginTop: '8px' }}>
               Monitor your KYC verification performance and efficiency metrics.
             </p>
-            <div className="section-accent" style={{ background: '#64748b' }}></div>
           </div>
           
           <div className="performance-metrics-modern">
@@ -2264,7 +2263,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#0369a1', marginTop: '8px' }}>
               Overview of your recent KYC verification activities and trends.
             </p>
-            <div className="section-accent" style={{ background: '#0ea5e9' }}></div>
           </div>
           
           <div className="activity-overview-modern">
@@ -2311,7 +2309,6 @@ const EmployeeDashboard = () => {
             <p className="employee-section-description" style={{ color: '#15803d', marginTop: '8px' }}>
               Quick access to common tasks and actions for managing your workload.
             </p>
-            <div className="section-accent" style={{ background: '#22c55e' }}></div>
           </div>
           
           <div className="quick-actions-modern">
@@ -2505,14 +2502,6 @@ const EmployeeDashboard = () => {
             <i className="fas fa-building"></i>
             <span>FPO</span>
           </div>
-
-          <div 
-            className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-          >
-            <i className="fas fa-user"></i>
-            <span>My Profile</span>
-          </div>
           
           <div 
             className={`nav-item ${activeTab === 'id-card' ? 'active' : ''}`}
@@ -2594,6 +2583,7 @@ const EmployeeDashboard = () => {
                       <FPOBoardMembersView
                         fpo={selectedFPOForBoardMembers}
                         onClose={() => { setShowBoardMembers(false); setSelectedFPOForBoardMembers(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showFarmServices && selectedFPOForFarmServices ? (
@@ -2601,6 +2591,7 @@ const EmployeeDashboard = () => {
                       <FPOFarmServicesView
                         fpo={selectedFPOForFarmServices}
                         onClose={() => { setShowFarmServices(false); setSelectedFPOForFarmServices(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showTurnover && selectedFPOForTurnover ? (
@@ -2608,6 +2599,7 @@ const EmployeeDashboard = () => {
                       <FPOTurnoverView
                         fpo={selectedFPOForTurnover}
                         onClose={() => { setShowTurnover(false); setSelectedFPOForTurnover(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showCropEntries && selectedFPOForCropEntries ? (
@@ -2615,6 +2607,7 @@ const EmployeeDashboard = () => {
                       <FPOCropEntriesView
                         fpo={selectedFPOForCropEntries}
                         onClose={() => { setShowCropEntries(false); setSelectedFPOForCropEntries(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showInputShop && selectedFPOForInputShop ? (
@@ -2622,6 +2615,7 @@ const EmployeeDashboard = () => {
                       <FPOInputShopView
                         fpo={selectedFPOForInputShop}
                         onClose={() => { setShowInputShop(false); setSelectedFPOForInputShop(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showProductCategories && selectedFPOForProductCategories ? (
@@ -2629,6 +2623,7 @@ const EmployeeDashboard = () => {
                       <FPOProductCategoriesView
                         fpo={selectedFPOForProductCategories}
                         onClose={() => { setShowProductCategories(false); setSelectedFPOForProductCategories(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showProducts && selectedFPOForProducts ? (
@@ -2636,6 +2631,7 @@ const EmployeeDashboard = () => {
                       <FPOProductsView
                         fpo={selectedFPOForProducts}
                         onClose={() => { setShowProducts(false); setSelectedFPOForProducts(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
                       />
                     </div>
                   ) : showFpoUsers && selectedFPOForUsers ? (
@@ -2643,6 +2639,8 @@ const EmployeeDashboard = () => {
                       <FPOUsersView
                         fpo={selectedFPOForUsers}
                         onClose={() => { setShowFpoUsers(false); setSelectedFPOForUsers(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
+                        userRole="EMPLOYEE"
                       />
                     </div>
                   ) : !viewingFPO ? (
@@ -2878,36 +2876,47 @@ const EmployeeDashboard = () => {
                   )}
                 </>
               ) : (
-                <div className="fpo-creation-section">
-                  <div className="overview-header">
-                    <h2 className="overview-title">
+                <div className="superadmin-overview-section">
+                  <div className="superadmin-overview-header">
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">
                       {editingFPO ? 'Edit FPO' : 'Add New FPO'}
                     </h2>
                     <p className="overview-description">
                       {editingFPO ? 'Update FPO information.' : 'Register a new FPO in the system.'}
                     </p>
+                    </div>
+                    <div className="header-right">
                     <div className="overview-actions">
                       <button 
                         onClick={() => {
                           setShowFPOCreationForm(false);
                           setEditingFPO(null);
                         }}
-                        className="btn btn-secondary"
+                          className="action-btn secondary"
                       >
                         <i className="fas fa-arrow-left"></i>
                         Back to FPO List
                       </button>
+                      </div>
                     </div>
                   </div>
                   
                   {showFPOEditForm && editingFPO ? (
                     <FPOEditForm
                       fpo={editingFPO}
-                      onCancel={() => { setShowFPOEditForm(false); setEditingFPO(null); }}
-                      onSave={(updatedFPO) => {
-                        setFpos(prev => prev.map(fpo => fpo.id === updatedFPO.id ? updatedFPO : fpo));
+                      onCancel={() => { 
                         setShowFPOEditForm(false);
+                        setShowFPOCreationForm(false); 
                         setEditingFPO(null);
+                      }}
+                      onUpdated={async (updatedFPO) => {
+                        // Reload FPOs from server to ensure data persistence
+                        await loadFPOs();
+                        setShowFPOEditForm(false);
+                        setShowFPOCreationForm(false);
+                        setEditingFPO(null);
+                        setToast({ type: 'success', message: 'FPO updated successfully!' });
                       }}
                     />
                   ) : (
@@ -2918,6 +2927,7 @@ const EmployeeDashboard = () => {
                         setEditingFPO(null);
                       }}
                       onSubmit={handleFPOCreated}
+                      onToast={(type, message) => setToast({ type, message })}
                     />
                   )}
                 </div>
@@ -3105,6 +3115,12 @@ const EmployeeDashboard = () => {
           <div className={`toast ${toast.type}`}>
             <span className="icon">{toast.type === 'success' ? '✔' : '!'}</span>
             <span>{toast.message}</span>
+            <button 
+              className="toast-close" 
+              onClick={() => setToast(null)}
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
@@ -3126,13 +3142,6 @@ const EmployeeDashboard = () => {
       )}
 
       {/* FPO Modals */}
-      {showFPOCreationForm && (
-        <FPOCreationForm
-          isOpen={showFPOCreationForm}
-          onClose={() => setShowFPOCreationForm(false)}
-          onSubmit={handleFPOCreated}
-        />
-      )}
 
       {showFPOEdit && editingFPO && (
         <FPOEditModal

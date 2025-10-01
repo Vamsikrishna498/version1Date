@@ -234,10 +234,14 @@ const AdminDashboard = () => {
         setRegistrations([]);
       }
       
-      // Set FPO data
-      const fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
-      setFpos(fpoList || []);
-      console.log('📊 FPOs data loaded in Admin dashboard:', fpoList?.length || 0, 'records');
+      // Set FPO data (filter to match Super Admin rules)
+      let fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
+      fpoList = (fpoList || []).filter(fpo => {
+        const status = fpo.status?.toUpperCase();
+        return status === 'ACTIVE' || status === 'APPROVED' || status === 'APPROVED_BY_ADMIN';
+      });
+      setFpos(fpoList);
+      console.log('📊 FPOs data loaded in Admin dashboard (filtered):', fpoList?.length || 0, 'records');
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to fetch data. Please try again.');
@@ -271,9 +275,13 @@ const AdminDashboard = () => {
       
       try {
         const fposData = await fpoAPI.getAllFPOs();
-        const fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
-        setFpos(fpoList || []);
-        console.log('📊 FPOs data loaded in Admin dashboard (fallback):', fpoList?.length || 0, 'records');
+        let fpoList = Array.isArray(fposData) ? fposData : (fposData?.content || fposData?.items || fposData?.data || []);
+        fpoList = (fpoList || []).filter(fpo => {
+          const status = fpo.status?.toUpperCase();
+          return status === 'ACTIVE' || status === 'APPROVED' || status === 'APPROVED_BY_ADMIN';
+        });
+        setFpos(fpoList);
+        console.log('📊 FPOs data loaded in Admin dashboard (fallback, filtered):', fpoList?.length || 0, 'records');
       } catch (e) {
         console.error('Failed to fetch FPOs:', e);
         setFpos([]);
@@ -2632,6 +2640,8 @@ const AdminDashboard = () => {
                       <FPOUsersView
                         fpo={selectedFPOForUsers}
                         onClose={() => { setShowFpoUsers(false); setSelectedFPOForUsers(null); }}
+                        onToast={(type, message) => setToast({ type, message })}
+                        userRole="ADMIN"
                       />
                     </div>
                   ) : viewingFPO ? (

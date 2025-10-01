@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import AddressForm from './AddressForm';
 import { validateAge, validateAgeSync } from '../utils/ageValidation';
 import { configAPI } from '../api/apiService';
+import { useConfiguration } from '../contexts/ConfigurationContext';
 import '../styles/FarmerRegistration.css';
 
 const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClose, onSubmit: onSubmitProp }) => {
   const navigate = useNavigate();
+  const { ageSettings, getEducationTypesForUser, cropNames, cropTypes, validateAge: validateAgeFromContext } = useConfiguration();
   const [currentStep, setCurrentStep] = useState(0);
   const [photoPreviewStep0, setPhotoPreviewStep0] = useState(null);
   const [photoPreviewStep3, setPhotoPreviewStep3] = useState(null);
@@ -18,11 +20,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const [selectedIrrigationTab, setSelectedIrrigationTab] = useState('Current');
   const [farmerData] = useState(editData);
   const [photoPreview] = useState(editData?.photo || null);
-  const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
-  const [cropNames, setCropNames] = useState([]);
-  const [cropTypes, setCropTypes] = useState([]);
-  const [educationTypes, setEducationTypes] = useState([]);
   const [focusedField, setFocusedField] = useState('');
 
   // Initialize photo name if editing
@@ -32,52 +30,9 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     }
   }, [editData]);
 
-  // Load age settings
-  useEffect(() => {
-    const loadAgeSettings = async () => {
-      try {
-        const settings = await configAPI.getAgeSettings();
-        setAgeSettings(settings);
-      } catch (error) {
-        console.error('Failed to load age settings:', error);
-      }
-    };
-    loadAgeSettings();
-  }, []);
-
-  // Load crop data
-  useEffect(() => {
-    const loadCropData = async () => {
-      try {
-        const [cropNamesData, cropTypesData] = await Promise.all([
-          configAPI.getCropNames(),
-          configAPI.getCropTypes()
-        ]);
-        setCropNames(cropNamesData || []);
-        setCropTypes(cropTypesData || []);
-      } catch (error) {
-        console.error('Failed to load crop data:', error);
-      }
-    };
-    loadCropData();
-  }, []);
-
-  // Load education types for farmers from super admin settings
-  useEffect(() => {
-    const loadEducationTypes = async () => {
-      try {
-        const educationData = await configAPI.getEducationTypes();
-        // Use all education types from super admin settings
-        setEducationTypes(educationData || []);
-        console.log('Education types loaded from settings:', educationData);
-      } catch (error) {
-        console.error('Failed to load education types:', error);
-        // Show empty array if API fails - no fallback to hardcoded data
-        setEducationTypes([]);
-      }
-    };
-    loadEducationTypes();
-  }, []);
+  // Configuration data is now loaded automatically by ConfigurationContext
+  // Get education types from context
+  const educationTypes = getEducationTypesForUser('FARMER');
 
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
@@ -95,7 +50,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       age--;
     }
 
-    const validation = validateAgeSync(age, 'FARMER', ageSettings);
+    // Use validation from ConfigurationContext
+    const validation = validateAgeFromContext(age, 'FARMER');
     setAgeValidationError(validation.isValid ? '' : validation.message);
   };
 
@@ -581,6 +537,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                 <label>Education <span className="optional"></span></label>
                 <select {...register("education", { required: 'Education is required' })} className="input-large">
                   <option value="">Select</option>
+<<<<<<< HEAD
                   {Array.isArray(educationTypes) && educationTypes.length > 0 ? (
                     educationTypes.map((edu, idx) => (
                       <option key={edu.id || idx} value={edu.name || edu.label || edu}>
@@ -596,6 +553,13 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                       <option value="Post Graduate">Post Graduate</option>
                     </>
                   )}
+=======
+                  {getEducationTypesForUser('farmer').map((edu) => (
+                    <option key={edu} value={edu}>
+                      {edu}
+                    </option>
+                  ))}
+>>>>>>> origin/master
                  </select>
                 <p>{errors.education?.message}</p>
               </div>
@@ -666,7 +630,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               className="input-large"
             >
               <option value="">Select</option>
+<<<<<<< HEAD
               {Object.keys(defaultCropOptions).map((cat) => (
+=======
+              {cropTypes.map((cat) => (
+>>>>>>> origin/master
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -676,7 +644,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               <label>Select Crop Name <span className="optional"></span></label>
               <select {...register("currentCrop")} defaultValue="" className="input-large">
                 <option value="">Select</option>
+<<<<<<< HEAD
                 {defaultCropOptions[cropCategoryStep3]?.map((crop) => (
+=======
+                {cropNames.map((crop) => (
+>>>>>>> origin/master
                   <option key={crop} value={crop}>{crop}</option>
                 ))}
               </select>
@@ -754,7 +726,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                className="input-large"
                >
               <option value="">Select</option>
+<<<<<<< HEAD
               {Object.keys(defaultCropOptions).map((cat) => (
+=======
+              {cropTypes.map((cat) => (
+>>>>>>> origin/master
               <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
@@ -764,7 +740,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                 <label>Select Crop Name <span className="optional"></span></label>
                 <select {...register("cropType")} defaultValue="" className="input-large">
                <option value="">Select</option>
+<<<<<<< HEAD
                 {defaultCropOptions[cropCategoryStep4]?.map((crop) => (
+=======
+                {cropNames.map((crop) => (
+>>>>>>> origin/master
                   <option key={crop} value={crop}>{crop}</option>
                 ))}
                </select>

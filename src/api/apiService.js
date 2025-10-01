@@ -42,6 +42,13 @@ api.interceptors.response.use(
       window.location.href = '/login';
       return; // stop further propagation
     }
+
+    // Handle 403 errors for configuration endpoints gracefully
+    if (status === 403 && requestUrl.includes('/config/')) {
+      console.warn(`Access denied to configuration endpoint: ${requestUrl}. Using fallback data.`);
+      // Don't log as error for config endpoints as they're expected to be restricted for employees
+    }
+
     // For login failures and requests without a token, let callers handle the error (no reload)
     return Promise.reject(error);
   }
@@ -1320,6 +1327,22 @@ export const fpoAPI = {
     return response.data;
   },
 
+  // Employee-specific FPO update endpoint
+  updateFPOEmployee: async (id, fpoData) => {
+    try {
+      // Try employee-specific endpoint first
+      const response = await api.put(`/employees/fpo/${id}`, fpoData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        // Fallback to regular endpoint if employee endpoint doesn't exist
+        const response = await api.put(`/fpo/${id}`, fpoData);
+        return response.data;
+      }
+      throw error;
+    }
+  },
+
   updateFPOStatus: async (id, status) => {
     const response = await api.put(`/fpo/${id}/status?status=${status}`);
     return response.data;
@@ -1668,6 +1691,35 @@ export const fpoUsersAPI = {
   updatePassword: async (fpoId, userId, password) => {
     const response = await api.put(`/fpo/${fpoId}/users/${userId}/password`, { password });
     return response.data;
+  },
+  // Employee-specific FPO user creation endpoint
+  createEmployee: async (fpoId, user) => {
+    try {
+      // Try employee-specific endpoint first
+      const response = await api.post(`/employees/fpo/${fpoId}/users`, {
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        password: user.password,
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        // Fallback to regular endpoint if employee endpoint doesn't exist
+        const response = await api.post(`/fpo/${fpoId}/users`, {
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          password: user.password,
+        });
+    return response.data;
+      }
+      throw error;
+    }
   }
 };
 
@@ -1675,18 +1727,21 @@ export const fpoUsersAPI = {
 export const idCardAPI = {
   // Employee-friendly: get current user's ID cards with multiple fallbacks
   getMyIdCards: async (holderId) => {
-    // Preferred: employee dashboard self endpoints
-    try {
-      const res = await api.get('/employees/dashboard/my/id-card');
-      return res.data;
-    } catch (e0) {
-      // Fall through to older routes
-    }
-    // Try holder endpoint first
+    // Prefer holder endpoint first (avoids 404s on dashboards without the self endpoint)
     try {
       const res = await api.get(`/id-cards/holder/${holderId}`);
       return res.data;
     } catch (e1) {
+      // Optional: attempt dashboard self endpoint only if older route failed
+      try {
+        const res = await api.get('/employees/dashboard/my/id-card', {
+          // avoid throwing to console by accepting non-2xx as handled
+          validateStatus: () => true
+        });
+        if (res && res.status >= 200 && res.status < 300) return res.data;
+      } catch (e0) {
+        // ignore
+      }
       // Try employee-scoped endpoints that some backends expose
       try {
         const res = await api.get('/employees/id-cards');

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOCreationForm.css';
 
-const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData }) => {
+const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) => {
   const [formData, setFormData] = useState({
     // Basic
     fpoName: '',
@@ -166,7 +166,7 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData }) => {
     } catch (err) {
       console.error('Error creating FPO:', err);
       const msg = err?.response?.data?.message || err?.response?.data?.error || 'Failed to create FPO. Please check required fields.';
-      alert(msg);
+      onToast && onToast('error', msg);
     } finally {
       setLoading(false);
     }
@@ -174,14 +174,12 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData }) => {
 
   return (
     <div className="fpo-creation-form-page">
+      <button className="close-btn" onClick={onClose}>×</button>
       <div className="form-header">
         <div className="header-content">
           <div className="header-left">
             <h1 className="form-title">Create FPO</h1>
             <p className="form-subtitle">Register a new Farmer Producer Organization</p>
-          </div>
-          <div className="header-right">
-            <button className="close-btn" onClick={onClose}>×</button>
           </div>
         </div>
       </div>

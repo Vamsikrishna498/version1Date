@@ -248,7 +248,7 @@ const MyIdCard = ({ userId, userType }) => {
           </label>
         </div>
         {idCards.map((card) => (
-          <div key={card.id} className="id-card-item">
+          <div key={String(card.id || card.cardId || `${card.holderId}-${card.cardType || 'CARD'}`)} className="id-card-item">
             <div className="card-main">
               <div className="card-info">
                 <div className="card-id">

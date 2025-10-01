@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOInputShopView.css';
 
-const FPOInputShopView = ({ fpo, onClose }) => {
+const FPOInputShopView = ({ fpo, onClose, onToast }) => {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,10 +103,10 @@ const FPOInputShopView = ({ fpo, onClose }) => {
         loadShops();
       }, 500);
       
-      alert('Input Shop created successfully!');
+      onToast && onToast('success', 'Input Shop created successfully!');
     } catch (error) {
       console.error('Error creating input shop:', error);
-      alert('Error creating shop: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating shop: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -150,11 +150,11 @@ const FPOInputShopView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('Input Shop updated successfully!');
+      onToast && onToast('success', 'Input Shop updated successfully!');
       loadShops();
     } catch (error) {
       console.error('Error updating input shop:', error);
-      alert('Error updating shop: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating shop: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -162,11 +162,11 @@ const FPOInputShopView = ({ fpo, onClose }) => {
     if (window.confirm('Are you sure you want to delete this input shop?')) {
       try {
         await fpoAPI.deleteInputShop(fpo.id, shopId);
-        alert('Input Shop deleted successfully!');
+        onToast && onToast('success', 'Input Shop deleted successfully!');
         loadShops();
       } catch (error) {
         console.error('Error deleting input shop:', error);
-        alert('Error deleting shop: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting shop: ' + (error.response?.data?.message || error.message));
       }
     }
   };

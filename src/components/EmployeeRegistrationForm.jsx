@@ -4,20 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import AddressForm from './AddressForm';
 import { validateAge, validateAgeSync } from '../utils/ageValidation';
 import { configAPI } from '../api/apiService';
+import { useConfiguration } from '../contexts/ConfigurationContext';
 import '../styles/EmployeeRegistration.css';
 
 const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onClose, onSubmit: onSubmitProp }) => {
   const navigate = useNavigate();
+  const { ageSettings, getEducationTypesForUser, validateAge: validateAgeFromContext } = useConfiguration();
   const [currentStep, setCurrentStep] = useState(0);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [selectedDoc, setSelectedDoc] = useState('');
-  const [ageSettings, setAgeSettings] = useState([]);
   const [ageValidationError, setAgeValidationError] = useState('');
   const [emailAvailabilityError, setEmailAvailabilityError] = useState('');  
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [educationTypes, setEducationTypes] = useState([]);
   const [focusedField, setFocusedField] = useState('');
-
 
   const totalSteps = 8;
 
@@ -41,55 +40,9 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
     ['role', 'accessStatus']
   ];
 
-  // Load age settings
-  useEffect(() => {
-    const loadAgeSettings = async () => {
-      try {
-        const settings = await configAPI.getAgeSettings();
-        setAgeSettings(settings);
-      } catch (error) {
-        console.error('Failed to load age settings:', error);
-      }
-    };
-    loadAgeSettings();
-  }, []);
-
-  // Load education types for employees from super admin settings
-  useEffect(() => {
-    const loadEducationTypes = async () => {
-      try {
-        const educationData = await configAPI.getEducationTypes();
-        // Fallback list if API returns empty/undefined
-        const fallback = [
-          { id: 'edu_primary', name: 'Primary' },
-          { id: 'edu_secondary', name: 'Secondary' },
-          { id: 'edu_intermediate', name: 'Intermediate' },
-          { id: 'edu_diploma', name: 'Diploma' },
-          { id: 'edu_graduate', name: 'Graduate' },
-          { id: 'edu_post_graduate', name: 'Post Graduate' },
-          { id: 'edu_phd', name: 'PhD' }
-        ];
-        const normalized = Array.isArray(educationData) && educationData.length > 0
-          ? educationData
-          : fallback;
-        setEducationTypes(normalized);
-        console.log('Education types loaded from settings:', educationData);
-      } catch (error) {
-        console.error('Failed to load education types:', error);
-        // Use fallback on error as well
-        setEducationTypes([
-          { id: 'edu_primary', name: 'Primary' },
-          { id: 'edu_secondary', name: 'Secondary' },
-          { id: 'edu_intermediate', name: 'Intermediate' },
-          { id: 'edu_diploma', name: 'Diploma' },
-          { id: 'edu_graduate', name: 'Graduate' },
-          { id: 'edu_post_graduate', name: 'Post Graduate' },
-          { id: 'edu_phd', name: 'PhD' }
-        ]);
-      }
-    };
-    loadEducationTypes();
-  }, []);
+  // Configuration data is now loaded automatically by ConfigurationContext
+  // Get education types from context
+  const educationTypes = getEducationTypesForUser('EMPLOYEE');
 
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
@@ -678,9 +631,9 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     {...register("professional.education", { required: "Education is required" })}
                   >
                     <option value="">Select</option>
-                    {educationTypes.map((edu) => (
-                      <option key={edu.id} value={edu.name}>
-                        {edu.name}
+                    {getEducationTypesForUser('employee').map((edu) => (
+                      <option key={edu} value={edu}>
+                        {edu}
                       </option>
                     ))}
                   </select>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOProductCategoriesView.css';
 
-const FPOProductCategoriesView = ({ fpo, onClose }) => {
+const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -108,10 +108,10 @@ const FPOProductCategoriesView = ({ fpo, onClose }) => {
         loadCategories();
       }, 500);
       
-      alert('Product Category created successfully!');
+      onToast && onToast('success', 'Product Category created successfully!');
     } catch (error) {
       console.error('Error creating product category:', error);
-      alert('Error creating category: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating category: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -146,11 +146,11 @@ const FPOProductCategoriesView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('Product Category updated successfully!');
+      onToast && onToast('success', 'Product Category updated successfully!');
       loadCategories();
     } catch (error) {
       console.error('Error updating product category:', error);
-      alert('Error updating category: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating category: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -158,11 +158,11 @@ const FPOProductCategoriesView = ({ fpo, onClose }) => {
     if (window.confirm('Are you sure you want to delete this product category?')) {
       try {
         await fpoAPI.deleteProductCategory(fpo.id, categoryId);
-        alert('Product Category deleted successfully!');
+        onToast && onToast('success', 'Product Category deleted successfully!');
         loadCategories();
       } catch (error) {
         console.error('Error deleting product category:', error);
-        alert('Error deleting category: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting category: ' + (error.response?.data?.message || error.message));
       }
     }
   };

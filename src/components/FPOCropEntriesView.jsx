@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fpoAPI } from '../api/apiService';
 import '../styles/FPOCropEntriesView.css';
 
-const FPOCropEntriesView = ({ fpo, onClose }) => {
+const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
   const [cropEntries, setCropEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -132,10 +132,10 @@ const FPOCropEntriesView = ({ fpo, onClose }) => {
         loadCropEntries();
       }, 500);
       
-      alert('Crop entry created successfully!');
+      onToast && onToast('success', 'Crop entry created successfully!');
     } catch (error) {
       console.error('Error creating crop entry:', error);
-      alert('Error creating crop entry: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error creating crop entry: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -191,11 +191,11 @@ const FPOCropEntriesView = ({ fpo, onClose }) => {
       });
       setFormErrors({});
       
-      alert('Crop entry updated successfully!');
+      onToast && onToast('success', 'Crop entry updated successfully!');
       loadCropEntries();
     } catch (error) {
       console.error('Error updating crop entry:', error);
-      alert('Error updating crop entry: ' + (error.response?.data?.message || error.message));
+      onToast && onToast('error', 'Error updating crop entry: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -203,11 +203,11 @@ const FPOCropEntriesView = ({ fpo, onClose }) => {
     if (window.confirm('Are you sure you want to delete this crop entry?')) {
       try {
         await fpoAPI.deleteCrop(fpo.id, cropEntryId);
-        alert('Crop entry deleted successfully!');
+        onToast && onToast('success', 'Crop entry deleted successfully!');
         loadCropEntries();
       } catch (error) {
         console.error('Error deleting crop entry:', error);
-        alert('Error deleting crop entry: ' + (error.response?.data?.message || error.message));
+        onToast && onToast('error', 'Error deleting crop entry: ' + (error.response?.data?.message || error.message));
       }
     }
   };
