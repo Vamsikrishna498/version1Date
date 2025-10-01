@@ -72,47 +72,206 @@ export const ConfigurationProvider = ({ children }) => {
 
       // Process age settings
       if (ageData.status === 'fulfilled' && ageData.value) {
-        setAgeSettings(ageData.value);
-        console.log('✅ Age settings loaded from API');
+        try {
+          const apiAgeSettings = ageData.value;
+          console.log('📊 Age settings from API - Type:', Array.isArray(apiAgeSettings) ? 'array' : typeof apiAgeSettings);
+          
+          // Transform API response to our format
+          // API returns array of settings, we need to map to userType keys
+          if (Array.isArray(apiAgeSettings) && apiAgeSettings.length > 0) {
+            const transformedSettings = {};
+            
+            apiAgeSettings.forEach(setting => {
+              if (setting && typeof setting === 'object' && setting.isActive) {
+                const userType = String(setting.userType || setting.name || '').toLowerCase();
+                // Map various user type names to our standard keys
+                let key = userType;
+                
+                // Handle different naming conventions
+                if (userType.includes('farmer')) {
+                  key = 'farmer';
+                } else if (userType.includes('employee')) {
+                  key = 'employee';
+                } else if (userType.includes('admin')) {
+                  key = 'admin';
+                } else if (userType.includes('date') || userType.includes('application')) {
+                  // If it's a global DATE Application setting, apply to all user types
+                  key = 'global';
+                }
+                
+                transformedSettings[key] = {
+                  min: Number(setting.minValue || setting.min || 18),
+                  max: Number(setting.maxValue || setting.max || 100)
+                };
+              }
+            });
+            
+            // If we have a global setting, apply it to all user types
+            if (transformedSettings.global) {
+              const globalSetting = { ...transformedSettings.global };
+              transformedSettings.farmer = transformedSettings.farmer || { ...globalSetting };
+              transformedSettings.employee = transformedSettings.employee || { ...globalSetting };
+              transformedSettings.admin = transformedSettings.admin || { ...globalSetting };
+            }
+            
+            // Merge with defaults to ensure all user types have settings
+            const finalSettings = {
+              farmer: transformedSettings.farmer || { min: 18, max: 100 },
+              employee: transformedSettings.employee || { min: 21, max: 65 },
+              admin: transformedSettings.admin || { min: 25, max: 60 }
+            };
+            
+            setAgeSettings(finalSettings);
+            console.log('✅ Age settings loaded and transformed');
+          } else if (typeof apiAgeSettings === 'object' && !Array.isArray(apiAgeSettings)) {
+            // If API already returns the correct format, ensure it has proper structure
+            const finalSettings = {
+              farmer: apiAgeSettings.farmer || { min: 18, max: 100 },
+              employee: apiAgeSettings.employee || { min: 21, max: 65 },
+              admin: apiAgeSettings.admin || { min: 25, max: 60 }
+            };
+            setAgeSettings(finalSettings);
+            console.log('✅ Age settings loaded from API (object format)');
+          } else {
+            console.warn('⚠️ Invalid age settings format from API, using fallback');
+            // Use fallback settings
+            setAgeSettings({
+              farmer: { min: 18, max: 100 },
+              employee: { min: 21, max: 65 },
+              admin: { min: 25, max: 60 }
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error processing age settings:', error);
+          // Use fallback settings on error
+          setAgeSettings({
+            farmer: { min: 18, max: 100 },
+            employee: { min: 21, max: 65 },
+            admin: { min: 25, max: 60 }
+          });
+        }
       } else {
         console.warn('⚠️ Using fallback age settings');
       }
 
       // Process education requirements
       if (educationData.status === 'fulfilled' && educationData.value) {
-        // If API returns user-type specific data, use it
-        if (typeof educationData.value === 'object' && !Array.isArray(educationData.value)) {
-          setEducationRequirements(educationData.value);
-        } else {
-          // If API returns array, distribute to user types
-          const allEducationTypes = educationData.value;
+        try {
+          const apiEducationData = educationData.value;
+          
+          // If API returns user-type specific data, use it
+          if (typeof apiEducationData === 'object' && !Array.isArray(apiEducationData)) {
+            setEducationRequirements(apiEducationData);
+          } else if (Array.isArray(apiEducationData)) {
+            // If API returns array, extract education type names and distribute to user types
+            // API may return objects with {name, description, id, etc.} or just strings
+            const allEducationTypes = apiEducationData.map(item => {
+              // If item is an object, extract the name property
+              if (typeof item === 'object' && item !== null) {
+                return String(item.name || item.typeName || item.educationType || '');
+              }
+              // If item is already a string, use it
+              return String(item);
+            }).filter(name => name.trim() !== ''); // Remove empty strings
+            
+            setEducationRequirements({
+              farmer: allEducationTypes,
+              employee: allEducationTypes.filter(type => 
+                ['Secondary (9-10)', 'Higher Secondary (11-12)', 'Graduate', 'Post Graduate', 'Professional'].includes(type)
+              ),
+              admin: allEducationTypes.filter(type => 
+                ['Graduate', 'Post Graduate', 'Professional'].includes(type)
+              )
+            });
+          } else {
+            console.warn('⚠️ Invalid education data format, using fallback');
+            setEducationRequirements({
+              farmer: [
+                'Illiterate', 'Primary (1-5)', 'Middle (6-8)', 'Secondary (9-10)',
+                'Higher Secondary (11-12)', 'Graduate', 'Post Graduate', 'Professional'
+              ],
+              employee: [
+                'Secondary (9-10)', 'Higher Secondary (11-12)', 'Graduate', 'Post Graduate', 'Professional'
+              ],
+              admin: [
+                'Graduate', 'Post Graduate', 'Professional'
+              ]
+            });
+          }
+          console.log('✅ Education requirements loaded from API');
+        } catch (error) {
+          console.error('❌ Error processing education data:', error);
           setEducationRequirements({
-            farmer: allEducationTypes,
-            employee: allEducationTypes.filter(type => 
-              ['Secondary (9-10)', 'Higher Secondary (11-12)', 'Graduate', 'Post Graduate', 'Professional'].includes(type)
-            ),
-            admin: allEducationTypes.filter(type => 
-              ['Graduate', 'Post Graduate', 'Professional'].includes(type)
-            )
+            farmer: [
+              'Illiterate', 'Primary (1-5)', 'Middle (6-8)', 'Secondary (9-10)',
+              'Higher Secondary (11-12)', 'Graduate', 'Post Graduate', 'Professional'
+            ],
+            employee: [
+              'Secondary (9-10)', 'Higher Secondary (11-12)', 'Graduate', 'Post Graduate', 'Professional'
+            ],
+            admin: [
+              'Graduate', 'Post Graduate', 'Professional'
+            ]
           });
         }
-        console.log('✅ Education requirements loaded from API');
       } else {
         console.warn('⚠️ Using fallback education requirements');
       }
 
       // Process crop names
       if (cropNamesData.status === 'fulfilled' && cropNamesData.value) {
-        setCropNames(cropNamesData.value);
-        console.log('✅ Crop names loaded from API');
+        try {
+          const apiCropNames = cropNamesData.value;
+          // Extract names if API returns objects
+          const cropNamesArray = Array.isArray(apiCropNames) 
+            ? apiCropNames.map(item => {
+                if (typeof item === 'object' && item !== null) {
+                  return String(item.name || item.cropName || '');
+                }
+                return String(item);
+              }).filter(name => name.trim() !== '')
+            : [];
+          setCropNames(cropNamesArray.length > 0 ? cropNamesArray : [
+            'Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane', 'Potato', 
+            'Tomato', 'Onion', 'Brinjal', 'Okra', 'Cabbage', 'Cauliflower'
+          ]);
+          console.log('✅ Crop names loaded from API');
+        } catch (error) {
+          console.error('❌ Error processing crop names:', error);
+          setCropNames([
+            'Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane', 'Potato', 
+            'Tomato', 'Onion', 'Brinjal', 'Okra', 'Cabbage', 'Cauliflower'
+          ]);
+        }
       } else {
         console.warn('⚠️ Using fallback crop names');
       }
 
       // Process crop types
       if (cropTypesData.status === 'fulfilled' && cropTypesData.value) {
-        setCropTypes(cropTypesData.value);
-        console.log('✅ Crop types loaded from API');
+        try {
+          const apiCropTypes = cropTypesData.value;
+          // Extract names if API returns objects
+          const cropTypesArray = Array.isArray(apiCropTypes)
+            ? apiCropTypes.map(item => {
+                if (typeof item === 'object' && item !== null) {
+                  return String(item.name || item.typeName || item.cropType || '');
+                }
+                return String(item);
+              }).filter(name => name.trim() !== '')
+            : [];
+          setCropTypes(cropTypesArray.length > 0 ? cropTypesArray : [
+            'Cereals', 'Pulses', 'Oilseeds', 'Cash Crops', 'Vegetables', 
+            'Fruits', 'Spices', 'Medicinal Plants', 'Fodder Crops'
+          ]);
+          console.log('✅ Crop types loaded from API');
+        } catch (error) {
+          console.error('❌ Error processing crop types:', error);
+          setCropTypes([
+            'Cereals', 'Pulses', 'Oilseeds', 'Cash Crops', 'Vegetables', 
+            'Fruits', 'Spices', 'Medicinal Plants', 'Fodder Crops'
+          ]);
+        }
       } else {
         console.warn('⚠️ Using fallback crop types');
       }
@@ -184,11 +343,20 @@ export const ConfigurationProvider = ({ children }) => {
 
   // Validate age based on current settings
   const validateAge = (age, userType = 'farmer') => {
-    const settings = ageSettings[userType] || ageSettings.farmer;
+    // Convert userType to lowercase to match the ageSettings keys
+    const normalizedUserType = userType.toLowerCase();
+    const settings = ageSettings[normalizedUserType] || ageSettings.farmer;
+    
+    // Check if settings exist and have min/max properties
+    if (!settings || typeof settings.min === 'undefined' || typeof settings.max === 'undefined') {
+      // Return valid if no settings configured
+      return { isValid: true, message: '' };
+    }
+    
     if (age < settings.min || age > settings.max) {
       return {
         isValid: false,
-        message: `Age must be between ${settings.min} and ${settings.max} for ${userType}s`
+        message: `Age must be between ${settings.min} and ${settings.max} for ${normalizedUserType}s`
       };
     }
     return { isValid: true, message: '' };

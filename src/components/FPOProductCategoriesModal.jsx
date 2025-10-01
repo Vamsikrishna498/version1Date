@@ -4,6 +4,7 @@ import { fpoAPI } from '../api/apiService';
 const FPOProductCategoriesModal = ({ isOpen, onClose, fpoId }) => {
   const [categories, setCategories] = useState([]);
   const CATEGORY_OPTIONS = [
+    'Urea',
     'Fertilizers',
     'Pesticides',
     'Bio-stimulants',
@@ -15,12 +16,16 @@ const FPOProductCategoriesModal = ({ isOpen, onClose, fpoId }) => {
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ categoryName: '' });
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   useEffect(() => { if (isOpen && fpoId) load(); }, [isOpen, fpoId]);
   useEffect(() => {
-    const cb = (e) => { if (activeDropdown && !e.target.closest('.action-dropdown')) setActiveDropdown(null); };
+    const cb = (e) => { 
+      if (activeDropdown && !e.target.closest('.action-dropdown')) setActiveDropdown(null);
+      if (showCategoryDropdown && !e.target.closest('.custom-dropdown-container')) setShowCategoryDropdown(false);
+    };
     document.addEventListener('mousedown', cb); return () => document.removeEventListener('mousedown', cb);
-  }, [activeDropdown]);
+  }, [activeDropdown, showCategoryDropdown]);
 
   const load = async () => {
     try {
@@ -60,6 +65,23 @@ const FPOProductCategoriesModal = ({ isOpen, onClose, fpoId }) => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this category?')) return;
     try { await fpoAPI.deleteProductCategory(fpoId, id); load(); } catch (e2) { alert('Error deleting category: ' + (e2.response?.data?.message || e2.message)); }
+  };
+
+  const selectCategory = (category) => {
+    setFormData({ categoryName: category });
+    setShowCategoryDropdown(false);
+  };
+
+  const getFilteredCategories = () => {
+    if (!formData.categoryName) return CATEGORY_OPTIONS;
+    return CATEGORY_OPTIONS.filter(cat => 
+      cat.toLowerCase().includes(formData.categoryName.toLowerCase())
+    );
+  };
+
+  const updateCategoryField = (value) => {
+    setFormData({ categoryName: value });
+    setShowCategoryDropdown(true);
   };
 
   const filtered = categories.filter(c => (c.categoryName || '').toLowerCase().includes(searchTerm.toLowerCase()));
@@ -123,30 +145,58 @@ const FPOProductCategoriesModal = ({ isOpen, onClose, fpoId }) => {
         <div className="form-modal-overlay">
           <div className="form-modal-content">
             <div className="form-modal-header">
-              <h3>{editing ? 'Edit Product Category' : 'Add Product Category'}</h3>
+              <h3>{editing ? 'Edit Product Category' : 'Add New Product Category'}</h3>
               <button className="close-btn" onClick={() => { setShowForm(false); setEditing(null); }}>×</button>
             </div>
             <div className="form-modal-body">
+              {!editing && <p className="form-subtitle">Add a new category for Food Product</p>}
               <form onSubmit={editing ? handleUpdate : handleCreate}>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>Category Name *</label>
-                    <select
-                      value={formData.categoryName}
-                      onChange={(e)=>setFormData({ categoryName: e.target.value })}
-                      required
-                      className={!formData.categoryName ? 'required-field' : ''}
-                    >
-                      <option value="">Select Category</option>
-                      {CATEGORY_OPTIONS.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                    <label>CATEGORY NAME *</label>
+                    <div className="custom-dropdown-container">
+                      <input
+                        type="text"
+                        value={formData.categoryName}
+                        onChange={(e)=>updateCategoryField(e.target.value)}
+                        onFocus={() => setShowCategoryDropdown(true)}
+                        placeholder="Select Category"
+                        required
+                        className={!formData.categoryName ? 'required-field' : ''}
+                        autoComplete="off"
+                      />
+                      <button 
+                        type="button"
+                        className="dropdown-arrow"
+                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      >
+                        <i className={`fas fa-chevron-${showCategoryDropdown ? 'up' : 'down'}`}></i>
+                      </button>
+                      {showCategoryDropdown && (
+                        <div className="custom-dropdown-menu">
+                          {getFilteredCategories().length > 0 ? (
+                            getFilteredCategories().map(option => (
+                              <div 
+                                key={option}
+                                className="custom-dropdown-item"
+                                onClick={() => selectCategory(option)}
+                              >
+                                {option}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item no-results">
+                              No matching categories
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="form-actions">
                   <button type="button" className="cancel-btn" onClick={() => { setShowForm(false); setEditing(null); }}>Cancel</button>
-                  <button type="submit" className={`submit-btn ${!formData.categoryName ? 'disabled' : ''}`} disabled={!formData.categoryName}>{editing ? 'Update' : 'Create'}</button>
+                  <button type="submit" className={`submit-btn ${!formData.categoryName ? 'disabled' : ''}`} disabled={!formData.categoryName}>{editing ? 'Update Category' : 'Add Category'}</button>
                 </div>
               </form>
             </div>

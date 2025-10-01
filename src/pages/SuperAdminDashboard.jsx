@@ -43,7 +43,6 @@ import FPODashboard from '../pages/FPODashboard';
 import ConfigurationDashboard from '../components/ConfigurationDashboard';
 import PersonalizationTab from '../components/config/PersonalizationTab';
 import SettingsMasterList from '../components/SettingsMasterList';
-import ConfigurationManagement from '../components/config/ConfigurationManagement';
 import '../styles/Dashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -3070,10 +3069,7 @@ const SuperAdminDashboard = () => {
           )}
 
           {activeTab === 'configurations' && (
-            <div>
-              <ConfigurationManagement />
-              <ConfigurationDashboard />
-            </div>
+            <ConfigurationDashboard />
           )}
 
           {activeTab === 'settings' && (

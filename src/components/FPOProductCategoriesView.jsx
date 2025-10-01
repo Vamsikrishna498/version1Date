@@ -11,19 +11,15 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // Predefined category options
   const CATEGORY_OPTIONS = [
+    'Urea',
     'Fertilizers',
     'Pesticides',
     'Bio-stimulants',
-    'Manure - FYM/Poultry manure',
-    'Seeds',
-    'Irrigation Equipment',
-    'Farm Tools',
-    'Machinery Parts',
-    'Organic Products',
-    'Soil Conditioners'
+    'Manure - FYM/Poultry manure'
   ];
 
   // Form state for creating/editing product categories
@@ -43,13 +39,16 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
       if (activeDropdown && !event.target.closest('.action-dropdown')) {
         setActiveDropdown(null);
       }
+      if (showCategoryDropdown && !event.target.closest('.custom-dropdown-container')) {
+        setShowCategoryDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeDropdown]);
+  }, [activeDropdown, showCategoryDropdown]);
 
   const loadCategories = async () => {
     try {
@@ -174,6 +173,26 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
+    
+    // Show dropdown when typing in category field
+    if (field === 'categoryName') {
+      setShowCategoryDropdown(true);
+    }
+  };
+
+  const selectCategory = (category) => {
+    setFormData(prev => ({ ...prev, categoryName: category }));
+    setShowCategoryDropdown(false);
+    if (formErrors.categoryName) {
+      setFormErrors(prev => ({ ...prev, categoryName: '' }));
+    }
+  };
+
+  const getFilteredCategories = () => {
+    if (!formData.categoryName) return CATEGORY_OPTIONS;
+    return CATEGORY_OPTIONS.filter(cat => 
+      cat.toLowerCase().includes(formData.categoryName.toLowerCase())
+    );
   };
 
   const filteredCategories = categories.filter(category =>
@@ -217,7 +236,7 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
             <div className="header-left">
               <h1 className="form-title">{editingCategory ? 'Edit Product Category' : 'Add New Product Category'}</h1>
               <p className="form-subtitle">
-                {editingCategory ? 'Update product category information' : 'Add a new category for ' + (fpo?.fpoName || 'FPO')}
+                {editingCategory ? 'Update product category information' : 'Add a new category for Food Product'}
               </p>
             </div>
             <div className="header-right">
@@ -240,15 +259,45 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
           <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="category-form">
             <div className="form-grid">
               <div className="form-group full-width">
-                <label htmlFor="categoryName" className="form-label">Category Name <span className="required">*</span></label>
-                <input
-                  type="text"
-                  id="categoryName"
-                  value={formData.categoryName}
-                  onChange={(e) => updateField('categoryName', e.target.value)}
-                  className={`form-input ${formErrors.categoryName ? 'error' : ''}`}
-                  placeholder="Select Category"
-                />
+                <label htmlFor="categoryName" className="form-label">CATEGORY NAME <span className="required">*</span></label>
+                <div className="custom-dropdown-container">
+                  <input
+                    type="text"
+                    id="categoryName"
+                    value={formData.categoryName}
+                    onChange={(e) => updateField('categoryName', e.target.value)}
+                    onFocus={() => setShowCategoryDropdown(true)}
+                    className={`form-input ${formErrors.categoryName ? 'error' : ''}`}
+                    placeholder="Select Category"
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="button"
+                    className="dropdown-arrow"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  >
+                    <i className={`fas fa-chevron-${showCategoryDropdown ? 'up' : 'down'}`}></i>
+                  </button>
+                  {showCategoryDropdown && (
+                    <div className="custom-dropdown-menu">
+                      {getFilteredCategories().length > 0 ? (
+                        getFilteredCategories().map(option => (
+                          <div 
+                            key={option}
+                            className="custom-dropdown-item"
+                            onClick={() => selectCategory(option)}
+                          >
+                            {option}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="custom-dropdown-item no-results">
+                          No matching categories
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {formErrors.categoryName && <span className="error-message">{formErrors.categoryName}</span>}
               </div>
             </div>
@@ -576,51 +625,77 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="product-category-form">
-              <div className="form-grid">
-                <div className="form-group full-width">
-                  <label htmlFor="categoryName" className="form-label">
-                    Category Name <span className="required">*</span>
-                  </label>
-                  <select
-                    id="categoryName"
-                    value={formData.categoryName}
-                    onChange={(e) => updateField('categoryName', e.target.value)}
-                    className={`form-select ${formErrors.categoryName ? 'error' : ''}`}
-                  >
-                    <option value="">Select Category</option>
-                    {CATEGORY_OPTIONS.map(option => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  {formErrors.categoryName && <span className="error-message">{formErrors.categoryName}</span>}
+            <div className="form-modal-body">
+              {!editingCategory && <p className="form-subtitle">Add a new category for Food Product</p>}
+              <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="product-category-form">
+                <div className="form-grid">
+                  <div className="form-group full-width">
+                    <label htmlFor="categoryName" className="form-label">
+                      CATEGORY NAME <span className="required">*</span>
+                    </label>
+                    <div className="custom-dropdown-container">
+                      <input
+                        type="text"
+                        id="categoryName"
+                        value={formData.categoryName}
+                        onChange={(e) => updateField('categoryName', e.target.value)}
+                        onFocus={() => setShowCategoryDropdown(true)}
+                        className={`form-input ${formErrors.categoryName ? 'error' : ''}`}
+                        placeholder="Select Category"
+                        autoComplete="off"
+                      />
+                      <button 
+                        type="button"
+                        className="dropdown-arrow"
+                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      >
+                        <i className={`fas fa-chevron-${showCategoryDropdown ? 'up' : 'down'}`}></i>
+                      </button>
+                      {showCategoryDropdown && (
+                        <div className="custom-dropdown-menu">
+                          {getFilteredCategories().length > 0 ? (
+                            getFilteredCategories().map(option => (
+                              <div 
+                                key={option}
+                                className="custom-dropdown-item"
+                                onClick={() => selectCategory(option)}
+                              >
+                                {option}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item no-results">
+                              No matching categories
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {formErrors.categoryName && <span className="error-message">{formErrors.categoryName}</span>}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setEditingCategory(null);
-                    setFormErrors({});
-                  }}
-                >
-                  <i className="fas fa-times"></i>
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                >
-                  <i className="fas fa-tags"></i>
-                  {editingCategory ? 'Update Category' : 'Add Category'}
-                </button>
-              </div>
-            </form>
+                
+                <div className="form-actions">
+                  <button 
+                    type="button" 
+                    className="cancel-btn" 
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setEditingCategory(null);
+                      setFormErrors({});
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="submit-btn"
+                  >
+                    {editingCategory ? 'Update Category' : 'Add Category'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
