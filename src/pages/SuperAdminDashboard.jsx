@@ -2521,7 +2521,7 @@ const SuperAdminDashboard = () => {
                                       (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
                                     ));
                                     const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
-                                    if (activeCard) {
+                                    if (activeCard && (activeCard.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(activeCard.cardId || ''))) {
                                       console.log('✅ Using existing EMPLOYEE ID card:', activeCard.cardId);
                                       setCurrentCardId(activeCard.cardId);
                                       setShowIdCardContent(true);
@@ -2623,15 +2623,26 @@ const SuperAdminDashboard = () => {
                       try {
                         const newEmployee = await employeesAPI.createEmployee(employeeData);
                         setEmployees(prev => [...prev, newEmployee]);
-                        // Try to ensure the employee unique ID is available immediately
+                        // Immediately compute and persist the correct employee display ID
                         try {
+                          // Try to generate or fetch the EMPLOYEE ID card right away
                           const gen = await idCardAPI.generateEmployeeIdCard(newEmployee.id);
                           if (gen && gen.cardId) {
                             setEmployeeUniqueIds(prev => ({ ...prev, [newEmployee.id]: gen.cardId }));
+                          } else {
+                            // If already exists, fetch and store only EMPLOYEE type
+                            const list = await idCardAPI.getIdCardsByHolder(newEmployee.id.toString());
+                            const employeeCards = Array.isArray(list) ? list.filter(card => (
+                              String(card.holderId) === String(newEmployee.id) &&
+                              (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
+                            )) : [];
+                            const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+                            if (activeCard) {
+                              setEmployeeUniqueIds(prev => ({ ...prev, [newEmployee.id]: activeCard.cardId }));
+                            }
                           }
                         } catch (e) {
-                          // If generation fails (e.g., permissions), ignore; it will appear later when generated
-                          console.warn('Could not generate employee ID card right after creation:', e);
+                          console.warn('Could not generate/fetch employee ID card immediately:', e);
                         }
                         alert('Employee created successfully!');
                         setShowEmployeeRegistration(false);
