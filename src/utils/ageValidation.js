@@ -26,11 +26,55 @@ export const validateAge = async (age, userType) => {
  * Validates age synchronously (for immediate feedback)
  * @param {number} age - The age to validate
  * @param {string} userType - The user type
- * @param {Array} ageSettings - Array of age settings from the backend
+ * @param {Array|Object} ageSettings - Array or object of age settings from the backend
  * @returns {Object} Validation result
  */
 export const validateAgeSync = (age, userType, ageSettings) => {
-  const userAgeSetting = ageSettings.find(setting => 
+  // Handle if ageSettings is not provided or is invalid
+  if (!ageSettings) {
+    return {
+      isValid: true,
+      message: 'No age restrictions configured'
+    };
+  }
+
+  let userAgeSetting;
+  
+  // Handle object format from ConfigurationContext: { farmer: { min: 18, max: 100 } }
+  if (!Array.isArray(ageSettings)) {
+    const normalizedUserType = userType.toLowerCase();
+    userAgeSetting = ageSettings[normalizedUserType];
+    
+    if (!userAgeSetting || typeof userAgeSetting.min === 'undefined' || typeof userAgeSetting.max === 'undefined') {
+      return {
+        isValid: true,
+        message: 'No age restrictions configured'
+      };
+    }
+    
+    // Use min/max from object format
+    if (age < userAgeSetting.min) {
+      return {
+        isValid: false,
+        message: `Age must be at least ${userAgeSetting.min} years for ${normalizedUserType} registration`
+      };
+    }
+    
+    if (age > userAgeSetting.max) {
+      return {
+        isValid: false,
+        message: `Age must not exceed ${userAgeSetting.max} years for ${normalizedUserType} registration`
+      };
+    }
+    
+    return {
+      isValid: true,
+      message: 'Age is valid'
+    };
+  }
+  
+  // Handle array format from backend API
+  userAgeSetting = ageSettings.find(setting => 
     setting.userType === userType && setting.isActive
   );
   

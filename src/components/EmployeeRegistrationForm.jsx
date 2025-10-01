@@ -16,7 +16,15 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   const [ageValidationError, setAgeValidationError] = useState('');
   const [emailAvailabilityError, setEmailAvailabilityError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [showEducationDropdown, setShowEducationDropdown] = useState(false);
+  const [educationSearchTerm, setEducationSearchTerm] = useState('');
 
+  // Initialize education search term from edit data
+  useEffect(() => {
+    if (editData?.professional?.education) {
+      setEducationSearchTerm(editData.professional.education);
+    }
+  }, [editData]);
 
   const totalSteps = 8;
 
@@ -65,6 +73,35 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
     } finally {
       setIsCheckingEmail(false);
     }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showEducationDropdown && !event.target.closest('.custom-dropdown-container')) {
+        setShowEducationDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEducationDropdown]);
+
+  // Helper functions for education dropdown
+  const getFilteredEducationTypes = () => {
+    const educationTypes = getEducationTypesForUser('employee');
+    if (!educationSearchTerm) return educationTypes;
+    return educationTypes.filter(edu => 
+      edu.toLowerCase().includes(educationSearchTerm.toLowerCase())
+    );
+  };
+
+  const selectEducation = (education) => {
+    setValue('professional.education', education);
+    setEducationSearchTerm(education);
+    setShowEducationDropdown(false);
   };
 
   const methods = useForm({
@@ -160,6 +197,12 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   };
 
   const onSubmit = async (data) => {
+    // Check for age validation error before submitting
+    if (ageValidationError) {
+      alert('Please fix age validation error before submitting');
+      return;
+    }
+    
     try {
       console.log('Employee form submitted with data:', data);
       
@@ -588,18 +631,51 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
               <div className="emp-form-four">
                 {/* Education Field */}
                 <div>
-                  <label className="label">Education <span className="required">*</span></label>
-                  <select className="input" {...register("professional.education")}>
-                    <option value="">Select</option>
-                    {getEducationTypesForUser('employee').map((edu) => (
-                      <option key={edu} value={edu}>
-                        {edu}
-                      </option>
-                    ))}
-                  </select>
-                                     {!isInDashboard && errors.professional?.education && (
-                     <p className="error">{errors.education?.message}</p>
-                   )}
+                  <label className="label">EDUCATION <span className="required">*</span></label>
+                  <div className="custom-dropdown-container">
+                    <input
+                      type="text"
+                      value={educationSearchTerm || watch('professional.education') || ''}
+                      onChange={(e) => {
+                        setEducationSearchTerm(e.target.value);
+                        setValue('professional.education', e.target.value);
+                        setShowEducationDropdown(true);
+                      }}
+                      onFocus={() => setShowEducationDropdown(true)}
+                      placeholder="Select Education"
+                      className="input"
+                      autoComplete="off"
+                    />
+                    <button 
+                      type="button"
+                      className="dropdown-arrow"
+                      onClick={() => setShowEducationDropdown(!showEducationDropdown)}
+                    >
+                      <i className={`fas fa-chevron-${showEducationDropdown ? 'up' : 'down'}`}></i>
+                    </button>
+                    {showEducationDropdown && (
+                      <div className="custom-dropdown-menu">
+                        {getFilteredEducationTypes().length > 0 ? (
+                          getFilteredEducationTypes().map((edu) => (
+                            <div 
+                              key={edu}
+                              className="custom-dropdown-item"
+                              onClick={() => selectEducation(edu)}
+                            >
+                              {edu}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="custom-dropdown-item no-results">
+                            No matching education types
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {!isInDashboard && errors.professional?.education && (
+                    <p className="error">{errors.professional?.education?.message}</p>
+                  )}
                 </div>
 
                 {/* Experience Field */}
@@ -822,6 +898,10 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   type="button"
                   onClick={async () => {
                     const isValid = await trigger();
+                    if (ageValidationError) {
+                      alert('Please fix age validation error before proceeding');
+                      return;
+                    }
                     if (isValid) setCurrentStep(currentStep + 1);
                   }}
                 >
@@ -843,6 +923,10 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     type="button"
                     onClick={async () => {
                       const isValid = await trigger();
+                      if (ageValidationError) {
+                        alert('Please fix age validation error before proceeding');
+                        return;
+                      }
                       if (isValid) setCurrentStep(currentStep + 1);
                     }}
                   >

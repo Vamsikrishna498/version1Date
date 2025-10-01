@@ -13,6 +13,8 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showInputShopDropdown, setShowInputShopDropdown] = useState(false);
 
   // Form state for creating/editing products
   const [formData, setFormData] = useState({
@@ -35,13 +37,19 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
       if (activeDropdown && !event.target.closest('.action-dropdown')) {
         setActiveDropdown(null);
       }
+      if (showCategoryDropdown && !event.target.closest('.custom-dropdown-container')) {
+        setShowCategoryDropdown(false);
+      }
+      if (showInputShopDropdown && !event.target.closest('.custom-dropdown-container')) {
+        setShowInputShopDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeDropdown]);
+  }, [activeDropdown, showCategoryDropdown, showInputShopDropdown]);
 
   const preloadData = async () => {
     try {
@@ -237,6 +245,46 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
     }
   };
 
+  // Helper functions for custom dropdowns
+  const selectCategory = (categoryId, categoryName) => {
+    setFormData(prev => ({ ...prev, categoryId: categoryId.toString() }));
+    setShowCategoryDropdown(false);
+    if (formErrors.categoryId) {
+      setFormErrors(prev => ({ ...prev, categoryId: '' }));
+    }
+  };
+
+  const selectInputShop = (shopName) => {
+    setFormData(prev => ({ ...prev, inputShop: shopName }));
+    setShowInputShopDropdown(false);
+    if (formErrors.inputShop) {
+      setFormErrors(prev => ({ ...prev, inputShop: '' }));
+    }
+  };
+
+  const getFilteredCategories = () => {
+    if (!formData.categoryId) return categories;
+    const searchValue = formData.categoryId.toLowerCase();
+    return categories.filter(cat => 
+      (cat.categoryName || cat.name || '').toLowerCase().includes(searchValue) ||
+      cat.id.toString().includes(searchValue)
+    );
+  };
+
+  const getFilteredShops = () => {
+    if (!formData.inputShop) return shops;
+    const searchValue = formData.inputShop.toLowerCase();
+    return shops.filter(shop => 
+      (shop.shopName || shop.name || '').toLowerCase().includes(searchValue)
+    );
+  };
+
+  const getCategoryDisplayValue = () => {
+    if (!formData.categoryId) return '';
+    const category = categories.find(c => c.id.toString() === formData.categoryId.toString());
+    return category ? (category.categoryName || category.name) : formData.categoryId;
+  };
+
   const filteredProducts = products.filter(product =>
     (product.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.categoryName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -352,26 +400,98 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
           <form onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="product-form">
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Input Shop <span className="required">*</span></label>
-                <input
-                  type="text"
-                  value={formData.inputShop}
-                  onChange={(e) => setFormData(prev => ({ ...prev, inputShop: e.target.value }))}
-                  className={`form-input ${formErrors.inputShop ? 'error' : ''}`}
-                  placeholder="Select Input Shop"
-                />
+                <label className="form-label">INPUT SHOP <span className="required">*</span></label>
+                <div className="custom-dropdown-container">
+                  <input
+                    type="text"
+                    value={formData.inputShop}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, inputShop: e.target.value }));
+                      setShowInputShopDropdown(true);
+                      if (formErrors.inputShop) {
+                        setFormErrors(prev => ({ ...prev, inputShop: '' }));
+                      }
+                    }}
+                    onFocus={() => setShowInputShopDropdown(true)}
+                    className={`form-input ${formErrors.inputShop ? 'error' : ''}`}
+                    placeholder="Select Input Shop"
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="button"
+                    className="dropdown-arrow"
+                    onClick={() => setShowInputShopDropdown(!showInputShopDropdown)}
+                  >
+                    <i className={`fas fa-chevron-${showInputShopDropdown ? 'up' : 'down'}`}></i>
+                  </button>
+                  {showInputShopDropdown && (
+                    <div className="custom-dropdown-menu">
+                      {getFilteredShops().length > 0 ? (
+                        getFilteredShops().map(shop => (
+                          <div 
+                            key={shop.id}
+                            className="custom-dropdown-item"
+                            onClick={() => selectInputShop(shop.shopName || shop.name || shop.id)}
+                          >
+                            {shop.shopName || shop.name || shop.id}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="custom-dropdown-item no-results">
+                          No matching shops
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {formErrors.inputShop && <span className="error-message">{formErrors.inputShop}</span>}
               </div>
 
               <div className="form-group">
-                <label className="form-label">Category <span className="required">*</span></label>
-                <input
-                  type="text"
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
-                  className={`form-input ${formErrors.categoryId ? 'error' : ''}`}
-                  placeholder="Select Category"
-                />
+                <label className="form-label">CATEGORY <span className="required">*</span></label>
+                <div className="custom-dropdown-container">
+                  <input
+                    type="text"
+                    value={getCategoryDisplayValue()}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, categoryId: e.target.value }));
+                      setShowCategoryDropdown(true);
+                      if (formErrors.categoryId) {
+                        setFormErrors(prev => ({ ...prev, categoryId: '' }));
+                      }
+                    }}
+                    onFocus={() => setShowCategoryDropdown(true)}
+                    className={`form-input ${formErrors.categoryId ? 'error' : ''}`}
+                    placeholder="Select Category"
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="button"
+                    className="dropdown-arrow"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  >
+                    <i className={`fas fa-chevron-${showCategoryDropdown ? 'up' : 'down'}`}></i>
+                  </button>
+                  {showCategoryDropdown && (
+                    <div className="custom-dropdown-menu">
+                      {getFilteredCategories().length > 0 ? (
+                        getFilteredCategories().map(category => (
+                          <div 
+                            key={category.id}
+                            className="custom-dropdown-item"
+                            onClick={() => selectCategory(category.id, category.categoryName || category.name)}
+                          >
+                            {category.categoryName || category.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="custom-dropdown-item no-results">
+                          No matching categories
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {formErrors.categoryId && <span className="error-message">{formErrors.categoryId}</span>}
               </div>
 
@@ -712,41 +832,103 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
               <div className="form-grid">
                 <div className="form-group">
                   <label htmlFor="inputShop" className="form-label">
-                    Input Shop <span className="required">*</span>
+                    INPUT SHOP <span className="required">*</span>
                   </label>
-                  <select
-                    id="inputShop"
-                    value={formData.inputShop}
-                    onChange={(e) => updateField('inputShop', e.target.value)}
-                    className={`form-select ${formErrors.inputShop ? 'error' : ''}`}
-                  >
-                    <option value="">Select Input Shop</option>
-                    {shops.map(shop => (
-                      <option key={shop.id} value={shop.shopName || shop.name || shop.id}>
-                        {shop.shopName || shop.name || shop.id}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="custom-dropdown-container">
+                    <input
+                      type="text"
+                      id="inputShop"
+                      value={formData.inputShop}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, inputShop: e.target.value }));
+                        setShowInputShopDropdown(true);
+                        if (formErrors.inputShop) {
+                          setFormErrors(prev => ({ ...prev, inputShop: '' }));
+                        }
+                      }}
+                      onFocus={() => setShowInputShopDropdown(true)}
+                      className={`form-input ${formErrors.inputShop ? 'error' : ''}`}
+                      placeholder="Select Input Shop"
+                      autoComplete="off"
+                    />
+                    <button 
+                      type="button"
+                      className="dropdown-arrow"
+                      onClick={() => setShowInputShopDropdown(!showInputShopDropdown)}
+                    >
+                      <i className={`fas fa-chevron-${showInputShopDropdown ? 'up' : 'down'}`}></i>
+                    </button>
+                    {showInputShopDropdown && (
+                      <div className="custom-dropdown-menu">
+                        {getFilteredShops().length > 0 ? (
+                          getFilteredShops().map(shop => (
+                            <div 
+                              key={shop.id}
+                              className="custom-dropdown-item"
+                              onClick={() => selectInputShop(shop.shopName || shop.name || shop.id)}
+                            >
+                              {shop.shopName || shop.name || shop.id}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="custom-dropdown-item no-results">
+                            No matching shops
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {formErrors.inputShop && <span className="error-message">{formErrors.inputShop}</span>}
                 </div>
                 
                 <div className="form-group">
                   <label htmlFor="categoryId" className="form-label">
-                    Category <span className="required">*</span>
+                    CATEGORY <span className="required">*</span>
                   </label>
-                  <select
-                    id="categoryId"
-                    value={formData.categoryId}
-                    onChange={(e) => updateField('categoryId', e.target.value)}
-                    className={`form-select ${formErrors.categoryId ? 'error' : ''}`}
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.categoryName || category.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="custom-dropdown-container">
+                    <input
+                      type="text"
+                      id="categoryId"
+                      value={getCategoryDisplayValue()}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, categoryId: e.target.value }));
+                        setShowCategoryDropdown(true);
+                        if (formErrors.categoryId) {
+                          setFormErrors(prev => ({ ...prev, categoryId: '' }));
+                        }
+                      }}
+                      onFocus={() => setShowCategoryDropdown(true)}
+                      className={`form-input ${formErrors.categoryId ? 'error' : ''}`}
+                      placeholder="Select Category"
+                      autoComplete="off"
+                    />
+                    <button 
+                      type="button"
+                      className="dropdown-arrow"
+                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    >
+                      <i className={`fas fa-chevron-${showCategoryDropdown ? 'up' : 'down'}`}></i>
+                    </button>
+                    {showCategoryDropdown && (
+                      <div className="custom-dropdown-menu">
+                        {getFilteredCategories().length > 0 ? (
+                          getFilteredCategories().map(category => (
+                            <div 
+                              key={category.id}
+                              className="custom-dropdown-item"
+                              onClick={() => selectCategory(category.id, category.categoryName || category.name)}
+                            >
+                              {category.categoryName || category.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="custom-dropdown-item no-results">
+                            No matching categories
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {formErrors.categoryId && <span className="error-message">{formErrors.categoryId}</span>}
                 </div>
                 

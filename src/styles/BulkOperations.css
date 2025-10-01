@@ -403,3 +403,140 @@
 .import-status.failed {
   animation: shake 0.5s ease-in-out;
 }
+
+/* Custom Dropdown Styling */
+.custom-dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-container input[type="text"] {
+  padding-right: 45px;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.dropdown-arrow:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.dropdown-arrow i {
+  font-size: 0.75rem;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #22c55e;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: dropdownSlideDown 0.2s ease;
+}
+
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-dropdown-item {
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+  color: #1f2937;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.custom-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.custom-dropdown-item:hover {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #15803d;
+  padding-left: 20px;
+}
+
+.custom-dropdown-item.no-results {
+  color: #9ca3af;
+  cursor: default;
+  font-style: italic;
+  text-align: center;
+}
+
+.custom-dropdown-item.no-results:hover {
+  background: white;
+  padding-left: 16px;
+}
+
+/* Employee Dropdown Info Styling */
+.employee-dropdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.employee-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.employee-email {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.employee-id {
+  color: #10b981;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Scrollbar Styling for Dropdown */
+.custom-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

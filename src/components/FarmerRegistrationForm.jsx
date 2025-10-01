@@ -152,6 +152,12 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   ];
 
   const onSubmit = async (data) => {
+    // Check for age validation error before submitting
+    if (ageValidationError) {
+      alert('Please fix age validation error before submitting');
+      return;
+    }
+    
     try {
       console.log('Form submitted with data:', data);
       
@@ -868,6 +874,10 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       type="button"
       onClick={async () => {
         const isValid = await trigger();
+        if (ageValidationError) {
+          alert('Please fix age validation error before proceeding');
+          return;
+        }
         if (isValid) setCurrentStep(currentStep + 1);
       }}
     >
@@ -882,6 +892,10 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
         type="button"
         onClick={async () => {
           const isValid = await trigger();
+          if (ageValidationError) {
+            alert('Please fix age validation error before submitting');
+            return;
+          }
           if (isValid) {
             await handleSubmit(onSubmit)();
           }
@@ -899,6 +913,10 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
         type="button"
         onClick={async () => {
           const isValid = await trigger();
+          if (ageValidationError) {
+            alert('Please fix age validation error before proceeding');
+            return;
+          }
           if (isValid) setCurrentStep(currentStep + 1);
         }}
       >

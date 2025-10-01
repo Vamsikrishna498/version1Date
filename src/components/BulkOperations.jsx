@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { apiService } from '../api/apiService';
 import '../styles/BulkOperations.css';
 
@@ -21,7 +21,93 @@ const BulkOperations = ({ userRole, hideHeader = false }) => {
     location: '',
     employeeEmail: ''
   });
+  const [employees, setEmployees] = useState([]);
+  const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
+  const [districts, setDistricts] = useState([]);
+  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const fileInputRef = useRef();
+
+  // Load employees and districts on component mount
+  useEffect(() => {
+    loadEmployees();
+    loadDistricts();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showEmployeeDropdown && !event.target.closest('.custom-dropdown-container')) {
+        setShowEmployeeDropdown(false);
+      }
+      if (showDistrictDropdown && !event.target.closest('.custom-dropdown-container')) {
+        setShowDistrictDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmployeeDropdown, showDistrictDropdown]);
+
+  const loadEmployees = async () => {
+    try {
+      const response = await apiService.getAllEmployees();
+      const employeeData = response?.data || response || [];
+      setEmployees(Array.isArray(employeeData) ? employeeData : []);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      setEmployees([]);
+    }
+  };
+
+  const getFilteredEmployees = () => {
+    if (!exportFilters.assignedEmployeeEmail) return employees;
+    const searchValue = exportFilters.assignedEmployeeEmail.toLowerCase();
+    return employees.filter(emp => 
+      (emp.email || '').toLowerCase().includes(searchValue) ||
+      (emp.firstName || '').toLowerCase().includes(searchValue) ||
+      (emp.lastName || '').toLowerCase().includes(searchValue) ||
+      (emp.employeeId || '').toLowerCase().includes(searchValue)
+    );
+  };
+
+  const selectEmployee = (email) => {
+    setExportFilters(prev => ({ ...prev, assignedEmployeeEmail: email }));
+    setShowEmployeeDropdown(false);
+  };
+
+  const loadDistricts = async () => {
+    try {
+      const response = await apiService.getAllFarmers();
+      const farmerData = response?.data || response || [];
+      
+      // Extract unique districts from farmers
+      const uniqueDistricts = [...new Set(
+        (Array.isArray(farmerData) ? farmerData : [])
+          .map(farmer => farmer.district)
+          .filter(district => district && district.trim() !== '')
+      )].sort();
+      
+      setDistricts(uniqueDistricts);
+    } catch (error) {
+      console.error('Error loading districts:', error);
+      setDistricts([]);
+    }
+  };
+
+  const getFilteredDistricts = () => {
+    if (!exportFilters.location) return districts;
+    const searchValue = exportFilters.location.toLowerCase();
+    return districts.filter(district => 
+      district.toLowerCase().includes(searchValue)
+    );
+  };
+
+  const selectDistrict = (district) => {
+    setExportFilters(prev => ({ ...prev, location: district }));
+    setShowDistrictDropdown(false);
+  };
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -207,14 +293,6 @@ const BulkOperations = ({ userRole, hideHeader = false }) => {
                 >
                   📄 Download Farmer Template
                 </button>
-                {userRole === 'SUPER_ADMIN' && (
-                  <button 
-                    className="template-btn"
-                    onClick={() => downloadTemplate('EMPLOYEE')}
-                  >
-                    📄 Download Employee Template
-                  </button>
-                )}
               </div>
             </div>
 
@@ -226,9 +304,6 @@ const BulkOperations = ({ userRole, hideHeader = false }) => {
                   onChange={(e) => setImportType(e.target.value)}
                 >
                   <option value="FARMER">Farmer Data</option>
-                  {userRole === 'SUPER_ADMIN' && (
-                    <option value="EMPLOYEE">Employee Data</option>
-                  )}
                 </select>
               </div>
 
@@ -326,29 +401,103 @@ const BulkOperations = ({ userRole, hideHeader = false }) => {
               </div>
 
               <div className="form-group">
-                <label>Assigned Employee Email:</label>
-                <input
-                  type="email"
-                  value={exportFilters.assignedEmployeeEmail}
-                  onChange={(e) => setExportFilters({
-                    ...exportFilters, 
-                    assignedEmployeeEmail: e.target.value
-                  })}
-                  placeholder="Filter by assigned employee"
-                />
+                <label>ASSIGNED EMPLOYEE EMAIL:</label>
+                <div className="custom-dropdown-container">
+                  <input
+                    type="text"
+                    value={exportFilters.assignedEmployeeEmail}
+                    onChange={(e) => {
+                      setExportFilters({
+                        ...exportFilters, 
+                        assignedEmployeeEmail: e.target.value
+                      });
+                      setShowEmployeeDropdown(true);
+                    }}
+                    onFocus={() => setShowEmployeeDropdown(true)}
+                    placeholder="Filter by assigned employee"
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="button"
+                    className="dropdown-arrow"
+                    onClick={() => setShowEmployeeDropdown(!showEmployeeDropdown)}
+                  >
+                    <i className={`fas fa-chevron-${showEmployeeDropdown ? 'up' : 'down'}`}></i>
+                  </button>
+                  {showEmployeeDropdown && (
+                    <div className="custom-dropdown-menu">
+                      {getFilteredEmployees().length > 0 ? (
+                        getFilteredEmployees().map(employee => (
+                          <div 
+                            key={employee.id || employee.email}
+                            className="custom-dropdown-item"
+                            onClick={() => selectEmployee(employee.email)}
+                          >
+                            <div className="employee-dropdown-info">
+                              <span className="employee-name">
+                                {employee.firstName} {employee.lastName}
+                              </span>
+                              <span className="employee-email">{employee.email}</span>
+                              {employee.employeeId && (
+                                <span className="employee-id">ID: {employee.employeeId}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="custom-dropdown-item no-results">
+                          No matching employees
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">
-                <label>Location (District):</label>
-                <input
-                  type="text"
-                  value={exportFilters.location}
-                  onChange={(e) => setExportFilters({
-                    ...exportFilters, 
-                    location: e.target.value
-                  })}
-                  placeholder="Filter by district"
-                />
+                <label>LOCATION (DISTRICT):</label>
+                <div className="custom-dropdown-container">
+                  <input
+                    type="text"
+                    value={exportFilters.location}
+                    onChange={(e) => {
+                      setExportFilters({
+                        ...exportFilters, 
+                        location: e.target.value
+                      });
+                      setShowDistrictDropdown(true);
+                    }}
+                    onFocus={() => setShowDistrictDropdown(true)}
+                    placeholder="Filter by district"
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="button"
+                    className="dropdown-arrow"
+                    onClick={() => setShowDistrictDropdown(!showDistrictDropdown)}
+                  >
+                    <i className={`fas fa-chevron-${showDistrictDropdown ? 'up' : 'down'}`}></i>
+                  </button>
+                  {showDistrictDropdown && (
+                    <div className="custom-dropdown-menu">
+                      {getFilteredDistricts().length > 0 ? (
+                        getFilteredDistricts().map((district, index) => (
+                          <div 
+                            key={index}
+                            className="custom-dropdown-item"
+                            onClick={() => selectDistrict(district)}
+                          >
+                            {district}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="custom-dropdown-item no-results">
+                          No matching districts
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">
@@ -412,28 +561,121 @@ const BulkOperations = ({ userRole, hideHeader = false }) => {
 
             <div className="assignment-form">
                   <div className="form-group">
-                    <label>Location (District):</label>
-                    <input
-                      type="text"
-                      value={assignmentData.location}
-                      onChange={(e) => setAssignmentData({
-                        ...assignmentData, 
-                        location: e.target.value
-                      })}
-                      placeholder="kadapa"
-                    />
+                    <label>LOCATION (DISTRICT):</label>
+                    <div className="custom-dropdown-container">
+                      <input
+                        type="text"
+                        value={assignmentData.location}
+                        onChange={(e) => {
+                          setAssignmentData({
+                            ...assignmentData, 
+                            location: e.target.value
+                          });
+                          setShowDistrictDropdown(true);
+                        }}
+                        onFocus={() => setShowDistrictDropdown(true)}
+                        placeholder="Select district"
+                        autoComplete="off"
+                      />
+                      <button 
+                        type="button"
+                        className="dropdown-arrow"
+                        onClick={() => setShowDistrictDropdown(!showDistrictDropdown)}
+                      >
+                        <i className={`fas fa-chevron-${showDistrictDropdown ? 'up' : 'down'}`}></i>
+                      </button>
+                      {showDistrictDropdown && (
+                        <div className="custom-dropdown-menu">
+                          {districts.length > 0 ? (
+                            districts.filter(district => 
+                              !assignmentData.location || 
+                              district.toLowerCase().includes(assignmentData.location.toLowerCase())
+                            ).map((district, index) => (
+                              <div 
+                                key={index}
+                                className="custom-dropdown-item"
+                                onClick={() => {
+                                  setAssignmentData({ ...assignmentData, location: district });
+                                  setShowDistrictDropdown(false);
+                                }}
+                              >
+                                {district}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item no-results">
+                              No districts available
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group">
-                <label>Employee Email:</label>
-                    <input
-                      type="email"
-                      value={assignmentData.employeeEmail}
-                      onChange={(e) => setAssignmentData({
-                        ...assignmentData, 
-                        employeeEmail: e.target.value
-                      })}
-                      placeholder="employee@example.com"
-                    />
+                    <label>EMPLOYEE EMAIL:</label>
+                    <div className="custom-dropdown-container">
+                      <input
+                        type="text"
+                        value={assignmentData.employeeEmail}
+                        onChange={(e) => {
+                          setAssignmentData({
+                            ...assignmentData, 
+                            employeeEmail: e.target.value
+                          });
+                          setShowEmployeeDropdown(true);
+                        }}
+                        onFocus={() => setShowEmployeeDropdown(true)}
+                        placeholder="Select employee email"
+                        autoComplete="off"
+                      />
+                      <button 
+                        type="button"
+                        className="dropdown-arrow"
+                        onClick={() => setShowEmployeeDropdown(!showEmployeeDropdown)}
+                      >
+                        <i className={`fas fa-chevron-${showEmployeeDropdown ? 'up' : 'down'}`}></i>
+                      </button>
+                      {showEmployeeDropdown && (
+                        <div className="custom-dropdown-menu">
+                          {employees.filter(emp => 
+                            !assignmentData.employeeEmail || 
+                            (emp.email || '').toLowerCase().includes(assignmentData.employeeEmail.toLowerCase()) ||
+                            (emp.firstName || '').toLowerCase().includes(assignmentData.employeeEmail.toLowerCase()) ||
+                            (emp.lastName || '').toLowerCase().includes(assignmentData.employeeEmail.toLowerCase())
+                          ).length > 0 ? (
+                            employees.filter(emp => 
+                              !assignmentData.employeeEmail || 
+                              (emp.email || '').toLowerCase().includes(assignmentData.employeeEmail.toLowerCase()) ||
+                              (emp.firstName || '').toLowerCase().includes(assignmentData.employeeEmail.toLowerCase()) ||
+                              (emp.lastName || '').toLowerCase().includes(assignmentData.employeeEmail.toLowerCase())
+                            ).map(employee => (
+                              <div 
+                                key={employee.id || employee.email}
+                                className="custom-dropdown-item"
+                                onClick={() => {
+                                  setAssignmentData({ ...assignmentData, employeeEmail: employee.email });
+                                  setShowEmployeeDropdown(false);
+                                }}
+                              >
+                                <div className="employee-dropdown-info">
+                                  <span className="employee-name">
+                                    {employee.firstName} {employee.lastName}
+                                  </span>
+                                  <span className="employee-email">{employee.email}</span>
+                                  {employee.employeeId && (
+                                    <span className="employee-id">ID: {employee.employeeId}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item no-results">
+                              No matching employees
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
               <button 
