@@ -192,6 +192,12 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   ];
 
   const onSubmit = async (data) => {
+    // Check for age validation error before submitting
+    if (ageValidationError) {
+      alert('Please fix age validation error before submitting');
+      return;
+    }
+    
     try {
       console.log('Form submitted with data:', data);
       
@@ -566,6 +572,20 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                   className="input-large"
                 />
                 <p>{errors.experience?.message}</p>
+<<<<<<< HEAD
+=======
+
+                <label>Education <span className="optional"></span></label>
+                <select {...register("education", { required: 'Education is required' })} className="input-large">
+                  <option value="">Select</option>
+                  {getEducationTypesForUser('farmer').map((edu) => (
+                    <option key={edu} value={edu}>
+                      {edu}
+                    </option>
+                  ))}
+                 </select>
+                <p>{errors.education?.message}</p>
+>>>>>>> origin/master
               </div>
               </>
             )}
@@ -634,7 +654,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               className="input-large"
             >
               <option value="">Select</option>
+<<<<<<< HEAD
               {Object.keys(defaultCropOptions).map((cat) => (
+=======
+              {cropTypes.map((cat) => (
+>>>>>>> origin/master
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -644,7 +668,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               <label>Select Crop Name <span className="optional"></span></label>
               <select {...register("currentCrop")} defaultValue="" className="input-large">
                 <option value="">Select</option>
+<<<<<<< HEAD
                 {defaultCropOptions[cropCategoryStep3]?.map((crop) => (
+=======
+                {cropNames.map((crop) => (
+>>>>>>> origin/master
                   <option key={crop} value={crop}>{crop}</option>
                 ))}
               </select>
@@ -722,7 +750,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                className="input-large"
                >
               <option value="">Select</option>
+<<<<<<< HEAD
               {Object.keys(defaultCropOptions).map((cat) => (
+=======
+              {cropTypes.map((cat) => (
+>>>>>>> origin/master
               <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
@@ -732,7 +764,11 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                 <label>Select Crop Name <span className="optional"></span></label>
                 <select {...register("cropType")} defaultValue="" className="input-large">
                <option value="">Select</option>
+<<<<<<< HEAD
                 {defaultCropOptions[cropCategoryStep4]?.map((crop) => (
+=======
+                {cropNames.map((crop) => (
+>>>>>>> origin/master
                   <option key={crop} value={crop}>{crop}</option>
                 ))}
                </select>
@@ -985,10 +1021,16 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     <button
       type="button"
       onClick={async () => {
+<<<<<<< HEAD
         // Keep showing validation errors for step 0
         setShowValidationErrors(true);
+=======
+        // Trigger validation for all fields in current step
+>>>>>>> origin/master
         const isValid = await trigger();
-        if (isValid) setCurrentStep(currentStep + 1);
+        if (isValid && !ageValidationError) {
+          setCurrentStep(currentStep + 1);
+        }
       }}
     >
       Next
@@ -1006,7 +1048,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
         onClick={async () => {
           setShowValidationErrors(true);
           const isValid = await trigger();
-          if (isValid) {
+          if (isValid && !ageValidationError) {
             await handleSubmit(onSubmit)();
           }
         }}
@@ -1025,11 +1067,27 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       <button
         type="button"
         onClick={async () => {
+<<<<<<< HEAD
           // Do not show validation errors visually on Address step (step 1)
           // Still run validations to prevent moving forward when invalid
           setShowValidationErrors(currentStep !== 1);
           const isValid = await trigger();
           if (isValid) setCurrentStep(currentStep + 1);
+=======
+          // For address step (step 1), validate address fields specifically
+          if (currentStep === 1) {
+            const addressFields = ['country', 'state', 'district', 'block', 'village', 'zipcode'];
+            const isValid = await trigger(addressFields);
+            if (isValid && !ageValidationError) {
+              setCurrentStep(currentStep + 1);
+            }
+          } else {
+            const isValid = await trigger();
+            if (isValid && !ageValidationError) {
+              setCurrentStep(currentStep + 1);
+            }
+          }
+>>>>>>> origin/master
         }}
       >
         Next

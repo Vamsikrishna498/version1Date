@@ -1,5 +1,8 @@
 .address-form-component {
   margin: 20px 0;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .address-form-title {
@@ -86,6 +89,12 @@
   font-size: 15px;
   letter-spacing: 0.3px;
   text-transform: capitalize;
+}
+
+.form-group label .required {
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 2px;
 }
 
 .form-control {
@@ -191,6 +200,43 @@
 .address-form-fields .form-group input {
   position: relative;
   z-index: 2;
+}
+
+.form-control.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-control.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+  font-weight: 500;
+  display: block;
+  min-height: 18px;
+  line-height: 1.4;
+}
+
+/* Ensure address form fields are always visible */
+.address-field .address-form-component {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.address-field .form-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+}
+
+.address-field .form-group {
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .address-form-loading {

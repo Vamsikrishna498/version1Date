@@ -44,7 +44,6 @@ import FPODashboard from '../pages/FPODashboard';
 import ConfigurationDashboard from '../components/ConfigurationDashboard';
 import PersonalizationTab from '../components/config/PersonalizationTab';
 import SettingsMasterList from '../components/SettingsMasterList';
-import ConfigurationManagement from '../components/config/ConfigurationManagement';
 import '../styles/Dashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -78,6 +77,9 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [codeFormats, setCodeFormats] = useState([]);
+  // Dynamic location filters
+  const [availableStates, setAvailableStates] = useState([]);
+  const [availableDistricts, setAvailableDistricts] = useState([]);
   
   // State for unique IDs (persisted to localStorage to avoid flicker)
   const [farmerUniqueIds, setFarmerUniqueIds] = useState(() => {
@@ -108,6 +110,20 @@ const SuperAdminDashboard = () => {
       return merged;
     });
   };
+
+  // Load states and districts for filters
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await adminAPI.getLocations();
+        setAvailableStates(Array.isArray(data?.states) ? data.states : []);
+        setAvailableDistricts(Array.isArray(data?.districts) ? data.districts : []);
+      } catch (e) {
+        setAvailableStates([]);
+        setAvailableDistricts([]);
+      }
+    })();
+  }, []);
 
   // Helper: robustly compute a display ID for employees
   const getEmployeeDisplayId = (row) => {
@@ -222,14 +238,15 @@ const SuperAdminDashboard = () => {
         try {
           const idCards = await idCardAPI.getIdCardsByHolder(employee.id.toString());
           if (idCards && idCards.length > 0) {
-            // Prefer EMPLOYEE cards only and matching holder
+            // Strictly filter: only EMPLOYEE cards for this employee
             const employeeCards = idCards.filter(card => (
-              (card.cardType === 'EMPLOYEE' || (card.cardId || '').startsWith('EMP')) &&
-              (String(card.holderId) === String(employee.id))
+              String(card.holderId) === String(employee.id) &&
+              (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
             ));
-            const byPreference = employeeCards.length > 0 ? employeeCards : idCards;
-            const activeCard = byPreference.find(card => card.status === 'ACTIVE') || byPreference[0];
-            employeeIds[employee.id] = activeCard.cardId;
+            if (employeeCards.length > 0) {
+              const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+              employeeIds[employee.id] = activeCard.cardId;
+            }
           }
         } catch (error) {
           console.warn(`Could not fetch ID card for employee ${employee.id}:`, error);
@@ -612,30 +629,25 @@ const SuperAdminDashboard = () => {
       const matchesDistrict = !filters.district || farmer.district === filters.district;
       const matchesKycStatus = !filters.kycStatus || farmer.kycStatus === filters.kycStatus;
       
-      // Debug employee filter
-      if (filters.employeeFilter) {
-        console.log('🔍 Employee filter active:', filters.employeeFilter);
-        console.log('🔍 Farmer assignedEmployee field:', farmer.assignedEmployee);
-        console.log('🔍 Available farmer fields:', Object.keys(farmer));
-      }
+      // Assignment status filter
+      const isAssigned = farmer.assignedEmployee && String(farmer.assignedEmployee).trim() !== '' && String(farmer.assignedEmployee).toLowerCase() !== 'not assigned';
+      const matchesAssignmentStatus = !filters.assignmentStatus ||
+        (filters.assignmentStatus === 'ASSIGNED' && isAssigned) ||
+        (filters.assignmentStatus === 'UNASSIGNED' && !isAssigned);
+
+      // Assigned employee filter: prefer id, fallback to name contains
+      const empFilter = (filters.employeeFilter || '').toString().trim();
+      const assignedId = farmer.assignedEmployeeId !== undefined && farmer.assignedEmployeeId !== null
+        ? String(farmer.assignedEmployeeId)
+        : '';
+      const assigned = String(farmer.assignedEmployee || '').trim();
+      const matchesEmployee = !empFilter ||
+        (assignedId && assignedId === empFilter) ||
+        assigned === empFilter ||
+        assigned.toLowerCase().includes(empFilter.toLowerCase()) ||
+        empFilter.toLowerCase().includes(assigned.toLowerCase());
       
-      // More robust employee filter matching
-      const matchesEmployee = !filters.employeeFilter || 
-        (farmer.assignedEmployee && 
-         (farmer.assignedEmployee === filters.employeeFilter || 
-          farmer.assignedEmployee.toLowerCase().includes(filters.employeeFilter.toLowerCase()) ||
-          filters.employeeFilter.toLowerCase().includes(farmer.assignedEmployee.toLowerCase())
-         ));
-      
-      // Debug: Log all farmers and their assigned employees when filter is active
-      if (filters.employeeFilter) {
-        console.log('🔍 All farmers and their assigned employees:');
-        (farmers || []).forEach((f, index) => {
-          console.log(`  Farmer ${index + 1}: ${f.name} -> Assigned to: "${f.assignedEmployee}"`);
-        });
-      }
-      
-      return matchesState && matchesDistrict && matchesKycStatus && matchesEmployee;
+      return matchesState && matchesDistrict && matchesKycStatus && matchesAssignmentStatus && matchesEmployee;
     });
   };
 
@@ -2152,13 +2164,9 @@ const SuperAdminDashboard = () => {
                         className="filter-select"
                       >
                         <option value="">All States</option>
-                        <option value="Telangana">Telangana</option>
-                        <option value="Andhrapradesh">Andhrapradesh</option>
-                        <option value="Maharashtra">Maharashtra</option>
-                        <option value="Gujarat">Gujarat</option>
-                        <option value="Punjab">Punjab</option>
-                        <option value="Uttar Pradesh">Uttar Pradesh</option>
-                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        {availableStates.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
                     </div>
                     
@@ -2170,17 +2178,9 @@ const SuperAdminDashboard = () => {
                         className="filter-select"
                       >
                         <option value="">All Districts</option>
-                        <option value="Karimnagar">Karimnagar</option>
-                        <option value="rangareddy">Rangareddy</option>
-                        <option value="kadapa">Kadapa</option>
-                        <option value="Kadapa">Kadapa</option>
-                        <option value="kadpaa">Kadpaa</option>
-                        <option value="Kuppam">Kuppam</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Ahmedabad">Ahmedabad</option>
-                        <option value="Amritsar">Amritsar</option>
-                        <option value="Lucknow">Lucknow</option>
-                        <option value="Chennai">Chennai</option>
+                        {availableDistricts.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
                       </select>
                     </div>
                     
@@ -2631,19 +2631,26 @@ const SuperAdminDashboard = () => {
                                   console.log('📋 Fetched ID cards list:', list);
                                   
                                   if (Array.isArray(list) && list.length > 0) {
-                                    const activeCard = list.find(card => card.status === 'ACTIVE') || list[0];
-                                    console.log('✅ Using existing ID card:', activeCard.cardId);
-                                    setCurrentCardId(activeCard.cardId);
-                                    setShowIdCardContent(true);
-                                    return;
+                                    // Only consider EMPLOYEE cards that belong to this employee
+                                    const employeeCards = list.filter(card => (
+                                      String(card.holderId) === String(employee.id) &&
+                                      (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
+                                    ));
+                                    const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+                                    if (activeCard && (activeCard.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(activeCard.cardId || ''))) {
+                                      console.log('✅ Using existing EMPLOYEE ID card:', activeCard.cardId);
+                                      setCurrentCardId(activeCard.cardId);
+                                      setShowIdCardContent(true);
+                                      return;
+                                    }
                                   }
                                   
-                                  console.log('🔄 No existing cards found, generating new one...');
+                                  console.log('🔄 No existing EMPLOYEE cards found, generating new one...');
                                   const gen = await idCardAPI.generateEmployeeIdCard(employee.id);
                                   console.log('🔄 Generated ID card response:', gen);
                                   
                                   if (gen && gen.cardId) {
-                                    console.log('✅ Successfully generated ID card:', gen.cardId);
+                                    console.log('✅ Successfully generated EMPLOYEE ID card:', gen.cardId);
                                     setCurrentCardId(gen.cardId);
                                     setShowIdCardContent(true);
                                   } else {
@@ -2711,21 +2718,33 @@ const SuperAdminDashboard = () => {
                       try {
                         const newEmployee = await employeesAPI.createEmployee(employeeData);
                         setEmployees(prev => [...prev, newEmployee]);
-                        // Try to ensure the employee unique ID is available immediately
+                        // Immediately compute and persist the correct employee display ID
                         try {
+                          // Try to generate or fetch the EMPLOYEE ID card right away
                           const gen = await idCardAPI.generateEmployeeIdCard(newEmployee.id);
                           if (gen && gen.cardId) {
                             setEmployeeUniqueIds(prev => ({ ...prev, [newEmployee.id]: gen.cardId }));
+                          } else {
+                            // If already exists, fetch and store only EMPLOYEE type
+                            const list = await idCardAPI.getIdCardsByHolder(newEmployee.id.toString());
+                            const employeeCards = Array.isArray(list) ? list.filter(card => (
+                              String(card.holderId) === String(newEmployee.id) &&
+                              (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
+                            )) : [];
+                            const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+                            if (activeCard) {
+                              setEmployeeUniqueIds(prev => ({ ...prev, [newEmployee.id]: activeCard.cardId }));
+                            }
                           }
                         } catch (e) {
-                          // If generation fails (e.g., permissions), ignore; it will appear later when generated
-                          console.warn('Could not generate employee ID card right after creation:', e);
+                          console.warn('Could not generate/fetch employee ID card immediately:', e);
                         }
                         alert('Employee created successfully!');
                         setShowEmployeeRegistration(false);
                       } catch (error) {
                         console.error('Error creating employee:', error);
-                        alert('Failed to create employee. Please try again.');
+                        const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create employee. Please try again.';
+                        alert(errorMessage);
                       }
                     }}
                   />
@@ -3199,10 +3218,7 @@ const SuperAdminDashboard = () => {
           )}
 
           {activeTab === 'configurations' && (
-            <div>
-              <ConfigurationManagement />
-              <ConfigurationDashboard />
-            </div>
+            <ConfigurationDashboard />
           )}
 
           {activeTab === 'settings' && (
