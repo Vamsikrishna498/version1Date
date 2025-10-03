@@ -257,15 +257,19 @@ const FPOAdminDashboard = () => {
   // Handlers for inline submissions
   const handleFarmerCreatedInline = async (formData) => {
     try {
-      // Create farmer under this FPO
-      const created = await fpoAPI.createFPOFarmer(fpoId, formData);
+      // 1) Create farmer via global multipart endpoint (preserves validations and ID card flow)
+      const createdFarmer = await farmersAPI.createFarmer(formData);
+
+      // 2) Link farmer to this FPO as a member (lightweight JSON)
+      await fpoAPI.addMemberToFPO(fpoId, { memberType: 'FARMER', farmerId: createdFarmer.id });
+
       setShowInlineFarmerCreate(false);
       setView('farmers');
       await loadFarmers();
-      alert('Farmer created successfully');
+      alert('Farmer created and linked to FPO successfully');
     } catch (e) {
-      console.error('Failed to create FPO farmer:', e);
-      alert(e.response?.data?.message || e.response?.data?.error || 'Failed to create FPO farmer');
+      console.error('Failed to create/link farmer to FPO:', e);
+      alert(e.response?.data?.message || e.response?.data?.error || 'Failed to add farmer');
     }
   };
 
