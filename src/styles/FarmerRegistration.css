@@ -51,8 +51,11 @@
   top: auto;
   bottom: auto;
   transform: none;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
   z-index: auto;
-  overflow: visible;
   height: auto;
 }
 
@@ -70,53 +73,105 @@
 .farmer {
   padding: 20px;
   min-height: auto;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling for farmer form */
+.farmer::-webkit-scrollbar {
+  width: 12px;
+}
+
+.farmer::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+.farmer::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  border: 3px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.farmer::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
+  border: 2px solid #f1f5f9;
+}
+
+/* Smooth scrolling for Firefox */
+.farmer {
+  scrollbar-width: thin;
 }
 
 /* Form Grid Layout */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
   align-items: start;
+  margin-bottom: 16px;
 }
 
 .field-left,
 .field-right {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
+  padding: 4px;
 }
 
 /* Photo Upload Styles */
 .photo-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .photo-box {
-  width: 150px;
-  height: 150px;
-  border: 2px dashed #ddd;
-  border-radius: 10px;
+  width: 160px;
+  height: 160px;
+  border: 3px dashed #cbd5e1;
+  border-radius: 12px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-box:hover {
+  border-color: #667eea;
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.15);
 }
 
 /* Large photo upload styles for better visibility */
 .photo-box-large {
-  width: 160px;
-  height: 160px;
-  border: 2px dashed #ddd;
-  border-radius: 10px;
+  width: 180px;
+  height: 180px;
+  border: 3px dashed #cbd5e1;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
 
 .photo-box-large:hover {
   border-color: #667eea;
-  background: #f0f2ff;
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.15);
 }
 
 .photo-preview-large {
@@ -186,10 +241,12 @@
 
 .label {
   font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
+  color: #374151;
+  margin-bottom: 8px;
   display: block;
   font-size: 14px;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
 }
 
 .input,
@@ -199,27 +256,31 @@ input[type="tel"],
 input[type="text"],
 input[type="number"] {
   width: 100%;
-  padding: 8px 12px;
-  border: 2px solid #e1e5e9;
-  border-radius: 5px;
-  font-size: 13px;
-  transition: all 0.3s ease;
-  background: white;
-  min-height: 36px;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+  min-height: 44px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 select,
 .input[type="select"],
 select.input {
-  padding-right: 35px;
+  padding-right: 40px;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 14px;
+  background-position: right 12px center;
+  background-size: 18px;
   cursor: pointer;
+  font-weight: 600;
 }
 
 /* Large input fields for better visibility */
@@ -229,9 +290,10 @@ select.input {
 .input-large + input[type="tel"],
 .input-large + input[type="text"],
 .input-large + input[type="number"] {
-  padding: 10px 12px;
-  font-size: 14px;
-  min-height: 40px;
+  padding: 14px 18px;
+  font-size: 15px;
+  min-height: 48px;
+  border-radius: 10px;
 }
 
 .input:focus,
@@ -242,18 +304,61 @@ input[type="text"]:focus,
 input[type="number"]:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.input:hover,
+select:hover,
+input[type="date"]:hover,
+input[type="tel"]:hover,
+input[type="text"]:hover,
+input[type="number"]:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.08);
+}
+
+/* Placeholder styling */
+.input::placeholder,
+input[type="date"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="text"]::placeholder,
+input[type="number"]::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Disabled state */
+.input:disabled,
+select:disabled,
+input[type="date"]:disabled,
+input[type="tel"]:disabled,
+input[type="text"]:disabled,
+input[type="number"]:disabled {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Required and Optional Indicators */
 .required {
-  color: #e74c3c;
-  font-weight: bold;
+  color: #dc2626;
+  font-weight: 700;
+  margin-left: 3px;
+  font-size: 16px;
 }
 
 .optional {
-  color: #7f8c8d;
-  font-size: 12px;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Error Messages (scoped to farmer form to avoid global .error conflicts) */
@@ -356,15 +461,64 @@ input[type="number"]:focus {
 .currentform-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px; /* a little more breathing room between columns */
+  align-items: end;
 }
 
-.cropform-columnleft,
+.cropform-columnleft{
+  .cropform-columnright {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* ensure rows line up */
+    gap: 18px; /* tighter, consistent vertical rhythm */
+  }
+}
 .cropform-columnright {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 25px;
+  justify-content: flex-start; /* ensure rows line up */
+  gap: 1px; /* tighter, consistent vertical rhythm */
+  margin-top: 10px;
+}
+
+/* Current crop labels and inputs: make them consistent like other steps */
+.current-field label {
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+  display: block;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.current-field input,
+.current-field select,
+.current-field textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+  min-height: 48px;
+}
+
+.current-field input:focus,
+.current-field select:focus,
+.current-field textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+/* File inputs in current/proposed sections */
+.current-field input[type="file"],
+.proposed-field input[type="file"] {
+  padding: 10px 12px;
+  border: 2px dashed #e1e5e9;
+  background: #f8fafc;
+  border-radius: 10px;
 }
 
 /* Proposed Crop Field */
@@ -468,22 +622,34 @@ input[type="number"]:focus {
 }
 
 .btn-group button {
-  padding: 12px 30px;
+  padding: 14px 32px;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-group button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-group button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-group button:first-child {
-  background: #95a5a6;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
   color: white;
 }
 
 .btn-group button:first-child:hover {
-  background: #7f8c8d;
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
 }
 
 .btn-group button:last-child {
@@ -492,8 +658,9 @@ input[type="number"]:focus {
 }
 
 .btn-group button:last-child:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
 }
 
 /* Form Right Side (Close Button) */

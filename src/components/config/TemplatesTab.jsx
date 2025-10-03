@@ -6,7 +6,7 @@ const TemplatesTab = ({ isSuperAdmin }) => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -94,7 +94,7 @@ const TemplatesTab = ({ isSuperAdmin }) => {
         await configAPI.createTemplate(normalized);
       }
       
-      setShowModal(false);
+      setShowForm(false);
       setEditingTemplate(null);
       resetForm();
       loadTemplates();
@@ -115,7 +115,7 @@ const TemplatesTab = ({ isSuperAdmin }) => {
       content: template.content,
       placeholders: template.placeholders
     });
-    setShowModal(true);
+    setShowForm(true);
   };
 
   const handleDelete = async (templateId) => {
@@ -176,129 +176,39 @@ const TemplatesTab = ({ isSuperAdmin }) => {
 
   return (
     <div className="config-tab">
-      <div className="tab-header">
-        <h2>📧 Mail Templates</h2>
-        <div className="header-actions">
-          <input
-            type="text"
-            placeholder="Search templates..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">All Types</option>
-            {templateTypes.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-          <select
-            value={filterModule}
-            onChange={(e) => setFilterModule(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">All Modules</option>
-            {moduleTypes.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              resetForm();
-              setEditingTemplate(null);
-              setShowModal(true);
-            }}
-          >
-            ➕ Add New Template
-          </button>
-        </div>
-      </div>
-
-      <div className="templates-grid">
-        {filteredTemplates.map((template) => (
-          <div key={template.id} className="template-card">
-            <div className="template-header">
-              <h3>{template.templateName}</h3>
-              <div className="template-actions">
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => handleEdit(template)}
-                >
-                  ✏️ Edit
-                </button>
-                {isSuperAdmin && (
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(template.id)}
-                  >
-                    🗑️ Delete
-                  </button>
-                )}
-              </div>
+      {showForm ? (
+        <>
+          <div className="superadmin-overview-header" style={{ marginBottom: '24px' }}>
+            <div className="header-left">
+              <h2 className="superadmin-overview-title">{editingTemplate ? 'Edit Template' : 'Add New Mail Template'}</h2>
+              <p className="overview-description">
+                {editingTemplate ? 'Update the mail template content and settings.' : 'Create a new mail template for automated communications.'}
+              </p>
             </div>
-            
-            <div className="template-meta">
-              <div className="meta-row">
-                <strong>Type:</strong>
-                <span className={`type-badge ${template.templateType.toLowerCase()}`}>
-                  {getTemplateTypeLabel(template.templateType)}
-                </span>
-              </div>
-              
-              <div className="meta-row">
-                <strong>Module:</strong>
-                <span className="module-badge">{getModuleTypeLabel(template.moduleType)}</span>
-              </div>
-              
-              {template.subject && (
-                <div className="meta-row">
-                  <strong>Subject:</strong>
-                  <span className="subject-text">{template.subject}</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="template-content">
-              <strong>Content Preview:</strong>
-              <div className="content-preview">
-                {template.content.substring(0, 150)}
-                {template.content.length > 150 && '...'}
-              </div>
-            </div>
-            
-            {template.placeholders && (
-              <div className="template-placeholders">
-                <strong>Available Placeholders:</strong>
-                <div className="placeholder-tags">
-                  {parsePlaceholders(template.placeholders).map((ph) => (
-                    <span key={ph} className="placeholder-tag">{ph}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div className="template-status">
-              <span className={`status-badge ${template.isActive ? 'active' : 'inactive'}`}>
-                {template.isActive ? '✅ Active' : '❌ Inactive'}
-              </span>
+            <div className="header-right">
+              <button 
+                className="action-btn secondary"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingTemplate(null);
+                  resetForm();
+                }}
+              >
+                <i className="fas fa-arrow-left"></i>
+                Back to Templates List
+              </button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content large-modal">
-            <div className="modal-header">
-              <h3>{editingTemplate ? 'Edit Template' : 'Add New Template'}</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            maxWidth: '100%',
+            maxHeight: 'calc(100vh - 250px)',
+            overflowY: 'auto'
+          }}>
             <form onSubmit={handleSubmit} className="template-form">
               <div className="form-row">
                 <div className="form-group">
@@ -390,20 +300,174 @@ const TemplatesTab = ({ isSuperAdmin }) => {
                 />
               </div>
               
-              <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              <div className="form-actions" style={{ 
+                display: 'flex', 
+                gap: '12px', 
+                justifyContent: 'flex-end',
+                marginTop: '24px' 
+              }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingTemplate(null);
+                    resetForm();
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={loading}
+                  style={{
+                    padding: '12px 24px',
+                    background: loading ? '#9ca3af' : 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   {loading ? 'Saving...' : (editingTemplate ? 'Update Template' : 'Create Template')}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </>
+      ) : (
+        <>
+          <div className="tab-header">
+            <h2>📧 Mail Templates</h2>
+            <div className="header-actions">
+              <input
+                type="text"
+                placeholder="Search templates..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">All Types</option>
+                {templateTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+              <select
+                value={filterModule}
+                onChange={(e) => setFilterModule(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">All Modules</option>
+                {moduleTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  resetForm();
+                  setEditingTemplate(null);
+                  setShowForm(true);
+                }}
+              >
+                ➕ Add New Template
+              </button>
+            </div>
+          </div>
+
+          <div className="templates-grid">
+            {filteredTemplates.map((template) => (
+              <div key={template.id} className="template-card">
+                <div className="template-header">
+                  <h3>{template.templateName}</h3>
+                  <div className="template-actions">
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => handleEdit(template)}
+                    >
+                      ✏️ Edit
+                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDelete(template.id)}
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="template-meta">
+                  <div className="meta-row">
+                    <strong>Type:</strong>
+                    <span className={`type-badge ${template.templateType.toLowerCase()}`}>
+                      {getTemplateTypeLabel(template.templateType)}
+                    </span>
+                  </div>
+                  
+                  <div className="meta-row">
+                    <strong>Module:</strong>
+                    <span className="module-badge">{getModuleTypeLabel(template.moduleType)}</span>
+                  </div>
+                  
+                  {template.subject && (
+                    <div className="meta-row">
+                      <strong>Subject:</strong>
+                      <span className="subject-text">{template.subject}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="template-content">
+                  <strong>Content Preview:</strong>
+                  <div className="content-preview">
+                    {template.content.substring(0, 150)}
+                    {template.content.length > 150 && '...'}
+                  </div>
+                </div>
+                
+                {template.placeholders && (
+                  <div className="template-placeholders">
+                    <strong>Available Placeholders:</strong>
+                    <div className="placeholder-tags">
+                      {parsePlaceholders(template.placeholders).map((ph) => (
+                        <span key={ph} className="placeholder-tag">{ph}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="template-status">
+                  <span className={`status-badge ${template.isActive ? 'active' : 'inactive'}`}>
+                    {template.isActive ? '✅ Active' : '❌ Inactive'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {error && (
+      {error && !showForm && (
         <div className="error-message">
           <span className="error-icon">❌</span>
           <span>{error}</span>

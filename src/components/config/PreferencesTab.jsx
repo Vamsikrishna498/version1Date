@@ -6,7 +6,7 @@ const PreferencesTab = ({ isSuperAdmin }) => {
   const [preferences, setPreferences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingPreference, setEditingPreference] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -58,7 +58,7 @@ const PreferencesTab = ({ isSuperAdmin }) => {
         await configAPI.createSystemPreference(formData);
       }
       
-      setShowModal(false);
+      setShowForm(false);
       setEditingPreference(null);
       resetForm();
       loadPreferences();
@@ -77,7 +77,7 @@ const PreferencesTab = ({ isSuperAdmin }) => {
       description: preference.description,
       preferenceType: preference.preferenceType
     });
-    setShowModal(true);
+    setShowForm(true);
   };
 
   const handleDelete = async (preferenceId) => {
@@ -159,110 +159,37 @@ const PreferencesTab = ({ isSuperAdmin }) => {
 
   return (
     <div className="config-tab">
-      <div className="tab-header">
-        <h2>🔔 System Preferences</h2>
-        <div className="header-actions">
-          <input
-            type="text"
-            placeholder="Search preferences..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">All Types</option>
-            {preferenceTypes.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              resetForm();
-              setEditingPreference(null);
-              setShowModal(true);
-            }}
-          >
-            ➕ Add New Preference
-          </button>
-        </div>
-      </div>
-
-      <div className="preferences-grid">
-        {filteredPreferences.map((preference) => (
-          <div key={preference.id} className="preference-card">
-            <div className="preference-header">
-              <h3>{preference.preferenceKey}</h3>
-              <div className="preference-actions">
-                {(preference.preferenceKey.includes('notification') || preference.preferenceKey.includes('email') || preference.preferenceKey.includes('sms')) ? (
-                  <button
-                    className={`btn btn-sm toggle-btn ${preference.preferenceValue === 'true' ? 'enabled' : 'disabled'}`}
-                    onClick={() => toggleNotificationPreference(preference)}
-                    disabled={loading}
-                  >
-                    {preference.preferenceValue === 'true' ? '🔔 ON' : '🔕 OFF'}
-                  </button>
-                ) : (
-                  <button
-                    className="btn btn-sm btn-secondary"
-                    onClick={() => handleEdit(preference)}
-                  >
-                    ✏️ Edit
-                  </button>
-                )}
-                {isSuperAdmin && (
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(preference.id)}
-                  >
-                    🗑️ Delete
-                  </button>
-                )}
-              </div>
+      {showForm ? (
+        <>
+          <div className="superadmin-overview-header" style={{ marginBottom: '24px' }}>
+            <div className="header-left">
+              <h2 className="superadmin-overview-title">{editingPreference ? 'Edit Preference' : 'Add New Preference'}</h2>
+              <p className="overview-description">
+                {editingPreference ? 'Update preference settings.' : 'Create a new system preference setting.'}
+              </p>
             </div>
-            
-            <div className="preference-meta">
-              <div className="meta-row">
-                <strong>Type:</strong>
-                <span className="type-badge">{getPreferenceTypeLabel(preference.preferenceType)}</span>
-              </div>
-            </div>
-            
-            <div className="preference-content">
-              <strong>Value:</strong>
-              <div className="preference-value-container">
-                {renderPreferenceValue(preference)}
-              </div>
-            </div>
-            
-            {preference.description && (
-              <div className="preference-description">
-                <strong>Description:</strong>
-                <p>{preference.description}</p>
-              </div>
-            )}
-            
-            <div className="preference-status">
-              <span className={`status-badge ${preference.isActive ? 'active' : 'inactive'}`}>
-                {preference.isActive ? '✅ Active' : '❌ Inactive'}
-              </span>
+            <div className="header-right">
+              <button 
+                className="action-btn secondary"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingPreference(null);
+                  resetForm();
+                }}
+              >
+                <i className="fas fa-arrow-left"></i>
+                Back to Preferences List
+              </button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>{editingPreference ? 'Edit Preference' : 'Add New Preference'}</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            maxWidth: '100%'
+          }}>
             <form onSubmit={handleSubmit} className="preference-form">
               <div className="form-group">
                 <label>Preference Type *</label>
@@ -328,20 +255,155 @@ const PreferencesTab = ({ isSuperAdmin }) => {
                 />
               </div>
               
-              <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              <div className="form-actions" style={{ 
+                display: 'flex', 
+                gap: '12px', 
+                justifyContent: 'flex-end',
+                marginTop: '24px' 
+              }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingPreference(null);
+                    resetForm();
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={loading}
+                  style={{
+                    padding: '12px 24px',
+                    background: loading ? '#9ca3af' : 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   {loading ? 'Saving...' : (editingPreference ? 'Update Preference' : 'Create Preference')}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </>
+      ) : (
+        <>
+          <div className="tab-header">
+            <h2>🔔 System Preferences</h2>
+            <div className="header-actions">
+              <input
+                type="text"
+                placeholder="Search preferences..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">All Types</option>
+                {preferenceTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  resetForm();
+                  setEditingPreference(null);
+                  setShowForm(true);
+                }}
+              >
+                ➕ Add New Preference
+              </button>
+            </div>
+          </div>
+
+          <div className="preferences-grid">
+            {filteredPreferences.map((preference) => (
+              <div key={preference.id} className="preference-card">
+                <div className="preference-header">
+                  <h3>{preference.preferenceKey}</h3>
+                  <div className="preference-actions">
+                    {(preference.preferenceKey.includes('notification') || preference.preferenceKey.includes('email') || preference.preferenceKey.includes('sms')) ? (
+                      <button
+                        className={`btn btn-sm toggle-btn ${preference.preferenceValue === 'true' ? 'enabled' : 'disabled'}`}
+                        onClick={() => toggleNotificationPreference(preference)}
+                        disabled={loading}
+                      >
+                        {preference.preferenceValue === 'true' ? '🔔 ON' : '🔕 OFF'}
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => handleEdit(preference)}
+                      >
+                        ✏️ Edit
+                      </button>
+                    )}
+                    {isSuperAdmin && (
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDelete(preference.id)}
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="preference-meta">
+                  <div className="meta-row">
+                    <strong>Type:</strong>
+                    <span className="type-badge">{getPreferenceTypeLabel(preference.preferenceType)}</span>
+                  </div>
+                </div>
+                
+                <div className="preference-content">
+                  <strong>Value:</strong>
+                  <div className="preference-value-container">
+                    {renderPreferenceValue(preference)}
+                  </div>
+                </div>
+                
+                {preference.description && (
+                  <div className="preference-description">
+                    <strong>Description:</strong>
+                    <p>{preference.description}</p>
+                  </div>
+                )}
+                
+                <div className="preference-status">
+                  <span className={`status-badge ${preference.isActive ? 'active' : 'inactive'}`}>
+                    {preference.isActive ? '✅ Active' : '❌ Inactive'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {error && (
+      {error && !showForm && (
         <div className="error-message">
           <span className="error-icon">❌</span>
           <span>{error}</span>

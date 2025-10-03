@@ -3118,11 +3118,9 @@ const EmployeeDashboard = () => {
                     setShowFarmerForm(false);
 
                   } catch (error) {
-
                     console.error('Error creating farmer:', error);
-
-                    alert('Failed to create farmer. Please try again.');
-
+                    const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create farmer. Please try again.';
+                    alert(errorMessage);
                   }
 
                 }}

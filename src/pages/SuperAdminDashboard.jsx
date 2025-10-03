@@ -17,6 +17,7 @@ import ViewEditEmployeeDetails from '../components/ViewEditEmployeeDetails';
 import EmployeeRegistrationForm from '../components/EmployeeRegistrationForm';
 import KYCDocumentUpload from '../components/KYCDocumentUpload';
 import DeleteModal from '../components/DeleteModal';
+import DeleteConfirmationInline from '../components/DeleteConfirmationInline';
 import BulkOperations from '../components/BulkOperations';
 import FPOCreationForm from '../components/FPOCreationForm';
 import FPOEditModal from '../components/FPOEditModal';
@@ -76,6 +77,9 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [codeFormats, setCodeFormats] = useState([]);
+  // Dynamic location filters
+  const [availableStates, setAvailableStates] = useState([]);
+  const [availableDistricts, setAvailableDistricts] = useState([]);
   
   // State for unique IDs (persisted to localStorage to avoid flicker)
   const [farmerUniqueIds, setFarmerUniqueIds] = useState(() => {
@@ -106,6 +110,20 @@ const SuperAdminDashboard = () => {
       return merged;
     });
   };
+
+  // Load states and districts for filters
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await adminAPI.getLocations();
+        setAvailableStates(Array.isArray(data?.states) ? data.states : []);
+        setAvailableDistricts(Array.isArray(data?.districts) ? data.districts : []);
+      } catch (e) {
+        setAvailableStates([]);
+        setAvailableDistricts([]);
+      }
+    })();
+  }, []);
 
   // Helper: robustly compute a display ID for employees
   const getEmployeeDisplayId = (row) => {
@@ -611,30 +629,25 @@ const SuperAdminDashboard = () => {
       const matchesDistrict = !filters.district || farmer.district === filters.district;
       const matchesKycStatus = !filters.kycStatus || farmer.kycStatus === filters.kycStatus;
       
-      // Debug employee filter
-      if (filters.employeeFilter) {
-        console.log('🔍 Employee filter active:', filters.employeeFilter);
-        console.log('🔍 Farmer assignedEmployee field:', farmer.assignedEmployee);
-        console.log('🔍 Available farmer fields:', Object.keys(farmer));
-      }
+      // Assignment status filter
+      const isAssigned = farmer.assignedEmployee && String(farmer.assignedEmployee).trim() !== '' && String(farmer.assignedEmployee).toLowerCase() !== 'not assigned';
+      const matchesAssignmentStatus = !filters.assignmentStatus ||
+        (filters.assignmentStatus === 'ASSIGNED' && isAssigned) ||
+        (filters.assignmentStatus === 'UNASSIGNED' && !isAssigned);
+
+      // Assigned employee filter: prefer id, fallback to name contains
+      const empFilter = (filters.employeeFilter || '').toString().trim();
+      const assignedId = farmer.assignedEmployeeId !== undefined && farmer.assignedEmployeeId !== null
+        ? String(farmer.assignedEmployeeId)
+        : '';
+      const assigned = String(farmer.assignedEmployee || '').trim();
+      const matchesEmployee = !empFilter ||
+        (assignedId && assignedId === empFilter) ||
+        assigned === empFilter ||
+        assigned.toLowerCase().includes(empFilter.toLowerCase()) ||
+        empFilter.toLowerCase().includes(assigned.toLowerCase());
       
-      // More robust employee filter matching
-      const matchesEmployee = !filters.employeeFilter || 
-        (farmer.assignedEmployee && 
-         (farmer.assignedEmployee === filters.employeeFilter || 
-          farmer.assignedEmployee.toLowerCase().includes(filters.employeeFilter.toLowerCase()) ||
-          filters.employeeFilter.toLowerCase().includes(farmer.assignedEmployee.toLowerCase())
-         ));
-      
-      // Debug: Log all farmers and their assigned employees when filter is active
-      if (filters.employeeFilter) {
-        console.log('🔍 All farmers and their assigned employees:');
-        (farmers || []).forEach((f, index) => {
-          console.log(`  Farmer ${index + 1}: ${f.name} -> Assigned to: "${f.assignedEmployee}"`);
-        });
-      }
-      
-      return matchesState && matchesDistrict && matchesKycStatus && matchesEmployee;
+      return matchesState && matchesDistrict && matchesKycStatus && matchesAssignmentStatus && matchesEmployee;
     });
   };
 
@@ -1700,7 +1713,40 @@ const SuperAdminDashboard = () => {
 
           {activeTab === 'registration' && (
             <div className="superadmin-overview-section">
-              {!showDeleteModal ? (
+              {showDeleteModal ? (
+                <div className="dashboard-main-content">
+                  <div className="superadmin-overview-header">
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">Confirm Delete</h2>
+                      <p className="overview-description" style={{ color: '#dc2626', fontWeight: '600' }}>
+                        ⚠️ Are you sure you want to delete this {itemToDelete?.type}? This action cannot be undone.
+                      </p>
+                    </div>
+                    <div className="header-right">
+                      <button 
+                        className="action-btn secondary"
+                        onClick={() => {
+                          setShowDeleteModal(false);
+                          setItemToDelete(null);
+                        }}
+                      >
+                        <i className="fas fa-arrow-left"></i>
+                        Back to List
+                      </button>
+                    </div>
+                  </div>
+
+                  <DeleteConfirmationInline
+                    item={itemToDelete?.item}
+                    type={itemToDelete?.type}
+                    onCancel={() => {
+                      setShowDeleteModal(false);
+                      setItemToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                  />
+                </div>
+              ) : (
                 <>
                   <div className="superadmin-overview-header">
                     <div className="header-left">
@@ -1843,7 +1889,7 @@ const SuperAdminDashboard = () => {
                     />
                   )}
                 </>
-              ) : null}
+              )}
             </div>
           )}
 
@@ -1857,7 +1903,100 @@ const SuperAdminDashboard = () => {
                     setCurrentCardId(null);
                   }}
                 />
-              ) : !viewingFarmer && !showAssignmentInline && !showDeleteModal ? (
+              ) : showDeleteModal ? (
+                <div className="dashboard-main-content">
+                  <div className="superadmin-overview-header">
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">Confirm Delete</h2>
+                      <p className="overview-description" style={{ color: '#dc2626', fontWeight: '600' }}>
+                        ⚠️ Are you sure you want to delete this {itemToDelete?.type}? This action cannot be undone.
+                      </p>
+                    </div>
+                    <div className="header-right">
+                      <button 
+                        className="action-btn secondary"
+                        onClick={() => {
+                          setShowDeleteModal(false);
+                          setItemToDelete(null);
+                        }}
+                      >
+                        <i className="fas fa-arrow-left"></i>
+                        Back to Farmers List
+                      </button>
+                    </div>
+                  </div>
+
+                  <DeleteConfirmationInline
+                    item={itemToDelete?.item}
+                    type={itemToDelete?.type}
+                    onCancel={() => {
+                      setShowDeleteModal(false);
+                      setItemToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                  />
+                </div>
+              ) : showFarmerForm ? (
+                <>
+                  <div className="superadmin-overview-header" style={{ marginBottom: '24px' }}>
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">{editingFarmer ? 'Edit Farmer' : 'Add New Farmer'}</h2>
+                      <p className="overview-description">
+                        {editingFarmer ? 'Update farmer information below.' : 'Register a new farmer in the system.'}
+                      </p>
+                    </div>
+                    <div className="header-right">
+                      <button 
+                        className="action-btn secondary"
+                        onClick={() => {
+                          setShowFarmerForm(false);
+                          setEditingFarmer(null);
+                        }}
+                      >
+                        <i className="fas fa-arrow-left"></i>
+                        Back to Farmers List
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    maxWidth: '100%'
+                  }}>
+                    <FarmerRegistrationForm 
+                      isInDashboard={true}
+                      editData={editingFarmer}
+                      onClose={() => {
+                        setShowFarmerForm(false);
+                        setEditingFarmer(null);
+                      }}
+                      onSubmit={async (farmerData) => {
+                        try {
+                          if (editingFarmer) {
+                            const updatedFarmer = await farmersAPI.updateFarmer(editingFarmer.id, farmerData);
+                            setFarmers(prev => prev.map(farmer => 
+                              farmer.id === editingFarmer.id ? updatedFarmer : farmer
+                            ));
+                            alert('Farmer updated successfully!');
+                          } else {
+                            const newFarmer = await farmersAPI.createFarmer(farmerData);
+                            setFarmers(prev => [...prev, newFarmer]);
+                            alert('Farmer created successfully!');
+                          }
+                          setShowFarmerForm(false);
+                          setEditingFarmer(null);
+                        } catch (error) {
+                          console.error('Error saving farmer:', error);
+                          alert('Failed to save farmer. Please try again.');
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              ) : !viewingFarmer && !showAssignmentInline ? (
                 <div className="superadmin-overview-section">
                   <div className="superadmin-overview-header">
                     <div className="header-left">
@@ -2025,13 +2164,9 @@ const SuperAdminDashboard = () => {
                         className="filter-select"
                       >
                         <option value="">All States</option>
-                        <option value="Telangana">Telangana</option>
-                        <option value="Andhrapradesh">Andhrapradesh</option>
-                        <option value="Maharashtra">Maharashtra</option>
-                        <option value="Gujarat">Gujarat</option>
-                        <option value="Punjab">Punjab</option>
-                        <option value="Uttar Pradesh">Uttar Pradesh</option>
-                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        {availableStates.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
                     </div>
                     
@@ -2043,17 +2178,9 @@ const SuperAdminDashboard = () => {
                         className="filter-select"
                       >
                         <option value="">All Districts</option>
-                        <option value="Karimnagar">Karimnagar</option>
-                        <option value="rangareddy">Rangareddy</option>
-                        <option value="kadapa">Kadapa</option>
-                        <option value="Kadapa">Kadapa</option>
-                        <option value="kadpaa">Kadpaa</option>
-                        <option value="Kuppam">Kuppam</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Ahmedabad">Ahmedabad</option>
-                        <option value="Amritsar">Amritsar</option>
-                        <option value="Lucknow">Lucknow</option>
-                        <option value="Chennai">Chennai</option>
+                        {availableDistricts.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
                       </select>
                     </div>
                     
@@ -2124,7 +2251,6 @@ const SuperAdminDashboard = () => {
                     </div>
                   </div>
 
-                  {!showFarmerForm ? (
                     <div className="table-scroll-wrapper">
                       <DataTable
                         data={getFilteredFarmers()}
@@ -2236,49 +2362,6 @@ const SuperAdminDashboard = () => {
                         ]}
                       />
                     </div>
-                  ) : (
-                    <div className="employee-registration-section">
-                      <div className="overview-header">
-                        <h2 className="overview-title">Add New Farmer</h2>
-                        <p className="overview-description">
-                          Register a new farmer in the system.
-                        </p>
-                        <div className="overview-actions">
-                          <button 
-                            className="action-btn secondary" 
-                            onClick={() => setShowFarmerForm(false)}
-                          >
-                            <i className="fas fa-arrow-left"></i>
-                            Back to Farmers
-                          </button>
-                        </div>
-                      </div>
-                      <FarmerRegistrationForm 
-                        isInDashboard={true}
-                        onClose={() => setShowFarmerForm(false)}
-                        onSubmit={async (farmerData) => {
-                          try {
-                            if (editingFarmer) {
-                              const updatedFarmer = await farmersAPI.updateFarmer(editingFarmer.id, farmerData);
-                              setFarmers(prev => prev.map(farmer => 
-                                farmer.id === editingFarmer.id ? updatedFarmer : farmer
-                              ));
-                              alert('Farmer updated successfully!');
-                            } else {
-                              const newFarmer = await farmersAPI.createFarmer(farmerData);
-                              setFarmers(prev => [...prev, newFarmer]);
-                              alert('Farmer created successfully!');
-                            }
-                            setShowFarmerForm(false);
-                            setEditingFarmer(null);
-                          } catch (error) {
-                            console.error('Error saving farmer:', error);
-                            alert('Failed to save farmer. Please try again.');
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
                 </div>
               ) : null}
 
@@ -2326,7 +2409,40 @@ const SuperAdminDashboard = () => {
                     setCurrentCardId(null);
                   }}
                 />
-              ) : !showEmployeeRegistration && !showDeleteModal ? (
+              ) : showDeleteModal ? (
+                <div className="dashboard-main-content">
+                  <div className="superadmin-overview-header">
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">Confirm Delete</h2>
+                      <p className="overview-description" style={{ color: '#dc2626', fontWeight: '600' }}>
+                        ⚠️ Are you sure you want to delete this {itemToDelete?.type}? This action cannot be undone.
+                      </p>
+                    </div>
+                    <div className="header-right">
+                      <button 
+                        className="action-btn secondary"
+                        onClick={() => {
+                          setShowDeleteModal(false);
+                          setItemToDelete(null);
+                        }}
+                      >
+                        <i className="fas fa-arrow-left"></i>
+                        Back to Employees List
+                      </button>
+                    </div>
+                  </div>
+
+                  <DeleteConfirmationInline
+                    item={itemToDelete?.item}
+                    type={itemToDelete?.type}
+                    onCancel={() => {
+                      setShowDeleteModal(false);
+                      setItemToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                  />
+                </div>
+              ) : !showEmployeeRegistration ? (
                 <>
                   {!viewingEmployee ? (
                     <>
@@ -2566,56 +2682,35 @@ const SuperAdminDashboard = () => {
                   )}
                 </>
               ) : showEmployeeRegistration ? (
-                <div className="employee-registration-section">
-                  <div className="overview-header">
-                    <h2 className="overview-title">Add New Employee</h2>
+                <>
+                  <div className="superadmin-overview-header" style={{ marginBottom: '24px' }}>
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">Add New Employee</h2>
                     <p className="overview-description">
                       Register a new employee in the system.
                     </p>
-                    <div className="overview-actions">
+                    </div>
+                    <div className="header-right">
                       <button 
+                        className="action-btn secondary"
                         onClick={() => {
-                          // Go back to Employees tab and close the registration form
-                          setActiveTab('employees');
                           setShowEmployeeRegistration(false);
                           console.log('🔄 Back to Employees button clicked - returning to employees list');
                         }}
-                        style={{
-                          background: '#6b7280',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '8px 16px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 2px 8px rgba(107, 114, 128, 0.25)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          transform: 'translateY(0)',
-                          position: 'relative',
-                          zIndex: 1,
-                          pointerEvents: 'auto'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#4b5563';
-                          e.target.style.transform = 'translateY(-1px)';
-                          e.target.style.boxShadow = '0 4px 12px rgba(107, 114, 128, 0.35)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = '#6b7280';
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 2px 8px rgba(107, 114, 128, 0.25)';
-                        }}
                       >
                         <i className="fas fa-arrow-left"></i>
-                        Back to Employees
+                        Back to Employees List
                       </button>
                     </div>
                   </div>
 
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    maxWidth: '100%'
+                  }}>
                   <EmployeeRegistrationForm 
                     isInDashboard={true}
                     onClose={() => setShowEmployeeRegistration(false)}
@@ -2648,11 +2743,13 @@ const SuperAdminDashboard = () => {
                         setShowEmployeeRegistration(false);
                       } catch (error) {
                         console.error('Error creating employee:', error);
-                        alert('Failed to create employee. Please try again.');
+                        const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create employee. Please try again.';
+                        alert(errorMessage);
                       }
                     }}
                   />
                 </div>
+                </>
               ) : null}
 
               {/* Delete modal is rendered globally at the bottom */}
@@ -2661,7 +2758,40 @@ const SuperAdminDashboard = () => {
 
           {activeTab === 'fpo' && (
             <>
-              {showFPODetailsView && selectedFPODetails ? (
+              {showDeleteModal ? (
+                <div className="dashboard-main-content">
+                  <div className="superadmin-overview-header">
+                    <div className="header-left">
+                      <h2 className="superadmin-overview-title">Confirm Delete</h2>
+                      <p className="overview-description" style={{ color: '#dc2626', fontWeight: '600' }}>
+                        ⚠️ Are you sure you want to delete this {itemToDelete?.type}? This action cannot be undone.
+                      </p>
+                    </div>
+                    <div className="header-right">
+                      <button 
+                        className="action-btn secondary"
+                        onClick={() => {
+                          setShowDeleteModal(false);
+                          setItemToDelete(null);
+                        }}
+                      >
+                        <i className="fas fa-arrow-left"></i>
+                        Back to FPO List
+                      </button>
+                    </div>
+                  </div>
+
+                  <DeleteConfirmationInline
+                    item={itemToDelete?.item}
+                    type={itemToDelete?.type}
+                    onCancel={() => {
+                      setShowDeleteModal(false);
+                      setItemToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                  />
+                </div>
+              ) : showFPODetailsView && selectedFPODetails ? (
                 <FPODetailsView
                   fpo={selectedFPODetails}
                   onClose={() => {
@@ -3261,16 +3391,7 @@ const SuperAdminDashboard = () => {
         />
       )}
 
-      {/* Global Delete Modal - visible regardless of active tab */}
-      {showDeleteModal && (
-        <DeleteModal
-          item={itemToDelete?.item}
-          type={itemToDelete?.type}
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={confirmDelete}
-          inlineMode={true}
-        />
-      )}
+      {/* Delete confirmation is now shown inline in the main content area */}
 
 
       {/* Hidden file input for photo upload */}

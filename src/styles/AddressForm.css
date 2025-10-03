@@ -19,19 +19,56 @@
 
 .address-form-fields {
   background: white;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  padding: 28px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Two-column container for explicit left/right stacks */
+.address-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.address-two-column .form-row {
+  grid-column: 1 / -1;
 }
 
 .form-row {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
+  display: grid;
+  /* Default to two columns for better field width on typical desktops */
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+/* Make first row (Country/State) clearly two columns inside tight containers */
+.form-row:first-child > .form-group {
+  min-width: 0;
+}
+
+/* On very wide screens, allow three columns */
+@media (min-width: 1440px) {
+  .form-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* Alternative layout for smaller screens */
+@media (max-width: 1024px) {
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 .form-row:last-child {
@@ -39,17 +76,19 @@
 }
 
 .form-group {
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   font-weight: 600;
-  color: #333;
-  font-size: 13px;
+  color: #374151;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
 }
 
 .form-group label .required {
@@ -60,24 +99,107 @@
 
 .form-control {
   width: 100%;
-  padding: 8px 12px;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 13px;
-  transition: all 0.3s ease;
-  background: white;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+  min-height: 48px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 .form-control:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-control:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.08);
 }
 
 .form-control:disabled {
-  background: #f8f9fa;
-  color: #6c757d;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #9ca3af;
   cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Error state styling */
+/* Keep inputs normal even when errors are present */
+.form-control.error {
+  border-color: #e2e8f0 !important;
+  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%) !important;
+}
+
+/* Placeholder styling */
+.form-control::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Error message styling */
+.error-text {
+  color: #e74c3c;
+  font-size: 12px;
+  line-height: 1.3;
+  margin-top: 6px;
+  margin-bottom: 0;
+  background: transparent !important;
+  padding: 0 !important;
+  display: inline-block !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  text-align: left !important;
+  font-weight: 400 !important;
+}
+
+/* Ensure form controls are always visible and properly styled */
+.address-form-component .form-control {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Enhanced hover and focus effects */
+.address-form-component .form-control:hover {
+  border-color: #a5b4fc !important;
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.12) !important;
+}
+
+.address-form-component .form-control:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Additional visibility fixes */
+.address-form-fields .form-group {
+  position: relative;
+  z-index: 1;
+}
+
+.address-form-fields .form-group input {
+  position: relative;
+  z-index: 2;
 }
 
 .form-control.error {

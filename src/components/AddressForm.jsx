@@ -67,7 +67,7 @@ const AddressForm = ({
         </div>
       )}
       
-      <div className="address-form-fields">
+      <div className="address-form-fields address-two-column">
         <div className="form-row">
           <div className="form-group">
             <label>COUNTRY <span className="required">*</span></label>
@@ -79,6 +79,23 @@ const AddressForm = ({
               placeholder="Enter Country"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.country && (
               <p className="error-text">{errors.country.message || 'Country is required'}</p>
@@ -95,14 +112,29 @@ const AddressForm = ({
               placeholder="Enter State"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.state && (
               <p className="error-text">{errors.state.message || 'State is required'}</p>
             )}
           </div>
-        </div>
-        
-        <div className="form-row">
+
           <div className="form-group">
             <label>DISTRICT <span className="required">*</span></label>
             <input
@@ -113,12 +145,31 @@ const AddressForm = ({
               placeholder="Enter District"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.district && (
               <p className="error-text">{errors.district.message || 'District is required'}</p>
             )}
           </div>
-          
+        </div>
+        
+        <div className="form-row">
           <div className="form-group">
             <label>BLOCK (MANDAL) <span className="required">*</span></label>
             <input
@@ -129,14 +180,29 @@ const AddressForm = ({
               placeholder="Enter Block (Mandal)"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.block && (
               <p className="error-text">{errors.block.message || 'Block is required'}</p>
             )}
           </div>
-        </div>
-        
-        <div className="form-row">
+          
           <div className="form-group">
             <label>VILLAGE <span className="required">*</span></label>
             <input
@@ -147,6 +213,23 @@ const AddressForm = ({
               placeholder="Enter Village"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.village && (
               <p className="error-text">{errors.village.message || 'Village is required'}</p>
@@ -163,6 +246,23 @@ const AddressForm = ({
               placeholder="Enter Zipcode"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.zipcode && (
               <p className="error-text">{errors.zipcode.message || 'Zipcode is required'}</p>
