@@ -124,6 +124,9 @@ const AdminDashboard = () => {
     assignmentStatus: '',
     employeeFilter: ''
   });
+  // Dynamic location filters
+  const [availableStates, setAvailableStates] = useState([]);
+  const [availableDistricts, setAvailableDistricts] = useState([]);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showIdCardModal, setShowIdCardModal] = useState(false);
   const [currentCardId, setCurrentCardId] = useState(null);
@@ -156,6 +159,20 @@ const AdminDashboard = () => {
   };
   const handlePhotoClick = () => { if (fileInputRef.current) fileInputRef.current.click(); };
   const handleRemovePhoto = () => { setUserPhoto(null); try { localStorage.removeItem('userProfilePhoto:ADMIN'); } catch {} };
+
+  // Load states and districts for filters
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await adminAPI.getLocations();
+        setAvailableStates(Array.isArray(data?.states) ? data.states : []);
+        setAvailableDistricts(Array.isArray(data?.districts) ? data.districts : []);
+      } catch (e) {
+        setAvailableStates([]);
+        setAvailableDistricts([]);
+      }
+    })();
+  }, []);
 
   // Greeting function based on time of day
   const getGreeting = () => {
@@ -465,9 +482,26 @@ const AdminDashboard = () => {
       const matchesState = !filters.state || farmer.state === filters.state;
       const matchesDistrict = !filters.district || farmer.district === filters.district;
       const matchesKycStatus = !filters.kycStatus || farmer.kycStatus === filters.kycStatus;
-      const matchesEmployee = !filters.employeeFilter || farmer.assignedEmployee === filters.employeeFilter;
+
+      // Assignment status: "ASSIGNED" means there is a non-empty assignedEmployee not equal to 'Not Assigned'
+      const isAssigned = farmer.assignedEmployee && String(farmer.assignedEmployee).trim() !== '' && String(farmer.assignedEmployee).toLowerCase() !== 'not assigned';
+      const matchesAssignmentStatus = !filters.assignmentStatus ||
+        (filters.assignmentStatus === 'ASSIGNED' && isAssigned) ||
+        (filters.assignmentStatus === 'UNASSIGNED' && !isAssigned);
+
+      // Assigned employee filter: prefer matching by employeeId, fallback to name includes
+      const empFilter = (filters.employeeFilter || '').toString().trim();
+      const assignedId = farmer.assignedEmployeeId !== undefined && farmer.assignedEmployeeId !== null
+        ? String(farmer.assignedEmployeeId)
+        : '';
+      const assigned = String(farmer.assignedEmployee || '').trim();
+      const matchesEmployee = !empFilter ||
+        (assignedId && assignedId === empFilter) ||
+        assigned === empFilter ||
+        assigned.toLowerCase().includes(empFilter.toLowerCase()) ||
+        empFilter.toLowerCase().includes(assigned.toLowerCase());
       
-      return matchesState && matchesDistrict && matchesKycStatus && matchesEmployee;
+      return matchesState && matchesDistrict && matchesKycStatus && matchesAssignmentStatus && matchesEmployee;
     });
   };
 
@@ -481,6 +515,10 @@ const AdminDashboard = () => {
   const getFilteredRegistrations = () => {
     // Apply filters
     const filtered = (registrations || []).filter(registration => {
+      // Admins should never appear in the Admin dashboard registration list
+      if ((registration.role || '').toUpperCase() === 'ADMIN') {
+        return false;
+      }
       const roleMatch = !registrationFilters.role || registration.role === registrationFilters.role;
       const statusMatch = !registrationFilters.status || registration.status === registrationFilters.status;
       return roleMatch && statusMatch;
@@ -1237,13 +1275,9 @@ const AdminDashboard = () => {
                   className="filter-select"
                 >
                   <option value="">All States</option>
-                  <option value="Telangana">Telangana</option>
-                  <option value="Andhrapradesh">Andhrapradesh</option>
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Punjab">Punjab</option>
-                  <option value="Uttar Pradesh">Uttar Pradesh</option>
-                  <option value="Tamil Nadu">Tamil Nadu</option>
+                  {availableStates.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
                 </select>
               </div>
               
@@ -1255,17 +1289,9 @@ const AdminDashboard = () => {
                   className="filter-select"
                 >
                   <option value="">All Districts</option>
-                  <option value="Karimnagar">Karimnagar</option>
-                  <option value="rangareddy">Rangareddy</option>
-                  <option value="kadapa">Kadapa</option>
-                  <option value="Kadapa">Kadapa</option>
-                  <option value="kadpaa">Kadpaa</option>
-                  <option value="Kuppam">Kuppam</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Ahmedabad">Ahmedabad</option>
-                  <option value="Amritsar">Amritsar</option>
-                  <option value="Lucknow">Lucknow</option>
-                  <option value="Chennai">Chennai</option>
+                  {availableDistricts.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
                 </select>
               </div>
               
@@ -1306,9 +1332,12 @@ const AdminDashboard = () => {
                   className="filter-select"
                 >
                   <option value="">All Employees</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.name}>{emp.name}</option>
-                  ))}
+                  {employees.map(emp => {
+                    const label = `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.name || emp.email || `Employee ${emp.id}`;
+                    return (
+                      <option key={emp.id} value={String(emp.id)}>{label}</option>
+                    );
+                  })}
                 </select>
               </div>
               
@@ -1500,7 +1529,8 @@ const AdminDashboard = () => {
                   setShowFarmerRegistration(false);
                 } catch (error) {
                   console.error('Error creating farmer:', error);
-                  alert('Failed to create farmer. Please try again.');
+                  const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create farmer. Please try again.';
+                  alert(errorMessage);
                 }
               }}
             />
@@ -1695,9 +1725,9 @@ const AdminDashboard = () => {
               onChange={(e) => setRegistrationFilters(prev => ({ ...prev, role: e.target.value }))}
             >
               <option value="">All Roles</option>
+              <option value="FPO">FPO</option>
               <option value="FARMER">Farmer</option>
               <option value="EMPLOYEE">Employee</option>
-              <option value="ADMIN">Admin</option>
             </select>
           </div>
           <div className="filter-group">
@@ -2053,7 +2083,8 @@ const AdminDashboard = () => {
                   setEditingEmployee(null);
                 } catch (error) {
                   console.error('Error saving employee:', error);
-                  alert('Failed to save employee. Please try again.');
+                  const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to save employee. Please try again.';
+                  alert(errorMessage);
                 }
               }}
             />
@@ -2176,7 +2207,8 @@ const AdminDashboard = () => {
                     setEditingEmployee(null);
                   } catch (error) {
                     console.error('Error saving employee:', error);
-                    alert('Failed to save employee. Please try again.');
+                    const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to save employee. Please try again.';
+                    alert(errorMessage);
                   }
                 }}
               />

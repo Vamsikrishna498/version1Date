@@ -488,8 +488,6 @@ const Login = () => {
       navigate('/register-employee', { state: { role: 'EMPLOYEE' } });
     } else if (loginType === 'farmer') {
       navigate('/register-farmer', { state: { role: 'FARMER' } });
-    } else if (loginType === 'fpo') {
-      navigate('/register-fpo', { state: { role: 'FPO' } });
     } else if (loginType === 'official') {
       // Admin registration under Official tab
       navigate('/register-admin', { state: { role: 'ADMIN' } });
@@ -651,7 +649,7 @@ const Login = () => {
                 <button type="submit" className="auth-submit" disabled={loading}>
                   {loading ? 'Logging in...' : 'Log In'}
                 </button>
-                {(loginType === 'employee' || loginType === 'farmer' || loginType === 'fpo' || loginType === 'official') && (
+                {(loginType === 'employee' || loginType === 'farmer' || loginType === 'official') && (
                   <button
                     type="button"
                     className="auth-secondary"
