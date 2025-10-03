@@ -22,6 +22,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const [photoPreview] = useState(editData?.photo || null);
   const [ageValidationError, setAgeValidationError] = useState('');
   const [focusedField, setFocusedField] = useState('');
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   // Initialize photo name if editing
   useEffect(() => {
@@ -30,9 +31,26 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     }
   }, [editData]);
 
+  // Reset validation errors when form first loads
+  useEffect(() => {
+    setShowValidationErrors(false);
+    clearErrors();
+  }, []);
+
   // Configuration data is now loaded automatically by ConfigurationContext
-  // Get education types from context
-  const educationTypes = getEducationTypesForUser('FARMER');
+  // Get education types from context with a sensible fallback if not configured
+  const educationTypesFromConfig = getEducationTypesForUser('FARMER');
+  const educationTypes = (educationTypesFromConfig && educationTypesFromConfig.length > 0)
+    ? educationTypesFromConfig
+    : [
+        'Primary',
+        'Secondary',
+        'Higher Secondary',
+        'Diploma',
+        'Graduate',
+        'Post Graduate',
+        'Doctorate'
+      ];
 
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
@@ -58,7 +76,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   const totalSteps = 8;
 
   const methods = useForm({
-    mode: 'all',
+    mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
       // Step 0 - Personal Details
@@ -496,16 +514,20 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               setValue('zipcode', data.zipcode);
               // Clear any existing errors
               clearErrors(['country', 'state', 'district', 'block', 'village', 'zipcode']);
+              // If user starts filling fields, hide validation errors
+              if (data.country || data.state || data.district || data.block || data.village || data.zipcode) {
+                setShowValidationErrors(false);
+              }
             }}
             showTitle={false}
-            errors={{
+            errors={showValidationErrors ? {
               country: errors.country,
               state: errors.state,
               district: errors.district,
               block: errors.block,
               village: errors.village,
               zipcode: errors.zipcode
-            }}
+            } : {}}
           />
           
           {/* Hidden inputs for form validation */}
@@ -526,6 +548,17 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
 {currentStep === 2 && (
                 <>
               <div className="profes-field">
+                <label>Education <span className="optional"></span></label>
+                <select {...register("education", { required: 'Education is required' })} className="input-large">
+                  <option value="">Select</option>
+                  {educationTypes.map((edu) => (
+                    <option key={edu} value={edu}>
+                      {edu}
+                    </option>
+                  ))}
+                 </select>
+                <p>{errors.education?.message}</p>
+
                 <label>Experience <span className="optional"></span></label>
                 <input 
                   {...register("experience")} 
@@ -533,35 +566,6 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                   className="input-large"
                 />
                 <p>{errors.experience?.message}</p>
-
-                <label>Education <span className="optional"></span></label>
-                <select {...register("education", { required: 'Education is required' })} className="input-large">
-                  <option value="">Select</option>
-<<<<<<< HEAD
-                  {Array.isArray(educationTypes) && educationTypes.length > 0 ? (
-                    educationTypes.map((edu, idx) => (
-                      <option key={edu.id || idx} value={edu.name || edu.label || edu}>
-                        {edu.name || edu.label || String(edu)}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="Primary">Primary</option>
-                      <option value="Secondary">Secondary</option>
-                      <option value="Higher Secondary">Higher Secondary</option>
-                      <option value="Graduate">Graduate</option>
-                      <option value="Post Graduate">Post Graduate</option>
-                    </>
-                  )}
-=======
-                  {getEducationTypesForUser('farmer').map((edu) => (
-                    <option key={edu} value={edu}>
-                      {edu}
-                    </option>
-                  ))}
->>>>>>> origin/master
-                 </select>
-                <p>{errors.education?.message}</p>
               </div>
               </>
             )}
@@ -630,11 +634,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               className="input-large"
             >
               <option value="">Select</option>
-<<<<<<< HEAD
               {Object.keys(defaultCropOptions).map((cat) => (
-=======
-              {cropTypes.map((cat) => (
->>>>>>> origin/master
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -644,11 +644,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               <label>Select Crop Name <span className="optional"></span></label>
               <select {...register("currentCrop")} defaultValue="" className="input-large">
                 <option value="">Select</option>
-<<<<<<< HEAD
                 {defaultCropOptions[cropCategoryStep3]?.map((crop) => (
-=======
-                {cropNames.map((crop) => (
->>>>>>> origin/master
                   <option key={crop} value={crop}>{crop}</option>
                 ))}
               </select>
@@ -726,45 +722,23 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                className="input-large"
                >
               <option value="">Select</option>
-<<<<<<< HEAD
               {Object.keys(defaultCropOptions).map((cat) => (
-=======
-              {cropTypes.map((cat) => (
->>>>>>> origin/master
               <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
  
-               {cropCategoryStep4 && (
+              {cropCategoryStep4 && (
               <>
                 <label>Select Crop Name <span className="optional"></span></label>
                 <select {...register("cropType")} defaultValue="" className="input-large">
                <option value="">Select</option>
-<<<<<<< HEAD
                 {defaultCropOptions[cropCategoryStep4]?.map((crop) => (
-=======
-                {cropNames.map((crop) => (
->>>>>>> origin/master
                   <option key={crop} value={crop}>{crop}</option>
                 ))}
                </select>
               </>
                )}
                {errors.cropType?.message && <p className="error">{errors.cropType.message}</p>}
- 
- 
-                <label>Soil Test <span className="optional"></span></label>
-                <select
-                  {...register("proposedSoilTest")}
-                  onChange={e => setValue("proposedSoilTest", e.target.value === "true")}
-                  value={typeof watch("proposedSoilTest") === "boolean" ? String(watch("proposedSoilTest")) : ""}
-                  className="input-large"
-                >
-                  <option value="">Select</option>
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-                <p>{errors.proposedSoilTest?.message}</p>
                 </div>
  
                 <div className="proposedform-columnright">
@@ -788,6 +762,19 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                   placeholder="Enter net income per year"
                 />
                 {errors.netIncome?.message && <p className="error">{errors.netIncome.message}</p>}
+
+                <label>Soil Test <span className="optional"></span></label>
+                <select
+                  {...register("proposedSoilTest")}
+                  onChange={e => setValue("proposedSoilTest", e.target.value === "true")}
+                  value={typeof watch("proposedSoilTest") === "boolean" ? String(watch("proposedSoilTest")) : ""}
+                  className="input-large"
+                >
+                  <option value="">Select</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                <p>{errors.proposedSoilTest?.message}</p>
  
                 <label>Soil Test Certificate <span className="optional"></span></label>
                  <input 
@@ -998,6 +985,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     <button
       type="button"
       onClick={async () => {
+        // Keep showing validation errors for step 0
+        setShowValidationErrors(true);
         const isValid = await trigger();
         if (isValid) setCurrentStep(currentStep + 1);
       }}
@@ -1006,12 +995,16 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     </button>
   ) : currentStep === totalSteps - 1 ? (
     <>
-      <button type="button" onClick={() => setCurrentStep(currentStep - 1)}>
+      <button type="button" onClick={() => {
+        setShowValidationErrors(false);
+        setCurrentStep(currentStep - 1);
+      }}>
         Previous
       </button>
       <button
         type="button"
         onClick={async () => {
+          setShowValidationErrors(true);
           const isValid = await trigger();
           if (isValid) {
             await handleSubmit(onSubmit)();
@@ -1023,12 +1016,18 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     </>
   ) : (
     <>
-      <button type="button" onClick={() => setCurrentStep(currentStep - 1)}>
+      <button type="button" onClick={() => {
+        setShowValidationErrors(false);
+        setCurrentStep(currentStep - 1);
+      }}>
         Previous
       </button>
       <button
         type="button"
         onClick={async () => {
+          // Do not show validation errors visually on Address step (step 1)
+          // Still run validations to prevent moving forward when invalid
+          setShowValidationErrors(currentStep !== 1);
           const isValid = await trigger();
           if (isValid) setCurrentStep(currentStep + 1);
         }}

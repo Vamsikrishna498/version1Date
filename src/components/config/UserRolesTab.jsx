@@ -12,7 +12,7 @@ const UserRolesTab = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
@@ -90,7 +90,7 @@ const UserRolesTab = () => {
         await rbacAPI.createRole(formData);
       }
       
-      setShowModal(false);
+      setShowForm(false);
       setEditingRole(null);
       resetForm();
       loadRoles();
@@ -110,7 +110,7 @@ const UserRolesTab = () => {
       permissions: role.permissions || [],
       isActive: role.isActive
     });
-    setShowModal(true);
+    setShowForm(true);
   };
 
   const handleDelete = async (roleId) => {
@@ -243,25 +243,171 @@ const UserRolesTab = () => {
 
       {activeSubTab === 'roles' && (
         <>
-          <div className="header-actions">
-            <input
-              type="text"
-              placeholder="Search roles..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                resetForm();
-                setEditingRole(null);
-                setShowModal(true);
-              }}
-            >
-              ➕ Add New Role
-            </button>
-          </div>
+          {showForm ? (
+            <>
+              <div className="superadmin-overview-header" style={{ marginBottom: '24px' }}>
+                <div className="header-left">
+                  <h2 className="superadmin-overview-title">{editingRole ? 'Edit Role' : 'Add New Role'}</h2>
+                  <p className="overview-description">
+                    {editingRole ? 'Update role permissions and settings.' : 'Create a new role with custom permissions.'}
+                  </p>
+                </div>
+                <div className="header-right">
+                  <button 
+                    className="action-btn secondary"
+                    onClick={() => {
+                      setShowForm(false);
+                      setEditingRole(null);
+                      resetForm();
+                    }}
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                    Back to Roles List
+                  </button>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '32px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                maxWidth: '100%'
+              }}>
+                <form onSubmit={handleSubmit} className="role-form">
+                  <div className="form-group">
+                    <label>Role Name *</label>
+                    <input
+                      type="text"
+                      value={formData.roleName}
+                      onChange={(e) => setFormData({ ...formData, roleName: e.target.value })}
+                      required
+                      className="form-control"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="form-control"
+                      rows="3"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Allowed Modules</label>
+                    <div className="checkbox-group">
+                      {availableModules.map(module => (
+                        <label key={module} className="checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={formData.allowedModules.includes(module)}
+                            onChange={() => handleModuleChange(module)}
+                          />
+                          {module}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Permissions</label>
+                    <div className="checkbox-group">
+                      {availablePermissions.map(permission => (
+                        <label key={permission} className="checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={formData.permissions.includes(permission)}
+                            onChange={() => handlePermissionChange(permission)}
+                          />
+                          {permission}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      />
+                      Active
+                    </label>
+                  </div>
+                  
+                  <div className="form-actions" style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    justifyContent: 'flex-end',
+                    marginTop: '24px' 
+                  }}>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={() => {
+                        setShowForm(false);
+                        setEditingRole(null);
+                        resetForm();
+                      }}
+                      style={{
+                        padding: '12px 24px',
+                        background: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary" 
+                      disabled={loading}
+                      style={{
+                        padding: '12px 24px',
+                        background: loading ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: loading ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {loading ? 'Saving...' : (editingRole ? 'Update Role' : 'Create Role')}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="header-actions">
+                <input
+                  type="text"
+                  placeholder="Search roles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    resetForm();
+                    setEditingRole(null);
+                    setShowForm(true);
+                  }}
+                >
+                  ➕ Add New Role
+                </button>
+              </div>
 
       <div className="roles-grid">
         {filteredRoles.map((role) => (
@@ -312,6 +458,8 @@ const UserRolesTab = () => {
           </div>
         ))}
       </div>
+            </>
+          )}
         </>
       )}
 
@@ -454,91 +602,7 @@ const UserRolesTab = () => {
         </>
       )}
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>{editingRole ? 'Edit Role' : 'Add New Role'}</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="role-form">
-              <div className="form-group">
-                <label>Role Name *</label>
-                <input
-                  type="text"
-                  value={formData.roleName}
-                  onChange={(e) => setFormData({ ...formData, roleName: e.target.value })}
-                  required
-                  className="form-control"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="form-control"
-                  rows="3"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Allowed Modules</label>
-                <div className="checkbox-group">
-                  {availableModules.map(module => (
-                    <label key={module} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={formData.allowedModules.includes(module)}
-                        onChange={() => handleModuleChange(module)}
-                      />
-                      {module}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label>Permissions</label>
-                <div className="checkbox-group">
-                  {availablePermissions.map(permission => (
-                    <label key={permission} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={formData.permissions.includes(permission)}
-                        onChange={() => handlePermissionChange(permission)}
-                      />
-                      {permission}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                  Active
-                </label>
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Saving...' : (editingRole ? 'Update Role' : 'Create Role')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Add New Role form is now shown inline above */}
 
       {showAssignModal && (
         <div className="modal-overlay">

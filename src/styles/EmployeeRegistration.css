@@ -94,6 +94,11 @@
   gap: 20px;
 }
 
+/* Address step should span full width so its internal grid can manage columns */
+.emp-form-three {
+  grid-template-columns: 1fr;
+}
+
 /* Form Column Layouts */
 .form-column-left,
 .form-column-right {
@@ -166,13 +171,13 @@
 .input,
 select {
   width: 100%;
-  padding: 8px 10px;
+  padding: 14px 16px;
   border: 2px solid #e9ecef;
-  border-radius: 5px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 14px;
   transition: all 0.3s ease;
   background: white;
-  min-height: 36px;
+  min-height: 48px;
 }
 
 select {
@@ -367,12 +372,13 @@ input[type="file"]:hover {
 /* Force Address step rows to full width inside employee form */
 .employee-form .address-form-component .address-form-fields .form-row {
   display: grid !important;
-  grid-template-columns: 1fr !important;
+  grid-template-columns: 1fr 1fr !important;
   gap: 20px !important;
 }
 
+/* Allow address form items to occupy their natural grid columns */
 .employee-form .address-form-component .address-form-fields .form-row > * {
-  grid-column: 1 / -1 !important;
+  grid-column: auto !important;
 }
 
 /* Professional and Bank Details */

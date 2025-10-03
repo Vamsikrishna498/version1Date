@@ -67,7 +67,7 @@ const AddressForm = ({
         </div>
       )}
       
-      <div className="address-form-fields">
+      <div className="address-form-fields address-two-column">
         <div className="form-row">
           <div className="form-group">
             <label>Country *</label>
@@ -79,6 +79,23 @@ const AddressForm = ({
               placeholder="Enter Country"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.country?.message && (
               <p className="error-text">{errors.country.message}</p>
@@ -95,14 +112,29 @@ const AddressForm = ({
               placeholder="Enter State"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.state?.message && (
               <p className="error-text">{errors.state.message}</p>
             )}
           </div>
-        </div>
-        
-        <div className="form-row">
+
           <div className="form-group">
             <label>District *</label>
             <input
@@ -113,12 +145,31 @@ const AddressForm = ({
               placeholder="Enter District"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.district?.message && (
               <p className="error-text">{errors.district.message}</p>
             )}
           </div>
-          
+        </div>
+        
+        <div className="form-row">
           <div className="form-group">
             <label>Block (Mandal) *</label>
             <input
@@ -129,14 +180,29 @@ const AddressForm = ({
               placeholder="Enter Block (Mandal)"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.block?.message && (
               <p className="error-text">{errors.block.message}</p>
             )}
           </div>
-        </div>
-        
-        <div className="form-row">
+          
           <div className="form-group">
             <label>Village *</label>
             <input
@@ -147,6 +213,23 @@ const AddressForm = ({
               placeholder="Enter Village"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.village?.message && (
               <p className="error-text">{errors.village.message}</p>
@@ -163,6 +246,23 @@ const AddressForm = ({
               placeholder="Enter Zipcode"
               disabled={disabled}
               required
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#1f2937',
+                backgroundColor: '#ffffff',
+                minHeight: '56px',
+                height: '56px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
             />
             {errors?.zipcode?.message && (
               <p className="error-text">{errors.zipcode.message}</p>

@@ -41,8 +41,19 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
   ];
 
   // Configuration data is now loaded automatically by ConfigurationContext
-  // Get education types from context
-  const educationTypes = getEducationTypesForUser('EMPLOYEE');
+  // Get education types from context with a safe fallback list
+  const educationTypesFromConfig = getEducationTypesForUser('EMPLOYEE');
+  const educationTypes = (educationTypesFromConfig && educationTypesFromConfig.length > 0)
+    ? educationTypesFromConfig
+    : [
+        'Primary',
+        'Secondary',
+        'Higher Secondary',
+        'Diploma',
+        'Graduate',
+        'Post Graduate',
+        'Doctorate'
+      ];
 
   // Age validation function
   const handleAgeValidation = async (dateOfBirth) => {
@@ -631,7 +642,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     {...register("professional.education", { required: "Education is required" })}
                   >
                     <option value="">Select</option>
-                    {getEducationTypesForUser('employee').map((edu) => (
+                    {educationTypes.map((edu) => (
                       <option key={edu} value={edu}>
                         {edu}
                       </option>

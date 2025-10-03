@@ -6,7 +6,7 @@ const PersonalizationTab = ({ isSuperAdmin, onFormatsUpdated }) => {
   const [codeFormats, setCodeFormats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingFormat, setEditingFormat] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -60,7 +60,7 @@ const PersonalizationTab = ({ isSuperAdmin, onFormatsUpdated }) => {
         await configAPI.createCodeFormat(submitData);
       }
       
-      setShowModal(false);
+      setShowForm(false);
       setEditingFormat(null);
       resetForm();
       loadCodeFormats();
@@ -85,7 +85,7 @@ const PersonalizationTab = ({ isSuperAdmin, onFormatsUpdated }) => {
       startingNumber: format.startingNumber.toString(),
       description: format.description
     });
-    setShowModal(true);
+    setShowForm(true);
   };
 
   const handleTestCode = async (codeType) => {
@@ -123,86 +123,37 @@ const PersonalizationTab = ({ isSuperAdmin, onFormatsUpdated }) => {
 
   return (
     <div className="config-tab">
-      <div className="tab-header">
-        <h2>🎨 Code Format Personalization</h2>
-        <div className="header-actions">
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              resetForm();
-              setEditingFormat(null);
-              setShowModal(true);
-            }}
-          >
-            ➕ Add New Format
-          </button>
-        </div>
-      </div>
-
-      <div className="code-formats-grid">
-        {codeFormats.map((format) => (
-          <div key={format.id} className="format-card">
-            <div className="format-header">
-              <h3>{getCodeTypeLabel(format.codeType)}</h3>
-              <div className="format-actions">
-                <button
-                  className="btn btn-sm btn-info"
-                  onClick={() => handleTestCode(format.codeType)}
-                >
-                  🔍 Test Code
-                </button>
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => handleEdit(format)}
-                >
-                  ✏️ Edit
-                </button>
-              </div>
+      {showForm ? (
+        <>
+          <div className="superadmin-overview-header" style={{ marginBottom: '24px' }}>
+            <div className="header-left">
+              <h2 className="superadmin-overview-title">{editingFormat ? 'Edit Code Format' : 'Add New Code Format'}</h2>
+              <p className="overview-description">
+                {editingFormat ? 'Update the code format settings below.' : 'Configure a new code format for automatic ID generation.'}
+              </p>
             </div>
-            
-            <div className="format-details">
-              <div className="detail-row">
-                <strong>Prefix:</strong>
-                <span className="prefix-display">{format.prefix}</span>
-              </div>
-              
-              <div className="detail-row">
-                <strong>Starting Number:</strong>
-                <span>{format.startingNumber}</span>
-              </div>
-              
-              <div className="detail-row">
-                <strong>Current Number:</strong>
-                <span className="current-number">{format.currentNumber}</span>
-              </div>
-              
-              <div className="detail-row">
-                <strong>Next Code:</strong>
-                <span className="next-code">{format.prefix}-{String(format.currentNumber + 1).padStart(5, '0')}</span>
-              </div>
-            </div>
-            
-            {format.description && (
-              <p className="format-description">{format.description}</p>
-            )}
-            
-            <div className="format-status">
-              <span className={`status-badge ${format.isActive ? 'active' : 'inactive'}`}>
-                {format.isActive ? '✅ Active' : '❌ Inactive'}
-              </span>
+            <div className="header-right">
+              <button 
+                className="action-btn secondary"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingFormat(null);
+                  resetForm();
+                }}
+              >
+                <i className="fas fa-arrow-left"></i>
+                Back to Formats List
+              </button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>{editingFormat ? 'Edit Code Format' : 'Add New Code Format'}</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            maxWidth: '100%'
+          }}>
             <form onSubmit={handleSubmit} className="format-form">
               <div className="form-group">
                 <label>Code Type *</label>
@@ -273,25 +224,174 @@ const PersonalizationTab = ({ isSuperAdmin, onFormatsUpdated }) => {
                 </div>
               </div>
               
-              <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              <div className="form-actions" style={{ 
+                display: 'flex', 
+                gap: '12px', 
+                justifyContent: 'flex-end',
+                marginTop: '24px' 
+              }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingFormat(null);
+                    resetForm();
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={loading}
+                  style={{
+                    padding: '12px 24px',
+                    background: loading ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   {loading ? 'Saving...' : (editingFormat ? 'Update Format' : 'Create Format')}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      )}
 
-      {error && (
-        <div className="error-message">
-          <span className="error-icon">❌</span>
-          <span>{error}</span>
-          <button onClick={() => setError('')} className="close-error">×</button>
-        </div>
+          {error && (
+            <div className="error-message" style={{
+              marginTop: '16px',
+              padding: '16px',
+              background: '#fee2e2',
+              border: '2px solid #dc2626',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <span className="error-icon">❌</span>
+              <span style={{ flex: 1 }}>{error}</span>
+              <button onClick={() => setError('')} className="close-error" style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                color: '#dc2626'
+              }}>×</button>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="tab-header">
+            <h2>🎨 Code Format Personalization</h2>
+            <div className="header-actions">
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  resetForm();
+                  setEditingFormat(null);
+                  setShowForm(true);
+                }}
+              >
+                ➕ Add New Format
+              </button>
+            </div>
+          </div>
+
+      <div className="code-formats-grid">
+        {codeFormats.map((format) => (
+          <div key={format.id} className="format-card">
+            <div className="format-header">
+              <h3>{getCodeTypeLabel(format.codeType)}</h3>
+              <div className="format-actions">
+                <button
+                  className="btn btn-sm btn-info"
+                  onClick={() => handleTestCode(format.codeType)}
+                >
+                  🔍 Test Code
+                </button>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleEdit(format)}
+                >
+                  ✏️ Edit
+                </button>
+              </div>
+            </div>
+            
+            <div className="format-details">
+              <div className="detail-row">
+                <strong>Prefix:</strong>
+                <span className="prefix-display">{format.prefix}</span>
+              </div>
+              
+              <div className="detail-row">
+                <strong>Starting Number:</strong>
+                <span>{format.startingNumber}</span>
+              </div>
+              
+              <div className="detail-row">
+                <strong>Current Number:</strong>
+                <span className="current-number">{format.currentNumber}</span>
+              </div>
+              
+              <div className="detail-row">
+                <strong>Next Code:</strong>
+                <span className="next-code">{format.prefix}-{String(format.currentNumber + 1).padStart(5, '0')}</span>
+              </div>
+            </div>
+            
+            {format.description && (
+              <p className="format-description">{format.description}</p>
+            )}
+            
+            <div className="format-status">
+              <span className={`status-badge ${format.isActive ? 'active' : 'inactive'}`}>
+                {format.isActive ? '✅ Active' : '❌ Inactive'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+          {error && !showForm && (
+            <div className="error-message" style={{
+              marginTop: '16px',
+              padding: '16px',
+              background: '#fee2e2',
+              border: '2px solid #dc2626',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <span className="error-icon">❌</span>
+              <span style={{ flex: 1 }}>{error}</span>
+              <button onClick={() => setError('')} className="close-error" style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                color: '#dc2626'
+              }}>×</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
