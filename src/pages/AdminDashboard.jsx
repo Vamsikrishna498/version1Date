@@ -833,7 +833,7 @@ const AdminDashboard = () => {
   const handleSaveEmployee = async (updatedData) => {
     try {
       // Update employee data in backend
-      const updatedEmployee = await adminAPI.updateEmployee(selectedEmployeeData.id, updatedData);
+      const updatedEmployee = await employeesAPI.updateEmployee(selectedEmployeeData.id, updatedData);
       
       // Update local state
       setEmployees(prev => prev.map(emp => 

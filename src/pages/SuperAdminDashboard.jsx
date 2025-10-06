@@ -493,6 +493,20 @@ const SuperAdminDashboard = () => {
     }
   }, [employees]);
 
+  // Debug effect to monitor employee filters
+  useEffect(() => {
+    console.log('🔍 Employee filters updated:', employeeFilters);
+    if (employees && employees.length > 0) {
+      const filtered = getFilteredEmployees();
+      console.log('🔍 Filtered employees after filter change:', filtered.length);
+    }
+  }, [employeeFilters, employees]);
+
+  // Debug effect to monitor delete modal state
+  useEffect(() => {
+    console.log('🔍 Delete modal state updated:', { showDeleteModal, itemToDelete });
+  }, [showDeleteModal, itemToDelete]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -534,6 +548,16 @@ const SuperAdminDashboard = () => {
         console.log('🔍 First employee data structure:', employeesData[0]);
         console.log('🔍 Available employee fields:', Object.keys(employeesData[0]));
         console.log('🔍 Employee names in dropdown:', employeesData.map(emp => emp.name));
+        
+        // Debug status values from backend
+        console.log('🔍 Employee status values from backend:');
+        employeesData.forEach((emp, index) => {
+          console.log(`  Backend Employee ${index + 1}: ${emp.name || emp.firstName} - status: "${emp.status}", accessStatus: "${emp.accessStatus}"`);
+        });
+        
+        // Check unique status values from backend
+        const backendStatuses = [...new Set(employeesData.map(emp => emp.status || emp.accessStatus))];
+        console.log('🔍 Unique status values from backend:', backendStatuses);
       }
       } catch (apiError) {
         console.error('❌ API call failed:', apiError);
@@ -562,17 +586,22 @@ const SuperAdminDashboard = () => {
       console.log('Setting farmers data:', finalFarmersData);
       console.log('Sample farmer structure:', finalFarmersData[0]);
       // Normalize employees from backend instead of forcing mock data
-      let finalEmployeesData = (employeesData || []).map(e => ({
-        id: e.id,
-        name: e.name || `${[e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ')}`.trim(),
-        contactNumber: e.contactNumber,
-        email: e.email,
-        status: e.status || e.accessStatus || 'ACTIVE',
-        role: (e.role && typeof e.role === 'string') ? e.role : (e.role?.name || 'employee'),
-        designation: e.designation || 'KYC Officer',
-        district: e.district,
-        state: e.state
-      }));
+      let finalEmployeesData = (employeesData || []).map(e => {
+        const normalizedStatus = e.status || e.accessStatus || 'ACTIVE';
+        console.log(`🔍 Normalizing employee ${e.name || e.firstName}: status="${e.status}", accessStatus="${e.accessStatus}", normalized="${normalizedStatus}"`);
+        
+        return {
+          id: e.id,
+          name: e.name || `${[e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ')}`.trim(),
+          contactNumber: e.contactNumber,
+          email: e.email,
+          status: normalizedStatus,
+          role: (e.role && typeof e.role === 'string') ? e.role : (e.role?.name || 'employee'),
+          designation: e.designation || 'KYC Officer',
+          district: e.district,
+          state: e.state
+        };
+      });
       // If backend returned nothing, keep empty array (do not override with mocks)
 
       setFarmers(finalFarmersData);
@@ -599,6 +628,18 @@ const SuperAdminDashboard = () => {
       console.log('Fetched data:', { farmersData, employeesData, registrationsData });
       console.log('Final employees data:', finalEmployeesData);
       console.log('Final employees count:', finalEmployeesData?.length || 0);
+      
+      // Debug employee status values
+      if (finalEmployeesData && finalEmployeesData.length > 0) {
+        console.log('🔍 Employee status values:');
+        finalEmployeesData.forEach((emp, index) => {
+          console.log(`  Employee ${index + 1}: ${emp.name} - status: "${emp.status}" (type: ${typeof emp.status})`);
+        });
+        
+        // Check unique status values
+        const uniqueStatuses = [...new Set(finalEmployeesData.map(emp => emp.status))];
+        console.log('🔍 Unique status values in employee data:', uniqueStatuses);
+      }
       
       // Fetch unique IDs after data is loaded
       setTimeout(() => {
@@ -652,15 +693,47 @@ const SuperAdminDashboard = () => {
   };
 
   const getFilteredEmployees = () => {
-    return (employees || []).filter(employee => {
-      const matchesStatus = !employeeFilters.status || employee.status === employeeFilters.status;
+    console.log('🔍 getFilteredEmployees called');
+    console.log('🔍 employeeFilters:', employeeFilters);
+    console.log('🔍 employees count:', employees?.length || 0);
+    
+    const filtered = (employees || []).filter(employee => {
+      // Make status comparison case-insensitive and handle null/undefined
+      const employeeStatus = (employee.status || '').toString().toUpperCase();
+      const filterStatus = (employeeFilters.status || '').toString().toUpperCase();
+      
+      // Handle different status value formats
+      let matchesStatus = !employeeFilters.status || employeeStatus === filterStatus;
+      
+      // Additional fallback: if exact match fails, try common variations
+      if (employeeFilters.status && !matchesStatus) {
+        const statusVariations = {
+          'ACTIVE': ['ACTIVE', 'APPROVED', 'ENABLED', '1', 'TRUE'],
+          'INACTIVE': ['INACTIVE', 'DISABLED', '0', 'FALSE'],
+          'PENDING': ['PENDING', 'WAITING', 'PENDING_APPROVAL']
+        };
+        
+        const filterVariations = statusVariations[filterStatus] || [filterStatus];
+        const employeeVariations = statusVariations[employeeStatus] || [employeeStatus];
+        
+        matchesStatus = filterVariations.some(fv => employeeVariations.includes(fv));
+      }
+      
       const matchesRole = !employeeFilters.role || employee.role === employeeFilters.role;
       const matchesDesignation = !employeeFilters.designation || employee.designation === employeeFilters.designation;
       const matchesState = !employeeFilters.state || employee.state === employeeFilters.state;
       const matchesDistrict = !employeeFilters.district || employee.district === employeeFilters.district;
       
+      // Debug status matching
+      if (employeeFilters.status) {
+        console.log(`🔍 Employee ${employee.name}: status="${employee.status}" (normalized: "${employeeStatus}"), filter="${employeeFilters.status}" (normalized: "${filterStatus}"), matches=${matchesStatus}`);
+      }
+      
       return matchesStatus && matchesRole && matchesDesignation && matchesState && matchesDistrict;
     });
+    
+    console.log('🔍 Filtered employees count:', filtered.length);
+    return filtered;
   };
 
   const getFilteredFPOs = () => {
@@ -879,8 +952,8 @@ const SuperAdminDashboard = () => {
 
   const handleViewEmployee = async (employee) => {
     try {
-      // Fetch complete employee details from backend
-      const completeEmployeeData = await superAdminAPI.getEmployeeById(employee.id);
+      // Fetch complete employee details from backend (unified route)
+      const completeEmployeeData = await employeesAPI.getEmployeeById(employee.id);
       setViewingEmployee(completeEmployeeData);
     } catch (error) {
       console.error('Error fetching employee details:', error);
@@ -901,16 +974,25 @@ const SuperAdminDashboard = () => {
 
   const handleSaveEmployee = async (updatedData) => {
     try {
+      // Determine the correct employee id (viewing page or selected modal)
+      const targetId = (viewingEmployee && viewingEmployee.id) || (selectedEmployee && selectedEmployee.id) || updatedData?.id;
+      if (!targetId) throw new Error('No employee id found to update');
+
       // Update employee data in backend
-      const updatedEmployee = await superAdminAPI.updateEmployee(selectedEmployee.id, updatedData);
+      const updatedEmployee = await employeesAPI.updateEmployee(targetId, updatedData);
       
-      // Update local state
+      // Update local state list
       setEmployees(prev => prev.map(emp => 
-        emp.id === selectedEmployee.id ? updatedEmployee : emp
+        emp.id === targetId ? updatedEmployee : emp
       ));
       
-      // Update selected employee
-      setSelectedEmployee(updatedEmployee);
+      // Update viewing/selected state
+      if (viewingEmployee && viewingEmployee.id === targetId) {
+        setViewingEmployee(updatedEmployee);
+      }
+      if (selectedEmployee && selectedEmployee.id === targetId) {
+        setSelectedEmployee(updatedEmployee);
+      }
       
       alert('Employee updated successfully!');
     } catch (error) {
@@ -1156,8 +1238,11 @@ const SuperAdminDashboard = () => {
   };
 
   const handleDelete = (item, type) => {
+    console.log('🔍 handleDelete called with:', { item, type });
+    console.log('🔍 Setting itemToDelete and showDeleteModal to true');
     setItemToDelete({ item, type });
     setShowDeleteModal(true);
+    console.log('🔍 Delete modal should now be visible');
   };
 
   const handleAddFPO = () => {
@@ -1238,16 +1323,19 @@ const SuperAdminDashboard = () => {
         await farmersAPI.deleteFarmer(item.id);
         setFarmers(prev => prev.filter(f => f.id !== item.id));
         console.log(`✅ Farmer ${item.id} deleted successfully`);
+        alert('Farmer deleted successfully!');
       } else if (type === 'employee') {
         console.log(`🔄 Deleting employee with ID: ${item.id}`);
         await employeesAPI.deleteEmployee(item.id);
         setEmployees(prev => prev.filter(e => e.id !== item.id));
         console.log(`✅ Employee ${item.id} deleted successfully`);
+        alert('Employee deleted successfully!');
       } else if (type === 'registration') {
         console.log(`🔄 Deleting registration with ID: ${item.id}`);
         await superAdminAPI.deleteUser(item.id);
         setRegistrations(prev => prev.filter(r => r.id !== item.id));
         console.log(`✅ Registration ${item.id} deleted successfully`);
+        alert('Registration deleted successfully!');
       } else if (type === 'fpo') {
         console.log(`🔄 Deleting FPO with ID: ${item.id}`);
         console.log(`🔄 FPO data:`, item);
@@ -1284,7 +1372,7 @@ const SuperAdminDashboard = () => {
         setFpos(prev => prev.filter(f => f.id !== item.id));
         console.log(`✅ FPO ${item.id} removed from list (${hardDeleted ? 'hard delete' : 'deactivated fallback'})`);
 
-        alert('fpo deleted successfully!');
+        alert('FPO deleted successfully!');
       }
       
     } catch (error) {
@@ -2493,6 +2581,29 @@ const SuperAdminDashboard = () => {
                             <i className="fas fa-plus"></i>
                             Add Employee
                                                       </button>
+                          {/* Debug button to test filtering */}
+                          <button 
+                            onClick={() => {
+                              const filtered = getFilteredEmployees();
+                              console.log('🔍 Debug: Total employees:', employees?.length || 0);
+                              console.log('🔍 Debug: Filtered employees:', filtered.length);
+                              console.log('🔍 Debug: Current filters:', employeeFilters);
+                              alert(`Total: ${employees?.length || 0}, Filtered: ${filtered.length}, Filter: ${JSON.stringify(employeeFilters)}`);
+                            }}
+                            style={{
+                              background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '12px 24px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '600',
+                              marginLeft: '10px'
+                            }}
+                          >
+                            Debug Filter
+                          </button>
                           </div>
                         </div>
                       </div>
@@ -2503,7 +2614,10 @@ const SuperAdminDashboard = () => {
                           <label className="filter-label">Status</label>
                           <select 
                             value={employeeFilters.status} 
-                            onChange={(e) => setEmployeeFilters(prev => ({ ...prev, status: e.target.value }))}
+                            onChange={(e) => {
+                              console.log('🔍 Status filter changed to:', e.target.value);
+                              setEmployeeFilters(prev => ({ ...prev, status: e.target.value }));
+                            }}
                             className="filter-select"
                           >
                             <option value="">All Status</option>

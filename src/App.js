@@ -16,6 +16,7 @@ import UsersRolesManagement from './pages/UsersRolesManagement';
 import FarmerRegistration from './pages/FarmerRegistration';
 import EmployeeRegistration from './pages/EmployeeRegistration';
 import RegistrationForm from './pages/RegistrationForm';
+import UnifiedRegistration from './components/UnifiedRegistration';
 import ForgotPassword from './pages/ForgotPassword';
 import ForgotUserId from './pages/ForgotUserid';
 import ChangePassword from './pages/ChangePassword';
@@ -47,6 +48,7 @@ function App() {
             
             
             {/* Registration Routes */}
+            <Route path="/register" element={<UnifiedRegistration />} />
             <Route path="/farmer/registration" element={<FarmerRegistration />} />
             <Route path="/employee/registration" element={<EmployeeRegistration />} />
             <Route path="/register-employee" element={<RegistrationForm />} />

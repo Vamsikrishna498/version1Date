@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Selection Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .fix-details {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Role Selection Validation Fix</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">✅ Issue Fixed</h2>
+        <p>The "Role is required" error appearing even when a role is selected has been resolved.</p>
+        
+        <div class="success">
+            <strong>Problem:</strong> React Hook Form wasn't properly recognizing the selected role value in the dropdown.<br>
+            <strong>Solution:</strong> Enhanced the onChange handler to manually clear errors and trigger validation.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🔧 What Was Fixed</h2>
+        
+        <div class="fix-details">
+            <strong>Before (Problematic Code):</strong>
+            <div class="code-block">
+&lt;select 
+  {...register('role')} 
+  onChange={(e) => {
+    handleRoleChange(e.target.value);
+    trigger('role');
+  }}
+&gt;
+            </div>
+            
+            <strong>After (Fixed Code):</strong>
+            <div class="code-block">
+&lt;select 
+  {...register('role')} 
+  onChange={(e) => {
+    const value = e.target.value;
+    setSelectedRole(value);
+    // Manually trigger validation
+    if (value) {
+      clearErrors('role');
+    } else {
+      setError('role', { type: 'required', message: 'Role is required' });
+    }
+    trigger('role');
+  }}
+&gt;
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🧪 How to Test the Fix</h2>
+        
+        <div class="step">
+            <strong>Step 1:</strong> Go to the registration page (http://localhost:3000/register)
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Try selecting different roles from the dropdown:
+            <ul>
+                <li>Admin</li>
+                <li>Employee</li>
+                <li>Farmer</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Verify that:
+            <ul>
+                <li>✅ No "Role is required" error appears when a role is selected</li>
+                <li>✅ The error appears only when no role is selected</li>
+                <li>✅ The error disappears immediately when a role is chosen</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🔍 Technical Details</h2>
+        <p>The fix involved several changes:</p>
+        
+        <div class="fix-details">
+            <strong>1. Enhanced onChange Handler:</strong>
+            <ul>
+                <li>Manual error clearing when a value is selected</li>
+                <li>Immediate validation trigger</li>
+                <li>Proper state management</li>
+            </ul>
+            
+            <strong>2. Cleaned Up Unused Code:</strong>
+            <ul>
+                <li>Removed unused `handleRoleChange` function</li>
+                <li>Removed unused `watch` and `emailValue` variables</li>
+                <li>Simplified the component structure</li>
+            </ul>
+            
+            <strong>3. Better Error Handling:</strong>
+            <ul>
+                <li>Immediate feedback on role selection</li>
+                <li>Clear error messages</li>
+                <li>Consistent validation behavior</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🎯 Expected Behavior Now</h2>
+        
+        <div class="step">
+            <strong>✅ Correct Behavior:</strong>
+            <ul>
+                <li>User selects "Admin" → No error message</li>
+                <li>User selects "Employee" → No error message</li>
+                <li>User selects "Farmer" → No error message</li>
+                <li>User clears selection → "Role is required" error appears</li>
+                <li>User selects any role again → Error disappears immediately</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>❌ Previous Issue (Now Fixed):</strong>
+            <ul>
+                <li>User selects "Admin" → "Role is required" error still showing</li>
+                <li>Confusing user experience</li>
+                <li>Form validation not working properly</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 20px; background: #27ae60; color: white; border-radius: 8px;">
+        <h3>🎉 Role Selection Issue Fixed!</h3>
+        <p>The registration form now properly validates role selection and provides immediate feedback.</p>
+    </div>
+</body>
+</html>
+

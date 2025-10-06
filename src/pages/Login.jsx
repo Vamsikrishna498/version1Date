@@ -484,14 +484,8 @@ const Login = () => {
   };
 
   const handleCreateAccount = () => {
-    if (loginType === 'employee') {
-      navigate('/register-employee', { state: { role: 'EMPLOYEE' } });
-    } else if (loginType === 'farmer') {
-      navigate('/register-farmer', { state: { role: 'FARMER' } });
-    } else if (loginType === 'official') {
-      // Admin registration under Official tab
-      navigate('/register-admin', { state: { role: 'ADMIN' } });
-    }
+    // Navigate to unified registration page
+    navigate('/register');
   };
 
   return (
@@ -649,15 +643,13 @@ const Login = () => {
                 <button type="submit" className="auth-submit" disabled={loading}>
                   {loading ? 'Logging in...' : 'Log In'}
                 </button>
-                {(loginType === 'employee' || loginType === 'farmer' || loginType === 'official') && (
-                  <button
-                    type="button"
-                    className="auth-secondary"
-                    onClick={handleCreateAccount}
-                  >
-                    Create New user Acount
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="auth-secondary"
+                  onClick={handleCreateAccount}
+                >
+                  Create New User Account
+                </button>
               </div>
           </form>
         </div>
