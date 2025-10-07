@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
 import UserProfileDropdown from '../components/UserProfileDropdown';
 import MyIdCard from '../components/MyIdCard';
 import { apiService } from '../api/apiService';
@@ -8,6 +9,7 @@ import '../styles/Dashboard.css';
 
 const FarmerDashboard = () => {
   const { user, logout } = useContext(AuthContext);
+  const { branding } = useBranding();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -153,9 +155,23 @@ const FarmerDashboard = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <div className="logo-section">
-            <h1 className="logo-title">DATE</h1>
-            <p className="logo-subtitle">Digital Agristack</p>
+          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {branding?.logoLight || branding?.logoDark ? (
+              <img 
+                src={branding.logoLight || branding.logoDark} 
+                alt={branding?.name || 'Logo'} 
+                className="company-logo"
+                style={{ height: '40px', objectFit: 'contain' }}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <div>
+              <h1 className="logo-title">{branding?.name || 'Company'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Dashboard'}</p>
+            </div>
           </div>
         </div>
         <div className="header-right">

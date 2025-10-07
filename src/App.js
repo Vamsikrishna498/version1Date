@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { RBACProvider } from './contexts/RBACContext';
 import { ConfigurationProvider } from './contexts/ConfigurationContext';
+import { BrandingProvider } from './contexts/BrandingContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
@@ -31,6 +32,7 @@ function App() {
     <AuthProvider>
       <RBACProvider>
         <ConfigurationProvider>
+          <BrandingProvider>
           <Router>
           <div className="App">
             <Routes>
@@ -77,6 +79,7 @@ function App() {
           </Routes>
         </div>
         </Router>
+          </BrandingProvider>
         </ConfigurationProvider>
       </RBACProvider>
     </AuthProvider>

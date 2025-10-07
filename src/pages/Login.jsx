@@ -2,7 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { authAPI } from '../api/apiService';
-import logo from '../assets/rightlogo.png';
+import defaultLogo from '../assets/rightlogo.png';
+import { useBranding } from '../contexts/BrandingContext';
 import '../styles/Login.css';
 
 const generateCaptcha = () => {
@@ -16,6 +17,7 @@ const generateCaptcha = () => {
 };
 
 const Login = () => {
+  const { branding } = useBranding();
   const { login } = useContext(AuthContext);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -500,7 +502,7 @@ const Login = () => {
       <header className="topbar">
         <div className="topbar-content">
           <div className="topbar-left">
-            <img src={logo} alt="DATE Logo" className="topbar-logo" />
+            <img src={branding?.logoLight || defaultLogo} alt={branding?.name || 'Logo'} className="topbar-logo" />
             <div className="topbar-date">
               <span className="date-text">{getCurrentDate()}</span>
             </div>
@@ -552,8 +554,8 @@ const Login = () => {
         </aside>
         <div className="auth-card">
           <div className="auth-brand">
-            <img src={logo} alt="DATE Logo" className="auth-logo" />
-            <div className="auth-title">Digital Agristack Transaction Enterprises</div>
+            <img src={branding?.logoDark || branding?.logoLight || defaultLogo} alt={branding?.name || 'Logo'} className="auth-logo" />
+            <div className="auth-title">{branding?.name || 'Digital Agristack Transaction Enterprises'}</div>
             <div className="auth-subtitle">Empowering Agricultural Excellence</div>
           </div>
 

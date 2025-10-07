@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
 import { farmersAPI, employeesAPI, adminAPI, fpoAPI, idCardAPI } from '../api/apiService';
 import api from '../api/apiService';
 import IdCardViewer from '../components/IdCardViewer';
@@ -44,10 +45,10 @@ import FPOUsersView from '../components/FPOUsersView';
 import FPODashboard from '../pages/FPODashboard';
 import FPODetailsView from '../components/FPODetailsView';
 import FPOBoardMembersView from '../components/FPOBoardMembersView';
-// duplicate import removed
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
   const [activeTab, setActiveTab] = useState('overview');
   const [farmers, setFarmers] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -987,6 +988,61 @@ const AdminDashboard = () => {
       <div className="overview-section">
         <div className="overview-header">
           <div className="header-left">
+            <div className="logo-section" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8,
+              maxWidth: '100%',
+              overflow: 'hidden'
+            }}>
+              <>
+                {branding?.logoLight || branding?.logoDark ? (
+                  <img 
+                    src={branding.logoLight || branding.logoDark} 
+                    alt={branding?.name || 'Logo'} 
+                    style={{ 
+                      height: 28, 
+                      width: 'auto',
+                      maxWidth: 120,
+                      objectFit: 'contain',
+                      flexShrink: 0
+                    }}
+                    onError={(e) => {
+                      // Fallback to text if logo fails to load
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : null}
+                <div style={{ 
+                  minWidth: 0,
+                  flex: 1,
+                  overflow: 'hidden'
+                }}>
+                  <h1 className="logo-title" style={{ 
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    margin: 0,
+                    lineHeight: '1.2',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {branding?.name || 'Company'}
+                  </h1>
+                  <p className="logo-subtitle" style={{ 
+                    fontSize: '12px',
+                    margin: 0,
+                    lineHeight: '1.2',
+                    opacity: 0.9,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {branding?.shortName || 'Dashboard'}
+                  </p>
+                </div>
+              </>
+            </div>
             <h2 className="overview-title">Admin Dashboard Overview</h2>
             <p className="overview-description">
               Manage farmers, employees, and assignments efficiently.
@@ -2455,9 +2511,59 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <div className="logo-section">
-            <h1 className="logo-title">DATE</h1>
-            <p className="logo-subtitle">Digital Agristack</p>
+          <div className="logo-section" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 8,
+            maxWidth: '100%',
+            overflow: 'hidden'
+          }}>
+            {branding?.logoLight || branding?.logoDark ? (
+              <img 
+                src={branding.logoLight || branding.logoDark} 
+                alt={branding.name || 'Company Logo'} 
+                className="company-logo"
+                style={{ 
+                  height: 28, 
+                  width: 'auto',
+                  maxWidth: 120,
+                  objectFit: 'contain',
+                  flexShrink: 0
+                }}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <div style={{ 
+              minWidth: 0,
+              flex: 1,
+              overflow: 'hidden'
+            }}>
+              <h1 className="logo-title" style={{ 
+                fontSize: '18px',
+                fontWeight: '600',
+                margin: 0,
+                lineHeight: '1.2',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {branding?.name || 'Company'}
+              </h1>
+              <p className="logo-subtitle" style={{ 
+                fontSize: '12px',
+                margin: 0,
+                lineHeight: '1.2',
+                opacity: 0.9,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {branding?.shortName || 'Dashboard'}
+              </p>
+            </div>
           </div>
         </div>
         <div className="header-right">
@@ -2600,7 +2706,7 @@ const AdminDashboard = () => {
               
               {/* Welcome Section - Only for Dashboard Overview */}
               <div className="welcome-section">
-                <h1 className="welcome-title">Welcome to DATE Digital Agristack!</h1>
+                <h1 className="welcome-title">Welcome to {branding?.name || 'Company'} {branding?.shortName || 'Dashboard'}!</h1>
                 <p className="welcome-subtitle">
                   Empowering your agricultural journey with data-driven insights and seamless management. 
                   Explore your dashboard below.
