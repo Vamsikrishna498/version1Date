@@ -4594,14 +4594,14 @@ table td:last-child {
 }
 
 .cancel-btn {
-  background: #ec4899 !important;
+  background: #6b7280 !important; /* neutral gray */
   color: white !important;
-  border-color: #ec4899 !important;
+  border-color: #6b7280 !important;
 }
 
 .cancel-btn:hover {
-  background: #db2777 !important;
-  border-color: #db2777 !important;
+  background: #4b5563 !important; /* darker gray on hover */
+  border-color: #4b5563 !important;
 }
 
 .submit-btn.disabled {

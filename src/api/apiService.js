@@ -1,4 +1,6 @@
 import axios from 'axios';
+import Logger from '../utils/logger';
+import TokenStorage from '../utils/tokenStorage';
 
 // Create axios instance
 const api = axios.create({
@@ -45,7 +47,7 @@ api.interceptors.response.use(
 
     // Handle 403 errors for configuration endpoints gracefully
     if (status === 403 && requestUrl.includes('/config/')) {
-      console.warn(`Access denied to configuration endpoint: ${requestUrl}. Using fallback data.`);
+      Logger.warn(`Access denied to configuration endpoint: ${requestUrl}. Using fallback data.`);
       // Don't log as error for config endpoints as they're expected to be restricted for employees
     }
 
@@ -466,13 +468,13 @@ export const superAdminAPI = {
       
       // Strategy 1: Try auth endpoint with PUT method
       try {
-        console.log('🔄 Trying PUT /auth/users/' + userId + '/approve');
+        Logger.log('🔄 Trying PUT /auth/users/' + userId + '/approve');
         response = await api.put(`/auth/users/${userId}/approve`, { role });
-        console.log('✅ Success with PUT /auth/users/' + userId + '/approve');
+        Logger.log('✅ Success with PUT /auth/users/' + userId + '/approve');
         return response.data;
       } catch (error) {
         lastError = error;
-        console.log('❌ Failed with PUT /auth/users/' + userId + '/approve:', error.response?.status);
+        Logger.log('❌ Failed with PUT /auth/users/' + userId + '/approve:', error.response?.status);
       }
       
       // Strategy 2: Try auth endpoint with POST method

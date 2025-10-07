@@ -2581,29 +2581,6 @@ const SuperAdminDashboard = () => {
                             <i className="fas fa-plus"></i>
                             Add Employee
                                                       </button>
-                          {/* Debug button to test filtering */}
-                          <button 
-                            onClick={() => {
-                              const filtered = getFilteredEmployees();
-                              console.log('🔍 Debug: Total employees:', employees?.length || 0);
-                              console.log('🔍 Debug: Filtered employees:', filtered.length);
-                              console.log('🔍 Debug: Current filters:', employeeFilters);
-                              alert(`Total: ${employees?.length || 0}, Filtered: ${filtered.length}, Filter: ${JSON.stringify(employeeFilters)}`);
-                            }}
-                            style={{
-                              background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '12px 24px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '600',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            Debug Filter
-                          </button>
                           </div>
                         </div>
                       </div>
