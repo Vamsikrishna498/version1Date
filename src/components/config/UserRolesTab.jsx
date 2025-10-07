@@ -300,7 +300,7 @@ const UserRolesTab = () => {
                     <label>Allowed Modules</label>
                     <div className="checkbox-group">
                       {availableModules.map(module => (
-                        <label key={module} className="checkbox-label">
+                        <label key={module} className={`checkbox-label ${formData.allowedModules.includes(module) ? 'checked' : ''}`}>
                           <input
                             type="checkbox"
                             checked={formData.allowedModules.includes(module)}
@@ -316,7 +316,7 @@ const UserRolesTab = () => {
                     <label>Permissions</label>
                     <div className="checkbox-group">
                       {availablePermissions.map(permission => (
-                        <label key={permission} className="checkbox-label">
+                        <label key={permission} className={`checkbox-label ${formData.permissions.includes(permission) ? 'checked' : ''}`}>
                           <input
                             type="checkbox"
                             checked={formData.permissions.includes(permission)}

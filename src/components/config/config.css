@@ -531,6 +531,12 @@
   transform: scale(1.2);
 }
 
+.checkbox-label.checked {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+  color: white;
+  border-color: #00b894;
+}
+
 /* Preview Section */
 .preview-section {
   background: #f8f9fa;
