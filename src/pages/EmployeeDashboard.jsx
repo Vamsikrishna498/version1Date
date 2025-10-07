@@ -74,6 +74,8 @@ const EmployeeDashboard = () => {
 
   const [activeTab, setActiveTab] = useState('overview');
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [employeeId, setEmployeeId] = useState(null);
 
   const [employeeProfile, setEmployeeProfile] = useState(null);
@@ -4945,7 +4947,18 @@ const EmployeeDashboard = () => {
 
       {/* Sidebar */}
 
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
 
         <div className="sidebar-header">
 
@@ -4965,11 +4978,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('overview')}
 
+            title="Dashboard Overview"
+
           >
 
-            <i className="fas fa-tachometer-alt"></i>
+            <span className="material-symbols-outlined">dashboard</span>
 
-            <span>Dashboard Overview</span>
+            <span className="nav-text">Dashboard Overview</span>
 
           </div>
 
@@ -4981,11 +4996,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('farmers')}
 
+            title="Assigned Farmers"
+
           >
 
-            <i className="fas fa-users"></i>
+            <span className="material-symbols-outlined">agriculture</span>
 
-            <span>Assigned Farmers</span>
+            <span className="nav-text">Assigned Farmers</span>
 
           </div>
 
@@ -4997,11 +5014,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('progress')}
 
+            title="KYC Progress"
+
           >
 
-            <i className="fas fa-chart-line"></i>
+            <span className="material-symbols-outlined">trending_up</span>
 
-            <span>KYC Progress</span>
+            <span className="nav-text">KYC Progress</span>
 
           </div>
 
@@ -5013,11 +5032,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('fpo')}
 
+            title="FPO"
+
           >
 
-            <i className="fas fa-building"></i>
+            <span className="material-symbols-outlined">business</span>
 
-            <span>FPO</span>
+            <span className="nav-text">FPO</span>
 
           </div>
 
@@ -5029,11 +5050,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('id-card')}
 
+            title="My ID Card"
+
           >
 
-            <i className="fas fa-id-card"></i>
+            <span className="material-symbols-outlined">badge</span>
 
-            <span>My ID Card</span>
+            <span className="nav-text">My ID Card</span>
 
           </div>
 
@@ -5045,11 +5068,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('todo')}
 
+            title="To-Do List"
+
           >
 
-            <i className="fas fa-tasks"></i>
+            <span className="material-symbols-outlined">checklist</span>
 
-            <span>To-Do List</span>
+            <span className="nav-text">To-Do List</span>
 
           </div>
 
@@ -5061,11 +5086,29 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('kyc-summary')}
 
+            title="KYC Summary"
+
           >
 
-            <i className="fas fa-clipboard-check"></i>
+            <span className="material-symbols-outlined">verified_user</span>
 
-            <span>KYC Summary</span>
+            <span className="nav-text">KYC Summary</span>
+
+          </div>
+
+          <div 
+
+            className="nav-item logout"
+
+            onClick={logout}
+
+            title="Logout"
+
+          >
+
+            <span className="material-symbols-outlined">logout</span>
+
+            <span className="nav-text">Logout</span>
 
           </div>
 
@@ -5077,7 +5120,7 @@ const EmployeeDashboard = () => {
 
       {/* Main Content */}
 
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
 
 
 

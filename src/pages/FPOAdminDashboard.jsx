@@ -38,6 +38,7 @@ const FPOAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState('overview'); // overview | farmers | employees
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [farmers, setFarmers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [farmerSearch, setFarmerSearch] = useState('');
@@ -331,7 +332,18 @@ const FPOAdminDashboard = () => {
       </div>
 
       {/* Sidebar */}
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+
         <div className="sidebar-header">
           <h2 className="sidebar-welcome">Welcome!!!</h2>
           <div className="sidebar-role">FPO Admin</div>
@@ -341,39 +353,43 @@ const FPOAdminDashboard = () => {
           <div 
             className={`nav-item ${view === 'overview' ? 'active' : ''}`}
             onClick={() => setView('overview')}
+            title="Dashboard"
           >
             <i className="fas fa-th-large"></i>
-            <span>Dashboard</span>
+            <span className="nav-text">Dashboard</span>
           </div>
 
           <div 
             className={`nav-item ${view === 'farmers' ? 'active' : ''}`}
             onClick={() => setView('farmers')}
+            title="Farmers"
           >
             <i className="fas fa-users"></i>
-            <span>Farmers</span>
+            <span className="nav-text">Farmers</span>
           </div>
           
           <div 
             className={`nav-item ${view === 'employees' ? 'active' : ''}`}
             onClick={() => setView('employees')}
+            title="Employees"
           >
             <i className="fas fa-user-tie"></i>
-            <span>Employees</span>
+            <span className="nav-text">Employees</span>
           </div>
 
           <div 
             className={`nav-item ${view === 'fpo' ? 'active' : ''}`}
             onClick={() => setView('fpo')}
+            title="FPO"
           >
             <i className="fas fa-building"></i>
-            <span>FPO</span>
+            <span className="nav-text">FPO</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {view === 'overview' && (
           <div className="welcome-section">
             <h1 className="welcome-title">
