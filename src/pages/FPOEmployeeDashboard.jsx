@@ -402,9 +402,10 @@ const FPOEmployeeDashboard = () => {
                 onClose={() => setShowCreateFarmer(false)}
                 onSubmit={async (formData) => {
                   try {
-                    // Create farmer scoped to this FPO
-                    const createdRes = await fpoAPI.createFPOFarmer(employeeFpoId, formData);
-                    console.log('Created FPO farmer:', createdRes);
+                    // 1) Create farmer via global multipart endpoint
+                    const createdFarmer = await farmersAPI.createFarmer(formData);
+                    // 2) Link farmer to this FPO as a member
+                    await fpoAPI.addMemberToFPO(employeeFpoId, { memberType: 'FARMER', farmerId: createdFarmer.id });
                     setShowCreateFarmer(false);
                     // Refresh members list
                     const members = await fpoAPI.getFPOMembers(employeeFpoId);

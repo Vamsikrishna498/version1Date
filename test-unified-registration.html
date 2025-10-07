@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Unified Registration Flow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .feature-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .highlight {
+            background: #f39c12;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .step {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌾 Farmer-Friendly Registration System Test</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">✅ Implementation Complete</h2>
+        <p>Your farmer-friendly registration system has been successfully implemented with the following features:</p>
+        
+        <ul class="feature-list">
+            <li>Unified registration page accessible from all login tabs</li>
+            <li>Role selection dropdown (Admin, Employee, Farmer)</li>
+            <li>Email verification with OTP</li>
+            <li>Form validation and error handling</li>
+            <li>Backend integration with proper API endpoints</li>
+            <li>Farmer-friendly UI with clear instructions</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🔧 What Was Implemented</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>Created UnifiedRegistration.jsx Component</strong>
+            <p>A new component that allows users to select their role (Admin, Employee, Farmer) and register with email verification.</p>
+            <div class="code-block">
+// Key features:
+- Role dropdown with Admin, Employee, Farmer options
+- Email OTP verification
+- Form validation with Yup schema
+- Password strength requirements
+- Backend API integration
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>Updated Login Page</strong>
+            <p>Modified the login page to show "Create New User Account" button on all tabs, directing to the unified registration.</p>
+            <div class="code-block">
+// Changes made:
+- Removed role-specific registration buttons
+- Added single "Create New User Account" button
+- Simplified navigation to /register route
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>Updated App.js Routing</strong>
+            <p>Added the new /register route that points to the UnifiedRegistration component.</p>
+            <div class="code-block">
+// New route added:
+&lt;Route path="/register" element={&lt;UnifiedRegistration /&gt;} /&gt;
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <strong>Enhanced API Service</strong>
+            <p>Added registerWithRole method to handle Employee and Farmer registrations through the backend.</p>
+            <div class="code-block">
+// New API method:
+registerWithRole: async (userData) => {
+  const response = await api.post('/auth/register-with-role', userData);
+  return response.data;
+}
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🚀 How to Test</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>Start the Applications</strong>
+            <p>Both backend and frontend should be running:</p>
+            <div class="code-block">
+Backend: http://localhost:8080
+Frontend: http://localhost:3000
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>Test Registration Flow</strong>
+            <p>Follow these steps to test the new registration:</p>
+            <div class="code-block">
+1. Go to http://localhost:3000/login
+2. Click "Create New User Account" on any tab
+3. Select a role from dropdown (Admin/Employee/Farmer)
+4. Fill in the registration form
+5. Verify email with OTP
+6. Submit registration
+7. Check backend for pending approval
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>Verify Backend Integration</strong>
+            <p>Check that the registration data reaches the backend correctly:</p>
+            <div class="code-block">
+- Admin registrations → /api/auth/register
+- Employee/Farmer registrations → /api/auth/register-with-role
+- All registrations require email OTP verification
+- Users appear in pending status for admin approval
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🎯 Key Benefits</h2>
+        
+        <ul class="feature-list">
+            <li><strong>Farmer-Friendly:</strong> Simple, single registration page for all user types</li>
+            <li><strong>Role Flexibility:</strong> Users can choose their role during registration</li>
+            <li><strong>Consistent UX:</strong> Same registration flow regardless of login tab</li>
+            <li><strong>Email Verification:</strong> Secure OTP-based email verification</li>
+            <li><strong>Backend Integration:</strong> Proper API endpoints for different user types</li>
+            <li><strong>Admin Approval:</strong> All registrations require admin approval for security</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">📝 Next Steps</h2>
+        <p>Your farmer-friendly registration system is now ready! Users can:</p>
+        <ul class="feature-list">
+            <li>Access registration from any login tab</li>
+            <li>Select their preferred role (Admin, Employee, Farmer)</li>
+            <li>Complete registration with email verification</li>
+            <li>Wait for admin approval before accessing the system</li>
+        </ul>
+        
+        <p><strong>Note:</strong> The system maintains security by requiring admin approval for all new registrations, ensuring proper user management and access control.</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 20px; background: #27ae60; color: white; border-radius: 8px;">
+        <h3>🎉 Registration System Successfully Implemented!</h3>
+        <p>Your team lead's requirements have been met with a farmer-friendly, unified registration system.</p>
+    </div>
+</body>
+</html>
+

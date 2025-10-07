@@ -991,7 +991,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     <button
       type="button"
       onClick={async () => {
-        // Trigger validation for all fields in current step
+        // Show validation errors on first step and trigger validation
+        setShowValidationErrors(true);
         const isValid = await trigger();
         if (isValid && !ageValidationError) {
           setCurrentStep(currentStep + 1);
@@ -1035,13 +1036,13 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           // For address step (step 1), validate address fields specifically
           if (currentStep === 1) {
             const addressFields = ['country', 'state', 'district', 'block', 'village', 'zipcode'];
-            const isValid = await trigger(addressFields);
-            if (isValid && !ageValidationError) {
+            const valid = await trigger(addressFields);
+            if (valid && !ageValidationError) {
               setCurrentStep(currentStep + 1);
             }
           } else {
-            const isValid = await trigger();
-            if (isValid && !ageValidationError) {
+            const valid = await trigger();
+            if (valid && !ageValidationError) {
               setCurrentStep(currentStep + 1);
             }
           }

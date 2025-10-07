@@ -25,6 +25,23 @@ const RegistrationApprovalModal = ({
     }
   };
 
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a reason for rejection.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await onReject(registration.id, rejectionReason);
+      onClose();
+    } catch (error) {
+      console.error('Error rejecting registration:', error);
+      alert('Failed to reject registration. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
   const getStatusBadge = (status) => {
@@ -159,10 +176,10 @@ const RegistrationApprovalModal = ({
                 </button>
                 <button 
                   className="reject-btn"
-                  onClick={() => document.getElementById('rejection-reason').focus()}
+                  onClick={handleReject}
                   disabled={isSubmitting}
                 >
-                  Reject Registration
+                  {isSubmitting ? 'Rejecting...' : 'Reject Registration'}
                 </button>
               </div>
               

@@ -65,12 +65,14 @@ import FPOUsersView from '../components/FPOUsersView';
 import FPODashboard from '../pages/FPODashboard';
 
 import { kycAPI, employeeAPI, farmersAPI, fpoAPI, idCardAPI } from '../api/apiService';
+import { useBranding } from '../contexts/BrandingContext';
 
 
 
 const EmployeeDashboard = () => {
 
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
 
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -4717,11 +4719,25 @@ const EmployeeDashboard = () => {
 
         <div className="header-left">
 
-          <div className="logo-section">
+          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
 
-            <h1 className="logo-title">DATE</h1>
+            {branding?.logoLight ? (
+              <img 
+                src={branding.logoLight} 
+                alt={branding.name || 'Company Logo'} 
+                className="company-logo"
+                style={{ height: '40px', objectFit: 'contain' }}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : null}
 
-            <p className="logo-subtitle">Digital Agristack</p>
+            <div>
+              <h1 className="logo-title">{branding?.name || 'Company'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Dashboard'}</p>
+            </div>
 
           </div>
 
@@ -5158,7 +5174,7 @@ const EmployeeDashboard = () => {
 
               <div className="welcome-section">
 
-                <h1 className="welcome-title">Welcome to DATE Digital Agristack!</h1>
+                <h1 className="welcome-title">Welcome to {branding?.name || 'Company'} {branding?.shortName || 'Dashboard'}!</h1>
 
                 <p className="welcome-subtitle">
 
