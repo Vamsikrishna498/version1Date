@@ -65,14 +65,18 @@ import FPOUsersView from '../components/FPOUsersView';
 import FPODashboard from '../pages/FPODashboard';
 
 import { kycAPI, employeeAPI, farmersAPI, fpoAPI, idCardAPI } from '../api/apiService';
+import { useBranding } from '../contexts/BrandingContext';
 
 
 
 const EmployeeDashboard = () => {
 
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
 
   const [activeTab, setActiveTab] = useState('overview');
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [employeeId, setEmployeeId] = useState(null);
 
@@ -4715,11 +4719,25 @@ const EmployeeDashboard = () => {
 
         <div className="header-left">
 
-          <div className="logo-section">
+          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
 
-            <h1 className="logo-title">DATE</h1>
+            {branding?.logoLight ? (
+              <img 
+                src={branding.logoLight} 
+                alt={branding.name || 'Company Logo'} 
+                className="company-logo"
+                style={{ height: '40px', objectFit: 'contain' }}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : null}
 
-            <p className="logo-subtitle">Digital Agristack</p>
+            <div>
+              <h1 className="logo-title">{branding?.name || 'Company'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Dashboard'}</p>
+            </div>
 
           </div>
 
@@ -4945,7 +4963,18 @@ const EmployeeDashboard = () => {
 
       {/* Sidebar */}
 
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
 
         <div className="sidebar-header">
 
@@ -4965,11 +4994,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('overview')}
 
+            title="Dashboard Overview"
+
           >
 
-            <i className="fas fa-tachometer-alt"></i>
+            <span className="material-symbols-outlined">dashboard</span>
 
-            <span>Dashboard Overview</span>
+            <span className="nav-text">Dashboard Overview</span>
 
           </div>
 
@@ -4981,11 +5012,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('farmers')}
 
+            title="Assigned Farmers"
+
           >
 
-            <i className="fas fa-users"></i>
+            <span className="material-symbols-outlined">agriculture</span>
 
-            <span>Assigned Farmers</span>
+            <span className="nav-text">Assigned Farmers</span>
 
           </div>
 
@@ -4997,11 +5030,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('progress')}
 
+            title="KYC Progress"
+
           >
 
-            <i className="fas fa-chart-line"></i>
+            <span className="material-symbols-outlined">trending_up</span>
 
-            <span>KYC Progress</span>
+            <span className="nav-text">KYC Progress</span>
 
           </div>
 
@@ -5013,11 +5048,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('fpo')}
 
+            title="FPO"
+
           >
 
-            <i className="fas fa-building"></i>
+            <span className="material-symbols-outlined">business</span>
 
-            <span>FPO</span>
+            <span className="nav-text">FPO</span>
 
           </div>
 
@@ -5029,11 +5066,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('id-card')}
 
+            title="My ID Card"
+
           >
 
-            <i className="fas fa-id-card"></i>
+            <span className="material-symbols-outlined">badge</span>
 
-            <span>My ID Card</span>
+            <span className="nav-text">My ID Card</span>
 
           </div>
 
@@ -5045,11 +5084,13 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('todo')}
 
+            title="To-Do List"
+
           >
 
-            <i className="fas fa-tasks"></i>
+            <span className="material-symbols-outlined">checklist</span>
 
-            <span>To-Do List</span>
+            <span className="nav-text">To-Do List</span>
 
           </div>
 
@@ -5061,11 +5102,29 @@ const EmployeeDashboard = () => {
 
             onClick={() => setActiveTab('kyc-summary')}
 
+            title="KYC Summary"
+
           >
 
-            <i className="fas fa-clipboard-check"></i>
+            <span className="material-symbols-outlined">verified_user</span>
 
-            <span>KYC Summary</span>
+            <span className="nav-text">KYC Summary</span>
+
+          </div>
+
+          <div 
+
+            className="nav-item logout"
+
+            onClick={logout}
+
+            title="Logout"
+
+          >
+
+            <span className="material-symbols-outlined">logout</span>
+
+            <span className="nav-text">Logout</span>
 
           </div>
 
@@ -5077,7 +5136,7 @@ const EmployeeDashboard = () => {
 
       {/* Main Content */}
 
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
 
 
 
@@ -5115,7 +5174,7 @@ const EmployeeDashboard = () => {
 
               <div className="welcome-section">
 
-                <h1 className="welcome-title">Welcome to DATE Digital Agristack!</h1>
+                <h1 className="welcome-title">Welcome to {branding?.name || 'Company'} {branding?.shortName || 'Dashboard'}!</h1>
 
                 <p className="welcome-subtitle">
 

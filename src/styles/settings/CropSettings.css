@@ -1,24 +1,31 @@
 .crop-settings {
-  padding: 20px;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-header {
-  background: white;
+  background: #ffffff;
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
   margin-bottom: 25px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-header h2 {
-  color: #2c3e50;
+  color: #1f2937;
   margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 600;
 }
 
 .settings-header p {
-  color: #6c757d;
+  color: #6b7280;
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
@@ -32,9 +39,9 @@
 }
 
 .section-button {
-  background: white;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -42,17 +49,20 @@
   align-items: center;
   gap: 15px;
   text-align: left;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .section-button:hover {
-  border-color: #ffc107;
-  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  transform: translateY(-2px);
 }
 
 .section-button.active {
-  border-color: #ffc107;
-  background: #fffdf5;
-  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+  border-color: #f59e0b;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  transform: translateY(-2px);
 }
 
 .section-icon {
@@ -348,4 +358,33 @@
   .form-actions {
     flex-direction: column;
   }
+}
+
+/* Add Button Styling */
+.add-button {
+  background: #8b5cf6;
+  color: #ffffff;
+  border: 1px solid #8b5cf6;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.add-button:hover {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.add-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
 }

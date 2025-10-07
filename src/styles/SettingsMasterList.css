@@ -1,89 +1,131 @@
 .settings-master-list {
-  padding: 20px;
-  background: #f8f9fa;
+  padding: 0;
+  background: #f9fafb;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-header {
-  background: white;
+  background: #ffffff;
   padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
   margin-bottom: 30px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-header h1 {
-  color: #2c3e50;
+  color: #1f2937;
   margin: 0 0 10px 0;
   font-size: 28px;
   font-weight: 700;
 }
 
 .settings-header p {
-  color: #6c757d;
+  color: #6b7280;
   margin: 0;
   font-size: 16px;
   line-height: 1.5;
 }
 
 .settings-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 30px;
-  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 25px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 2px solid transparent;
-  min-width: 250px;
-  text-align: left;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .settings-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .settings-card.active {
-  border-color: #007bff;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-  color: white;
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Individual button colors matching Quick Actions design */
+.settings-card[data-tab="country-settings"] {
+  background: #28a745;
+  border: none;
+}
+
+.settings-card[data-tab="country-settings"]:hover {
+  background: #218838;
+}
+
+.settings-card[data-tab="global-area"] {
+  background: #007bff;
+  border: none;
+}
+
+.settings-card[data-tab="global-area"]:hover {
+  background: #0056b3;
+}
+
+.settings-card[data-tab="crop-settings"] {
+  background: #6f42c1;
+  border: none;
+}
+
+.settings-card[data-tab="crop-settings"]:hover {
+  background: #5a32a3;
 }
 
 .card-content {
-  text-align: left;
+  text-align: center;
 }
 
 .card-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  margin: 0 0 10px 0;
-  color: inherit;
+  margin: 0 0 8px 0;
+  color: #ffffff;
+  text-align: center;
 }
 
 .card-description {
-  font-size: 14px;
-  color: #6c757d;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
   margin: 0;
   line-height: 1.4;
-  opacity: 0.8;
+  text-align: center;
 }
 
 .tab-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
   min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .loading-overlay {
@@ -92,14 +134,14 @@
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #6c757d;
+  color: #6b7280;
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -111,10 +153,11 @@
 }
 
 .error-message {
-  background: #f8d7da;
-  color: #721c24;
+  background: #fef2f2;
+  color: #dc2626;
   padding: 15px;
   border-radius: 8px;
+  border: 1px solid #fecaca;
   margin: 20px 0;
   display: flex;
   align-items: center;
@@ -128,7 +171,7 @@
 .close-error {
   background: none;
   border: none;
-  color: #721c24;
+  color: #dc2626;
   font-size: 18px;
   cursor: pointer;
   margin-left: auto;
@@ -137,26 +180,34 @@
 .access-denied {
   text-align: center;
   padding: 60px 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
 }
 
 .access-denied h2 {
-  color: #dc3545;
+  color: #dc2626;
   margin-bottom: 20px;
   font-weight: 700;
 }
 
 .access-denied p {
-  color: #6c757d;
+  color: #6b7280;
   margin-bottom: 10px;
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .settings-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .settings-master-list {
-    padding: 10px;
+    padding: 0;
   }
   
   .settings-header {
@@ -168,14 +219,13 @@
   }
   
   .settings-cards {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
     gap: 15px;
   }
   
   .settings-card {
-    min-width: 100%;
-    max-width: 300px;
+    width: 100%;
+    max-width: 100%;
     padding: 20px;
   }
   

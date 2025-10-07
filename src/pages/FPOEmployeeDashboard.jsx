@@ -23,6 +23,7 @@ const FPOEmployeeDashboard = () => {
   const [showFarmerView, setShowFarmerView] = useState(false);
   const [farmerViewData, setFarmerViewData] = useState(null);
   const [tab, setTab] = useState('overview'); // overview | farmers
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [search, setSearch] = useState('');
 
   const employeeFpoId = user?.fpoId || user?.assignedFpoId || user?.fpo?.id || user?.fpo?.fpoId;
@@ -179,24 +180,35 @@ const FPOEmployeeDashboard = () => {
         </div>
       </div>
 
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+
         <div className="sidebar-header">
           <h2 className="sidebar-welcome">Welcome!!!</h2>
           <div className="sidebar-role">FPO Employee</div>
         </div>
         <div className="sidebar-nav">
-          <div className={`nav-item ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>
+          <div className={`nav-item ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')} title="Overview">
             <i className="fas fa-th-large" />
-            <span>Overview</span>
+            <span className="nav-text">Overview</span>
           </div>
-          <div className={`nav-item ${tab === 'farmers' ? 'active' : ''}`} onClick={() => setTab('farmers')}>
+          <div className={`nav-item ${tab === 'farmers' ? 'active' : ''}`} onClick={() => setTab('farmers')} title="Farmers">
             <i className="fas fa-users" />
-            <span>Farmers</span>
+            <span className="nav-text">Farmers</span>
           </div>
         </div>
       </div>
 
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {tab === 'overview' && !showCreateFarmer && (
           <>
             <div className="welcome-section">

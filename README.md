@@ -59,9 +59,9 @@ A comprehensive React.js frontend application for managing agricultural farmers 
 ## 🔐 Demo Credentials
 
 ### Login Credentials
-- **Admin**: `admin@agri.com` / `password123`
-- **Super Admin**: `superadmin@agri.com` / `password123`
-- **Employee**: `employee@agri.com` / `password123`
+Demo credentials are available for testing purposes. Please contact your system administrator for access credentials.
+
+**Security Note:** Never commit real credentials to the repository. Use environment variables for sensitive information.
 
 ## 📁 Project Structure
 

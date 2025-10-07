@@ -2285,4 +2285,41 @@ export const configAPI = {
   }
 };
 
-export default api; 
+export default api;
+
+// Companies (Super Admin only)
+export const companiesAPI = {
+  list: async () => {
+    const res = await api.get('/companies');
+    return res.data;
+  },
+  create: async (company) => {
+    const res = await api.post('/companies', company);
+    return res.data;
+  },
+  update: async (id, company) => {
+    const res = await api.put(`/companies/${id}`, company);
+    return res.data;
+  },
+  remove: async (id) => {
+    const res = await api.delete(`/companies/${id}`);
+    return res.data;
+  },
+  uploadLogos: async (id, files) => {
+    const form = new FormData();
+    if (files.dark) form.append('dark', files.dark);
+    if (files.light) form.append('light', files.light);
+    if (files.smallDark) form.append('smallDark', files.smallDark);
+    if (files.smallLight) form.append('smallLight', files.smallLight);
+    const res = await api.post(`/companies/${id}/logos`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data;
+  },
+  getBranding: async (tenant) => {
+    const res = await api.get(`/companies/branding/${tenant}`);
+    return res.data;
+  },
+  getBrandingByEmail: async (email) => {
+    const res = await api.get(`/companies/branding/by-email/${encodeURIComponent(email)}`);
+    return res.data;
+  }
+};

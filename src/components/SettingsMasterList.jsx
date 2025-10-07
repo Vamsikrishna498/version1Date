@@ -77,6 +77,7 @@ const SettingsMasterList = () => {
           <div
             key={tab.id}
             className={`settings-card ${activeTab === tab.id ? 'active' : ''}`}
+            data-tab={tab.id}
             onClick={() => handleTabClick(tab.id)}
           >
             <div className="card-content">

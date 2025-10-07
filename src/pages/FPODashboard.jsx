@@ -21,6 +21,7 @@ const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = fa
   const { fpoId: urlFpoId } = useParams();
   const fpoId = propFpoId || urlFpoId; // Use prop first, then URL param
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [fpos, setFpos] = useState([]);
   const [selectedFPO, setSelectedFPO] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -299,61 +300,79 @@ const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = fa
       </header>
 
       <div className="dashboard-content">
-        <div className="dashboard-sidebar">
+        <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+          {/* Sidebar Toggle Button */}
+          <button 
+            className="sidebar-toggle-btn" 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            <span className="material-symbols-outlined">
+              {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+            </span>
+          </button>
+
           <nav className="sidebar-nav">
             <div
               className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
+              title="Overview"
             >
               <i className="fas fa-th-large"></i>
-              <span>Overview</span>
+              <span className="nav-text">Overview</span>
             </div>
             <div
               className={`nav-item ${activeTab === 'board-members' ? 'active' : ''} ${!selectedFPO ? 'disabled' : ''}`}
               onClick={() => selectedFPO && setActiveTab('board-members')}
+              title="Board Members"
             >
               <i className="fas fa-users"></i>
-              <span>Board Members</span>
+              <span className="nav-text">Board Members</span>
             </div>
             <div
               className={`nav-item ${activeTab === 'services' ? 'active' : ''} ${!selectedFPO ? 'disabled' : ''}`}
               onClick={() => selectedFPO && setActiveTab('services')}
+              title="Services"
             >
               <i className="fas fa-tools"></i>
-              <span>Services</span>
+              <span className="nav-text">Services</span>
             </div>
             <div
               className={`nav-item ${activeTab === 'crops' ? 'active' : ''} ${!selectedFPO ? 'disabled' : ''}`}
               onClick={() => selectedFPO && setActiveTab('crops')}
+              title="Crops"
             >
               <i className="fas fa-seedling"></i>
-              <span>Crops</span>
+              <span className="nav-text">Crops</span>
             </div>
             <div
               className={`nav-item ${activeTab === 'turnover' ? 'active' : ''} ${!selectedFPO ? 'disabled' : ''}`}
               onClick={() => selectedFPO && setActiveTab('turnover')}
+              title="Turnover"
             >
               <i className="fas fa-rupee-sign"></i>
-              <span>Turnover</span>
+              <span className="nav-text">Turnover</span>
             </div>
             <div
               className={`nav-item ${activeTab === 'products' ? 'active' : ''} ${!selectedFPO ? 'disabled' : ''}`}
               onClick={() => selectedFPO && setActiveTab('products')}
+              title="Products"
             >
               <i className="fas fa-box"></i>
-              <span>Products</span>
+              <span className="nav-text">Products</span>
             </div>
             <div
               className={`nav-item ${activeTab === 'notifications' ? 'active' : ''} ${!selectedFPO ? 'disabled' : ''}`}
               onClick={() => selectedFPO && setActiveTab('notifications')}
+              title="Notifications"
             >
               <i className="fas fa-bell"></i>
-              <span>Notifications</span>
+              <span className="nav-text">Notifications</span>
             </div>
           </nav>
         </div>
 
-        <div className="dashboard-main">
+        <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
           {selectedFPO && (
             <div className="selected-fpo-info">
               <h3>Selected FPO: {selectedFPO.fpoName}</h3>

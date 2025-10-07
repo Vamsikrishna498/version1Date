@@ -45,9 +45,12 @@ import ConfigurationDashboard from '../components/ConfigurationDashboard';
 import PersonalizationTab from '../components/config/PersonalizationTab';
 import SettingsMasterList from '../components/SettingsMasterList';
 import '../styles/Dashboard.css';
+import { useBranding } from '../contexts/BrandingContext';
+import CompaniesTab from '../components/CompaniesTab';
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
+  const { branding, loading: brandingLoading } = useBranding();
   const [showIdCardModal, setShowIdCardModal] = useState(false);
   const [currentCardId, setCurrentCardId] = useState(null);
   const [showIdCardContent, setShowIdCardContent] = useState(false);
@@ -57,6 +60,8 @@ const SuperAdminDashboard = () => {
   console.log('SuperAdminDashboard - User name:', user?.name);
   console.log('SuperAdminDashboard - User role:', user?.role);
   console.log('SuperAdminDashboard - User email:', user?.email);
+  console.log('SuperAdminDashboard - Branding data:', branding);
+  console.log('SuperAdminDashboard - Branding loading:', brandingLoading);
   console.log('=== SUPER ADMIN DASHBOARD LOADED ===');
   
   // Test if user data is available
@@ -70,6 +75,7 @@ const SuperAdminDashboard = () => {
   
 
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [farmers, setFarmers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [registrations, setRegistrations] = useState([]);
@@ -1437,9 +1443,23 @@ const SuperAdminDashboard = () => {
       {/* Top Frame - Modern Professional Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <div className="logo-section">
-            <h1 className="logo-title">DATE</h1>
-            <p className="logo-subtitle">Digital Agristack</p>
+          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {branding?.logoLight ? (
+              <img 
+                src={branding.logoLight} 
+                alt={branding.name || 'Company Logo'} 
+                className="company-logo"
+                style={{ height: '40px', objectFit: 'contain' }}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <div>
+              <h1 className="logo-title">{branding?.name || 'Company'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Dashboard'}</p>
+            </div>
           </div>
         </div>
         <div className="header-right">
@@ -1511,106 +1531,136 @@ const SuperAdminDashboard = () => {
       </div>
 
       {/* Sidebar */}
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+
         <div className="sidebar-header">
           <h2 className="sidebar-welcome">Welcome!!!</h2>
-          <div className="sidebar-role">Super Admin</div>
+          <div className="sidebar-role">{user?.role || 'Super Admin'}</div>
         </div>
         
         <div className="sidebar-nav">
           <div 
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
+            title="Dashboard"
           >
-            <i className="fas fa-th-large"></i>
-            <span>Dashboard</span>
+            <span className="material-symbols-outlined">dashboard</span>
+            <span className="nav-text">Dashboard</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'registration' ? 'active' : ''}`}
             onClick={() => setActiveTab('registration')}
+            title="Registration"
           >
-            <i className="fas fa-user-plus"></i>
-            <span>Registration</span>
+            <span className="material-symbols-outlined">person_add</span>
+            <span className="nav-text">Registration</span>
           </div>
           
           <div 
             className={`nav-item ${activeTab === 'farmers' ? 'active' : ''}`}
             onClick={() => setActiveTab('farmers')}
+            title="Farmers"
           >
-            <i className="fas fa-users"></i>
-            <span>Farmers</span>
+            <span className="material-symbols-outlined">group</span>
+            <span className="nav-text">Farmers</span>
           </div>
           
           <div 
             className={`nav-item ${activeTab === 'employees' ? 'active' : ''}`}
             onClick={() => setActiveTab('employees')}
+            title="Employees"
           >
-            <i className="fas fa-user-tie"></i>
-            <span>Employees</span>
+            <span className="material-symbols-outlined">badge</span>
+            <span className="nav-text">Employees</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'fpo' ? 'active' : ''}`}
             onClick={() => setActiveTab('fpo')}
+            title="FPO"
           >
-            <i className="fas fa-building"></i>
-            <span>FPO</span>
+            <span className="material-symbols-outlined">apartment</span>
+            <span className="nav-text">FPO</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'bulk-operations' ? 'active' : ''}`}
             onClick={() => setActiveTab('bulk-operations')}
+            title="Bulk Operations"
           >
-            <i className="fas fa-tasks"></i>
-            <span>Bulk Operations</span>
+            <span className="material-symbols-outlined">task</span>
+            <span className="nav-text">Bulk Operations</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'personalization' ? 'active' : ''}`}
             onClick={() => setActiveTab('personalization')}
+            title="Personalization"
           >
-            <i className="fas fa-palette"></i>
-            <span>Personalization</span>
+            <span className="material-symbols-outlined">palette</span>
+            <span className="nav-text">Personalization</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'configurations' ? 'active' : ''}`}
             onClick={() => setActiveTab('configurations')}
+            title="Configurations"
           >
-            <i className="fas fa-cogs"></i>
-            <span>Configurations</span>
+            <span className="material-symbols-outlined">tune</span>
+            <span className="nav-text">Configurations</span>
+          </div>
+
+          <div 
+            className={`nav-item ${activeTab === 'companies' ? 'active' : ''}`}
+            onClick={() => setActiveTab('companies')}
+          >
+            <i className="fas fa-building"></i>
+            <span>Companies</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
+            title="Settings"
           >
-            <i className="fas fa-cog"></i>
-            <span>Settings</span>
+            <span className="material-symbols-outlined">settings</span>
+            <span className="nav-text">Settings</span>
           </div>
 
 
           <div 
             className={`nav-item ${activeTab === 'my-account' ? 'active' : ''}`}
             onClick={() => setActiveTab('my-account')}
+            title="My Account"
           >
-            <i className="fas fa-user"></i>
-            <span>My Account</span>
+            <span className="material-symbols-outlined">person</span>
+            <span className="nav-text">My Account</span>
           </div>
 
           <div 
             className="nav-item logout"
             onClick={handleLogout}
+            title="Logout"
           >
-            <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+            <span className="material-symbols-outlined">logout</span>
+            <span className="nav-text">Logout</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Dashboard Content */}
         <div className="dashboard-content">
           {activeTab === 'dashboard' && (
@@ -1628,7 +1678,7 @@ const SuperAdminDashboard = () => {
               
               {/* Welcome Section - Only for Dashboard Overview */}
               <div className="welcome-section">
-                <h1 className="welcome-title">Welcome to DATE Digital Agristack!</h1>
+                <h1 className="welcome-title">Welcome to {branding?.name || 'Company'} {branding?.shortName || 'Dashboard'}!</h1>
                 <p className="welcome-subtitle">
                   Empowering your agricultural journey with data-driven insights and seamless management. 
                   Explore your dashboard below.
@@ -2980,6 +3030,26 @@ const SuperAdminDashboard = () => {
                     <>
                       <div className="superadmin-overview-header">
                         <div className="header-left">
+                          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <>
+                              {branding?.logoLight || branding?.logoDark ? (
+                                <img 
+                                  src={branding.logoLight || branding.logoDark} 
+                                  alt={branding?.name || 'Logo'} 
+                                  style={{ height: 36, objectFit: 'contain' }}
+                                  onError={(e) => {
+                                    // Fallback to text if logo fails to load
+                                    e.target.style.display = 'none';
+                                    e.target.nextElementSibling.style.display = 'block';
+                                  }}
+                                />
+                              ) : null}
+                              <div style={{ display: (branding?.logoLight || branding?.logoDark) ? 'none' : 'block' }}>
+                                <h1 className="logo-title">{branding?.name || 'Company'}</h1>
+                              </div>
+                              <p className="logo-subtitle">{branding?.shortName || 'Dashboard'}</p>
+                            </>
+                          </div>
                           <h2 className="superadmin-overview-title">FPO Management</h2>
                           <p className="overview-description">
                             Manage Farmer Producer Organizations and their operations.
@@ -3310,6 +3380,10 @@ const SuperAdminDashboard = () => {
 
           {activeTab === 'configurations' && (
             <ConfigurationDashboard />
+          )}
+
+          {activeTab === 'companies' && (
+            <CompaniesTab />
           )}
 
           {activeTab === 'settings' && (

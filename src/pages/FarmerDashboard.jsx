@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
 import UserProfileDropdown from '../components/UserProfileDropdown';
 import MyIdCard from '../components/MyIdCard';
 import { apiService } from '../api/apiService';
@@ -8,11 +9,13 @@ import '../styles/Dashboard.css';
 
 const FarmerDashboard = () => {
   const { user, logout } = useContext(AuthContext);
+  const { branding } = useBranding();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [farmerData, setFarmerData] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const toggleUserDropdown = () => {
@@ -153,9 +156,23 @@ const FarmerDashboard = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <div className="logo-section">
-            <h1 className="logo-title">DATE</h1>
-            <p className="logo-subtitle">Digital Agristack</p>
+          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {branding?.logoLight || branding?.logoDark ? (
+              <img 
+                src={branding.logoLight || branding.logoDark} 
+                alt={branding?.name || 'Logo'} 
+                className="company-logo"
+                style={{ height: '40px', objectFit: 'contain' }}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <div>
+              <h1 className="logo-title">{branding?.name || 'Company'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Dashboard'}</p>
+            </div>
           </div>
         </div>
         <div className="header-right">
@@ -229,7 +246,18 @@ const FarmerDashboard = () => {
       </div>
 
       {/* Sidebar */}
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+
         <div className="sidebar-header">
           <h2 className="sidebar-welcome">Welcome!!!</h2>
           <p className="sidebar-role">FARMER</p>
@@ -239,71 +267,79 @@ const FarmerDashboard = () => {
           <div 
             className={`nav-item ${activeSection === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveSection('overview')}
+            title="Dashboard Overview"
           >
             <i className="fas fa-tachometer-alt"></i>
-            <span>Dashboard Overview</span>
+            <span className="nav-text">Dashboard Overview</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'profile' ? 'active' : ''}`}
             onClick={() => setActiveSection('profile')}
+            title="My Profile"
           >
             <i className="fas fa-user"></i>
-            <span>My Profile</span>
+            <span className="nav-text">My Profile</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'crops' ? 'active' : ''}`}
             onClick={() => setActiveSection('crops')}
+            title="My Crops"
           >
             <i className="fas fa-seedling"></i>
-            <span>My Crops</span>
+            <span className="nav-text">My Crops</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'kyc' ? 'active' : ''}`}
             onClick={() => setActiveSection('kyc')}
+            title="KYC Status"
           >
             <i className="fas fa-clipboard-check"></i>
-            <span>KYC Status</span>
+            <span className="nav-text">KYC Status</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'documents' ? 'active' : ''}`}
             onClick={() => setActiveSection('documents')}
+            title="Documents"
           >
             <i className="fas fa-file-alt"></i>
-            <span>Documents</span>
+            <span className="nav-text">Documents</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'benefits' ? 'active' : ''}`}
             onClick={() => setActiveSection('benefits')}
+            title="Benefits"
           >
             <i className="fas fa-gift"></i>
-            <span>Benefits</span>
+            <span className="nav-text">Benefits</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'id-card' ? 'active' : ''}`}
             onClick={() => setActiveSection('id-card')}
+            title="My ID Card"
           >
             <i className="fas fa-id-card"></i>
-            <span>My ID Card</span>
+            <span className="nav-text">My ID Card</span>
           </div>
           
           <div 
             className={`nav-item ${activeSection === 'support' ? 'active' : ''}`}
             onClick={() => setActiveSection('support')}
+            title="Support"
           >
             <i className="fas fa-headset"></i>
-            <span>Support</span>
+            <span className="nav-text">Support</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Dashboard Content */}
         <div className="dashboard-content">
           {activeSection === 'overview' && (
