@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { companiesAPI } from '../api/apiService';
+import { buildCompanyLogoCandidates } from '../contexts/BrandingContext';
 
 const initial = { name: '', shortName: '', email: '', phone: '', defaultTimezone: 'Asia/Kolkata', status: 'ACTIVE' };
 
@@ -27,6 +28,30 @@ const CompaniesTab = () => {
 
   useEffect(() => { load(); }, []);
 
+  const getCurrentTenant = () => {
+    try {
+      const t = localStorage.getItem('tenant');
+      return t && t.trim() ? t.trim() : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [activeTenant, setActiveTenant] = useState(getCurrentTenant());
+
+  const setActiveCompany = (company) => {
+    try {
+      const t = (company?.shortName || company?.name || '').toString().trim();
+      if (!t) return;
+      localStorage.setItem('tenant', t);
+      setActiveTenant(t);
+      try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
+      setToast({ type: 'success', message: `Active company set to ${company?.name || t}` });
+    } catch (e) {
+      setToast({ type: 'error', message: 'Failed to set active company' });
+    }
+  };
+
   const handleSave = async () => {
     setError('');
     setLoading(true);
@@ -44,9 +69,16 @@ const CompaniesTab = () => {
       setSelected(saved);
       // Upload logos if provided
       if ((files.dark || files.light || files.smallDark || files.smallLight) && saved?.id) {
-        try { await companiesAPI.uploadLogos(saved.id, files); } catch {}
+        try { 
+          await companiesAPI.uploadLogos(saved.id, files);
+          // Notify app to refresh branding (login page, headers, etc.)
+          try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
+        } catch {}
       }
+      // Persist active tenant for immediate branding on login page and dashboards
+      try { if (saved?.shortName) localStorage.setItem('tenant', (saved.shortName || '').toString().trim()); } catch {}
       await load();
+      try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
       setToast({ type: 'success', message: selected?.id ? 'Company updated' : 'Company created' });
       setOpen(false);
     } catch (e) {
@@ -64,6 +96,7 @@ const CompaniesTab = () => {
     try {
       await companiesAPI.uploadLogos(selected.id, files);
       await load();
+      try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
     } catch (e) {
       setError('Logo upload failed');
     } finally {
@@ -80,20 +113,15 @@ const CompaniesTab = () => {
   const apiBase = (process.env.REACT_APP_API_URL || 'http://localhost:8080/api');
   const apiOrigin = apiBase.replace(/\/?api\/?$/, '');
 
-  const buildCandidates = (c) => {
-    const cid = c.id || c.companyId || c.companyID;
-    const pick = c.logoLight || c.logoDark || c.logoSmallLight || c.logoSmallDark;
-    if (!pick) return [];
-    const tail = (pick || '').split('/').pop();
-    const base = cid ? `${apiOrigin}/api/public/uploads/company-logos/${cid}/${tail}` : `${apiOrigin}/uploads/company-logos/${cid}/${tail}`;
-    const candidates = [];
-    if (pick.startsWith('http')) candidates.push(pick);
-    if (base) candidates.push(base);
-    if (pick.startsWith('/uploads/')) candidates.push(apiOrigin + pick);
-    // raw relative stored as id/file
-    candidates.push(`${apiOrigin}/uploads/${pick}`);
-    return Array.from(new Set(candidates));
+  // Ensure image URLs update immediately after upload by appending a cache-busting query param
+  const addCacheBust = (url, ver) => {
+    if (!url) return url;
+    const sep = url.includes('?') ? '&' : '?';
+    const version = ver ?? Date.now();
+    return `${url}${sep}v=${version}`;
   };
+
+  const buildCandidates = (c) => buildCompanyLogoCandidates(c, apiOrigin);
 
   const LogoCell = ({ company }) => {
     const candidates = buildCandidates(company);
@@ -133,12 +161,14 @@ const CompaniesTab = () => {
     if (selected && fieldValue) {
       const tail = (fieldValue || '').split('/').pop();
       const cid = selected.id || selected.companyId || selected.companyID;
+      const version = selected?.updatedAt || selected?.logoUpdatedAt || Date.now();
       const candidates = cid ? [
         `${apiOrigin}/api/public/uploads/company-logos/${cid}/${tail}`,
         `${apiOrigin}/uploads/company-logos/${cid}/${tail}`,
         `${apiOrigin}/uploads/${fieldValue}`
       ] : [`${apiOrigin}/uploads/${fieldValue}`];
-      existing = candidates[0];
+      // pick first candidate and append cache-busting param
+      existing = `${candidates[0]}?v=${version}`;
     }
     const showUrl = previews[keyName] || existing || null;
     return (
@@ -180,7 +210,7 @@ const CompaniesTab = () => {
 
       <div className="card" style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div className="table" role="table">
-          <div className="thead" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px', padding: '12px 16px', fontWeight: 600, color: '#374151', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+          <div className="thead" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', padding: '12px 16px', fontWeight: 600, color: '#374151', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
             <div>Company Logo</div>
             <div>Company Name</div>
             <div>Company Email</div>
@@ -188,12 +218,13 @@ const CompaniesTab = () => {
             <div>Subscription Plan</div>
             <div>Status</div>
             <div>Action</div>
+            <div>Activate</div>
           </div>
           {companies.length === 0 && (
             <div style={{ padding: 24, color: '#6b7280' }}>No companies found.</div>
           )}
           {companies.map(c => (
-            <div key={c.id} className="tbody-row" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
+            <div key={c.id} className="tbody-row" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
               <div>
                 <LogoCell company={c} />
               </div>
@@ -214,7 +245,12 @@ const CompaniesTab = () => {
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button title="Edit" onClick={() => { setSelected(c); setForm({ ...c }); setOpen(true); }} style={{ padding: 8 }}>✎</button>
+                <button title="Edit" onClick={() => { 
+                  setSelected(c); setForm({ ...c }); setOpen(true); 
+                  // Preview this company's branding immediately across app/login
+                  try { if (c?.shortName) localStorage.setItem('tenant', (c.shortName || '').toString().trim()); } catch {}
+                  try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
+                }} style={{ padding: 8 }}>✎</button>
                 <button title="Delete" onClick={async () => {
                   if (!window.confirm(`Delete company "${c.name}"? This will also delete all associated users. This action cannot be undone.`)) return;
                   try {
@@ -227,6 +263,13 @@ const CompaniesTab = () => {
                     setToast({ type: 'error', message: errorMessage });
                   }
                 }} style={{ padding: 8 }}>🗑</button>
+              </div>
+              <div>
+                {activeTenant && (activeTenant === (c?.shortName || c?.name)) ? (
+                  <span style={{ padding: '6px 10px', borderRadius: 8, background: '#dcfce7', color: '#166534', fontWeight: 600 }}>Current</span>
+                ) : (
+                  <button className="primary" onClick={() => setActiveCompany(c)} style={{ padding: '6px 10px' }}>Set Active</button>
+                )}
               </div>
             </div>
           ))}

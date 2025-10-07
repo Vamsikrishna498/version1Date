@@ -496,7 +496,7 @@ const Login = () => {
       <header className="topbar">
         <div className="topbar-content">
           <div className="topbar-left">
-            <img src={branding?.logoLight || defaultLogo} alt={branding?.name || 'Logo'} className="topbar-logo" />
+            <img src={branding?.logoLight || branding?.logoDark || defaultLogo} alt={branding?.name || 'Logo'} className="topbar-logo" />
             <div className="topbar-date">
               <span className="date-text">{getCurrentDate()}</span>
             </div>

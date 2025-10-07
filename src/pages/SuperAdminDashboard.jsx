@@ -1443,10 +1443,10 @@ const SuperAdminDashboard = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {branding?.logoLight ? (
+            {(branding?.logoLight || branding?.logoDark) ? (
               <img 
-                src={branding.logoLight} 
-                alt={branding.name || 'Company Logo'} 
+                src={branding.logoLight || branding.logoDark} 
+                alt={branding?.name || 'Company Logo'} 
                 className="company-logo"
                 style={{ height: '40px', objectFit: 'contain' }}
                 onError={(e) => {

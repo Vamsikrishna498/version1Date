@@ -51,6 +51,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Keep the last known tenant branding for login screen
+    try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
   };
 
   const value = {
