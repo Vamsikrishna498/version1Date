@@ -95,6 +95,12 @@ export const authAPI = {
     return response.data;
   },
 
+  // Register user with role
+  registerWithRole: async (userData) => {
+    const response = await api.post('/auth/register-with-role', userData);
+    return response.data;
+  },
+
   // Send OTP
   sendOTP: async (email) => {
     try {
@@ -368,15 +374,23 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Get employee by ID
+  // Get employee by ID (use unified backend route)
   getEmployeeById: async (employeeId) => {
-    const response = await api.get(`/admin/employees/${employeeId}`);
+    const response = await api.get(`/employees/${employeeId}`);
     return response.data;
   },
 
-  // Update employee
+  // Update employee - send as FormData for @ModelAttribute compatibility
   updateEmployee: async (employeeId, employeeData) => {
-    const response = await api.put(`/admin/employees/${employeeId}`, employeeData);
+    const form = new FormData();
+    Object.entries(employeeData || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (value instanceof File || value instanceof Blob) form.append(key, value);
+      else form.append(key, String(value));
+    });
+    const response = await api.put(`/employees/${employeeId}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   },
 
@@ -547,7 +561,7 @@ export const superAdminAPI = {
       let response;
       let lastError;
       
-      // Strategy 1: Try auth endpoint with PUT method
+      // Strategy 1: Try auth endpoint with PUT method (NEW - should work now)
       try {
         console.log('🔄 Trying PUT /auth/users/' + userId + '/reject');
         response = await api.put(`/auth/users/${userId}/reject`, { reason });
@@ -558,18 +572,7 @@ export const superAdminAPI = {
         console.log('❌ Failed with PUT /auth/users/' + userId + '/reject:', error.response?.status);
       }
       
-      // Strategy 2: Try auth endpoint with POST method
-      try {
-        console.log('🔄 Trying POST /auth/users/' + userId + '/reject');
-        response = await api.post(`/auth/users/${userId}/reject`, { reason });
-        console.log('✅ Success with POST /auth/users/' + userId + '/reject');
-        return response.data;
-      } catch (error) {
-        lastError = error;
-        console.log('❌ Failed with POST /auth/users/' + userId + '/reject:', error.response?.status);
-      }
-      
-      // Strategy 3: Try super-admin endpoint
+      // Strategy 2: Try super-admin endpoint (NEW - should work now)
       try {
         console.log('🔄 Trying PUT /super-admin/users/' + userId + '/reject');
         response = await api.put(`/super-admin/users/${userId}/reject`, { reason });
@@ -580,7 +583,29 @@ export const superAdminAPI = {
         console.log('❌ Failed with PUT /super-admin/users/' + userId + '/reject:', error.response?.status);
       }
       
-      // Strategy 4: Try registrations endpoint
+      // Strategy 3: Try admin endpoint (fallback)
+      try {
+        console.log('🔄 Trying PUT /admin/users/' + userId + '/reject');
+        response = await api.put(`/admin/users/${userId}/reject`, { reason });
+        console.log('✅ Success with PUT /admin/users/' + userId + '/reject');
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        console.log('❌ Failed with PUT /admin/users/' + userId + '/reject:', error.response?.status);
+      }
+      
+      // Strategy 4: Try auth endpoint with POST method
+      try {
+        console.log('🔄 Trying POST /auth/users/' + userId + '/reject');
+        response = await api.post(`/auth/users/${userId}/reject`, { reason });
+        console.log('✅ Success with POST /auth/users/' + userId + '/reject');
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        console.log('❌ Failed with POST /auth/users/' + userId + '/reject:', error.response?.status);
+      }
+      
+      // Strategy 5: Try registrations endpoint
       try {
         console.log('🔄 Trying POST /registrations/' + userId + '/reject');
         response = await api.post(`/registrations/${userId}/reject`, { 
@@ -594,7 +619,7 @@ export const superAdminAPI = {
         console.log('❌ Failed with POST /registrations/' + userId + '/reject:', error.response?.status);
       }
       
-      // Strategy 5: Try employee-specific endpoints (based on Hibernate logs)
+      // Strategy 6: Try employee-specific endpoints (based on Hibernate logs)
       try {
         console.log('🔄 Trying PUT /employees/' + userId + '/reject');
         response = await api.put(`/employees/${userId}/reject`, { reason });
@@ -605,7 +630,7 @@ export const superAdminAPI = {
         console.log('❌ Failed with PUT /employees/' + userId + '/reject:', error.response?.status);
       }
       
-      // Strategy 6: Try employee status update
+      // Strategy 7: Try employee status update
       try {
         console.log('🔄 Trying PUT /employees/' + userId + '/status');
         response = await api.put(`/employees/${userId}/status`, { status: 'REJECTED', reason });
@@ -616,7 +641,7 @@ export const superAdminAPI = {
         console.log('❌ Failed with PUT /employees/' + userId + '/status:', error.response?.status);
       }
       
-      // Strategy 7: Try user status update
+      // Strategy 8: Try user status update
       try {
         console.log('🔄 Trying PUT /users/' + userId + '/status');
         response = await api.put(`/users/${userId}/status`, { status: 'REJECTED', reason });
@@ -674,15 +699,30 @@ export const superAdminAPI = {
     return response.data;
   },
 
-  // Get employee by ID
+  // Get employee by ID (use unified backend route)
   getEmployeeById: async (employeeId) => {
-    const response = await api.get(`/super-admin/employees/${employeeId}`);
+    const response = await api.get(`/employees/${employeeId}`);
     return response.data;
   },
 
-  // Update employee
+  // Update employee - backend expects @ModelAttribute, so use multipart/form-data
   updateEmployee: async (employeeId, employeeData) => {
-    const response = await api.put(`/super-admin/employees/${employeeId}`, employeeData);
+    // If a plain object was passed, convert to FormData for compatibility
+    const form = new FormData();
+
+    // Copy fields while omitting File/Blob detection issues
+    Object.entries(employeeData || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (value instanceof File || value instanceof Blob) {
+        form.append(key, value);
+      } else {
+        form.append(key, String(value));
+      }
+    });
+
+    const response = await api.put(`/employees/${employeeId}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   },
 
