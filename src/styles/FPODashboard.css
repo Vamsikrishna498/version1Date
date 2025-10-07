@@ -72,9 +72,9 @@
   margin: 0;
 }
 
-/* Dashboard Sidebar */
+/* Dashboard Sidebar (scoped to FPO container to avoid global overrides) */
 /* Sidebar: clearer contrast and active state */
-.dashboard-sidebar {
+.fpo-dashboard-container .dashboard-sidebar {
 
   width: 280px;
   background: #55833d!important;
@@ -90,13 +90,13 @@
 
 }
 
-.sidebar-nav {
+.fpo-dashboard-container .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.nav-item {
+.fpo-dashboard-container .nav-item {
   padding: 12px 16px !important;
   border: none !important;
   background: transparent !important;
@@ -115,24 +115,24 @@
   overflow: hidden;
 }
 
-.nav-item:hover:not(:disabled) {
+.fpo-dashboard-container .nav-item:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1) !important;
   color: white !important;
 }
 
-.nav-item.active {
+.fpo-dashboard-container .nav-item.active {
   background: rgba(255, 255, 255, 0.2) !important;
   color: white !important;
   font-weight: 600;
 }
 
-.nav-item:disabled {
+.fpo-dashboard-container .nav-item:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Left accent bar indicator */
-.nav-item::before {
+.fpo-dashboard-container .nav-item::before {
   content: '';
   position: absolute;
   left: 8px;
@@ -145,13 +145,13 @@
   transition: width 0.25s ease;
 }
 
-.nav-item:hover::before,
-.nav-item.active::before {
+.fpo-dashboard-container .nav-item:hover::before,
+.fpo-dashboard-container .nav-item.active::before {
   width: 4px;
 }
 
 /* Dashboard Main Content */
-.dashboard-main {
+.fpo-dashboard-container .dashboard-main {
   flex: 1;
   margin-left: 280px;
   margin-top: 96px;

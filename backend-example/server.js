@@ -184,8 +184,16 @@ let registrations = [
   }
 ];
 
-// JWT Secret (use environment variable in production)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// JWT Secret (MUST be set via environment variable)
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Fail fast if JWT_SECRET is not set or is using default value
+if (!JWT_SECRET || JWT_SECRET === 'your-secret-key' || JWT_SECRET.length < 32) {
+  console.error('❌ FATAL ERROR: JWT_SECRET environment variable is not set or is insecure!');
+  console.error('📝 Please set JWT_SECRET in your .env file to a secure random string (32+ characters)');
+  console.error('💡 Example: JWT_SECRET=your_very_long_and_secure_random_string_here_at_least_32_characters');
+  process.exit(1);
+}
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {

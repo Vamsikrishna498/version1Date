@@ -50,6 +50,7 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const { branding } = useBranding();
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [farmers, setFarmers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [fpos, setFpos] = useState([]);
@@ -985,7 +986,7 @@ const AdminDashboard = () => {
     const stats = getStats();
 
     return (
-      <div className="overview-section">
+      <div className="overview-section admin-overview-section">
         <div className="overview-header">
           <div className="header-left">
             <div className="logo-section" style={{ 
@@ -2621,7 +2622,18 @@ const AdminDashboard = () => {
       </div>
 
       {/* Sidebar */}
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+
         <div className="sidebar-header">
           <h2 className="sidebar-welcome">Welcome!!!</h2>
           <div className="sidebar-role">Admin</div>
@@ -2631,64 +2643,80 @@ const AdminDashboard = () => {
           <div 
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
+            title="Dashboard Overview"
           >
-            <i className="fas fa-th-large"></i>
-            <span>Dashboard Overview</span>
+            <span className="material-symbols-outlined">dashboard</span>
+            <span className="nav-text">Dashboard Overview</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'registration' ? 'active' : ''}`}
             onClick={() => setActiveTab('registration')}
+            title="Registration"
           >
-            <i className="fas fa-user-plus"></i>
-            <span>Registration</span>
+            <span className="material-symbols-outlined">person_add</span>
+            <span className="nav-text">Registration</span>
           </div>
           
           <div 
             className={`nav-item ${activeTab === 'farmers' ? 'active' : ''}`}
             onClick={() => setActiveTab('farmers')}
+            title="Farmers"
           >
-            <i className="fas fa-users"></i>
-            <span>Farmers</span>
+            <span className="material-symbols-outlined">agriculture</span>
+            <span className="nav-text">Farmers</span>
           </div>
           
           <div 
             className={`nav-item ${activeTab === 'employees' ? 'active' : ''}`}
             onClick={() => setActiveTab('employees')}
+            title="Employees"
           >
-            <i className="fas fa-user-tie"></i>
-            <span>Employees</span>
+            <span className="material-symbols-outlined">groups</span>
+            <span className="nav-text">Employees</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'fpo' ? 'active' : ''}`}
             onClick={() => setActiveTab('fpo')}
+            title="FPO"
           >
-            <i className="fas fa-building"></i>
-            <span>FPO</span>
+            <span className="material-symbols-outlined">business</span>
+            <span className="nav-text">FPO</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'kyc-overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('kyc-overview')}
+            title="KYC Overview"
           >
-            <i className="fas fa-clipboard-check"></i>
-            <span>KYC Overview</span>
+            <span className="material-symbols-outlined">verified_user</span>
+            <span className="nav-text">KYC Overview</span>
           </div>
 
 
           <div 
             className={`nav-item ${activeTab === 'bulk-operations' ? 'active' : ''}`}
             onClick={() => setActiveTab('bulk-operations')}
+            title="Bulk Operations"
           >
-            <i className="fas fa-tasks"></i>
-            <span>Bulk Operations</span>
+            <span className="material-symbols-outlined">inventory_2</span>
+            <span className="nav-text">Bulk Operations</span>
+          </div>
+
+          <div 
+            className="nav-item logout"
+            onClick={logout}
+            title="Logout"
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="nav-text">Logout</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Dashboard Content */}
         <div className="dashboard-content">
           {activeTab === 'overview' && (

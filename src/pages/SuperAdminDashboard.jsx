@@ -75,6 +75,7 @@ const SuperAdminDashboard = () => {
   
 
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [farmers, setFarmers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [registrations, setRegistrations] = useState([]);
@@ -1530,7 +1531,18 @@ const SuperAdminDashboard = () => {
       </div>
 
       {/* Sidebar */}
-      <div className="dashboard-sidebar">
+      <div className={`dashboard-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Sidebar Toggle Button */}
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+
         <div className="sidebar-header">
           <h2 className="sidebar-welcome">Welcome!!!</h2>
           <div className="sidebar-role">{user?.role || 'Super Admin'}</div>
@@ -1540,65 +1552,73 @@ const SuperAdminDashboard = () => {
           <div 
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
+            title="Dashboard"
           >
-            <i className="fas fa-th-large"></i>
-            <span>Dashboard</span>
+            <span className="material-symbols-outlined">dashboard</span>
+            <span className="nav-text">Dashboard</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'registration' ? 'active' : ''}`}
             onClick={() => setActiveTab('registration')}
+            title="Registration"
           >
-            <i className="fas fa-user-plus"></i>
-            <span>Registration</span>
+            <span className="material-symbols-outlined">person_add</span>
+            <span className="nav-text">Registration</span>
           </div>
           
           <div 
             className={`nav-item ${activeTab === 'farmers' ? 'active' : ''}`}
             onClick={() => setActiveTab('farmers')}
+            title="Farmers"
           >
-            <i className="fas fa-users"></i>
-            <span>Farmers</span>
+            <span className="material-symbols-outlined">group</span>
+            <span className="nav-text">Farmers</span>
           </div>
           
           <div 
             className={`nav-item ${activeTab === 'employees' ? 'active' : ''}`}
             onClick={() => setActiveTab('employees')}
+            title="Employees"
           >
-            <i className="fas fa-user-tie"></i>
-            <span>Employees</span>
+            <span className="material-symbols-outlined">badge</span>
+            <span className="nav-text">Employees</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'fpo' ? 'active' : ''}`}
             onClick={() => setActiveTab('fpo')}
+            title="FPO"
           >
-            <i className="fas fa-building"></i>
-            <span>FPO</span>
+            <span className="material-symbols-outlined">apartment</span>
+            <span className="nav-text">FPO</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'bulk-operations' ? 'active' : ''}`}
             onClick={() => setActiveTab('bulk-operations')}
+            title="Bulk Operations"
           >
-            <i className="fas fa-tasks"></i>
-            <span>Bulk Operations</span>
+            <span className="material-symbols-outlined">task</span>
+            <span className="nav-text">Bulk Operations</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'personalization' ? 'active' : ''}`}
             onClick={() => setActiveTab('personalization')}
+            title="Personalization"
           >
-            <i className="fas fa-palette"></i>
-            <span>Personalization</span>
+            <span className="material-symbols-outlined">palette</span>
+            <span className="nav-text">Personalization</span>
           </div>
 
           <div 
             className={`nav-item ${activeTab === 'configurations' ? 'active' : ''}`}
             onClick={() => setActiveTab('configurations')}
+            title="Configurations"
           >
-            <i className="fas fa-cogs"></i>
-            <span>Configurations</span>
+            <span className="material-symbols-outlined">tune</span>
+            <span className="nav-text">Configurations</span>
           </div>
 
           <div 
@@ -1612,32 +1632,35 @@ const SuperAdminDashboard = () => {
           <div 
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
+            title="Settings"
           >
-            <i className="fas fa-cog"></i>
-            <span>Settings</span>
+            <span className="material-symbols-outlined">settings</span>
+            <span className="nav-text">Settings</span>
           </div>
 
 
           <div 
             className={`nav-item ${activeTab === 'my-account' ? 'active' : ''}`}
             onClick={() => setActiveTab('my-account')}
+            title="My Account"
           >
-            <i className="fas fa-user"></i>
-            <span>My Account</span>
+            <span className="material-symbols-outlined">person</span>
+            <span className="nav-text">My Account</span>
           </div>
 
           <div 
             className="nav-item logout"
             onClick={handleLogout}
+            title="Logout"
           >
-            <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+            <span className="material-symbols-outlined">logout</span>
+            <span className="nav-text">Logout</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Dashboard Content */}
         <div className="dashboard-content">
           {activeTab === 'dashboard' && (
@@ -2608,29 +2631,6 @@ const SuperAdminDashboard = () => {
                             <i className="fas fa-plus"></i>
                             Add Employee
                                                       </button>
-                          {/* Debug button to test filtering */}
-                          <button 
-                            onClick={() => {
-                              const filtered = getFilteredEmployees();
-                              console.log('🔍 Debug: Total employees:', employees?.length || 0);
-                              console.log('🔍 Debug: Filtered employees:', filtered.length);
-                              console.log('🔍 Debug: Current filters:', employeeFilters);
-                              alert(`Total: ${employees?.length || 0}, Filtered: ${filtered.length}, Filter: ${JSON.stringify(employeeFilters)}`);
-                            }}
-                            style={{
-                              background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '12px 24px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '600',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            Debug Filter
-                          </button>
                           </div>
                         </div>
                       </div>

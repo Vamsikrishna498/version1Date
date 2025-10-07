@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import TokenStorage from '../utils/tokenStorage';
+import Logger from '../utils/logger';
 
 const AuthContext = createContext();
 
@@ -17,40 +19,41 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    const token = TokenStorage.getToken();
+    const userData = TokenStorage.getUserData();
     
-    console.log('=== AUTH CONTEXT INITIALIZATION ===');
-    console.log('Token found:', !!token);
-    console.log('User data found:', !!userData);
-    console.log('Raw user data:', userData);
+    Logger.log('=== AUTH CONTEXT INITIALIZATION ===');
+    Logger.log('Token found:', !!token);
+    Logger.log('User data found:', !!userData);
     
     if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        console.log('Parsed user data:', parsedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+      // Check if token is expired
+      if (TokenStorage.isTokenExpired()) {
+        Logger.warn('Token is expired, clearing auth data');
+        TokenStorage.clearAuth();
+        setUser(null);
+      } else {
+        Logger.log('User authenticated successfully');
+        setUser(userData);
       }
     } else {
-      console.log('No token or user data found in localStorage');
+      Logger.log('No token or user data found');
     }
     setLoading(false);
   }, []);
 
   const login = (userData, token) => {
     setUser(userData);
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    TokenStorage.setToken(token);
+    TokenStorage.setUserData(userData);
+    Logger.log('User logged in successfully');
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Use centralized storage/logout
+    TokenStorage.logout();
+    Logger.log('User logged out');
     // Keep the last known tenant branding for login screen
     try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
   };
