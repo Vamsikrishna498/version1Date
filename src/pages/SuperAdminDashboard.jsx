@@ -47,6 +47,7 @@ import SettingsMasterList from '../components/SettingsMasterList';
 import '../styles/Dashboard.css';
 import { useBranding } from '../contexts/BrandingContext';
 import CompaniesTab from '../components/CompaniesTab';
+import { getFarmerDisplayId as getFarmerDisplayIdUtil, getConfiguredFarmerPrefix as getConfiguredFarmerPrefixUtil } from '../utils/farmerIdUtils';
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -152,39 +153,17 @@ const SuperAdminDashboard = () => {
     return getConfiguredEmployeePrefix() + '-' + fallbackNumeric;
   };
 
-  // Helper: robustly compute a display ID for farmers
+  // Helper: robustly compute a display ID for farmers using shared utility
   const getFarmerDisplayId = (row) => {
-    const candidates = [
-      row?.farmerId,
-      row?.farmerCode,
-      row?.farmerUniqueId,
-      row?.famId,
-      row?.famCode,
-      row?.userUniqueId,
-      row?.userId,
-      row?.uniqueId,
-      farmerUniqueIds?.[row?.id],
-      row?.cardId
-    ];
-    const firstNonEmpty = candidates.find(v => v !== undefined && v !== null && String(v).trim() !== '');
-    if (firstNonEmpty) return String(firstNonEmpty);
-    
-    // Dynamic fallback using configured format
-    const fallbackNumeric = row?.id ? String(row.id).padStart(5, '0') : '00000';
-    return getConfiguredFarmerPrefix() + '-' + fallbackNumeric;
+    return getFarmerDisplayIdUtil(row, {
+      farmerUniqueIds,
+      getConfiguredFarmerPrefix: () => getConfiguredFarmerPrefix(codeFormats)
+    });
   };
 
-  // Get configured farmer prefix from state or default
+  // Get configured farmer prefix from state or default using shared utility
   const getConfiguredFarmerPrefix = () => {
-    // Try to get from codeFormats state if available
-    if (codeFormats && codeFormats.length > 0) {
-      const farmerFormat = codeFormats.find(f => f.codeType === 'FARMER' && f.isActive);
-      if (farmerFormat && farmerFormat.prefix) {
-        return farmerFormat.prefix;
-      }
-    }
-    // Fallback to a generic format if not available
-    return 'FARMER';
+    return getConfiguredFarmerPrefixUtil(codeFormats);
   };
 
   // Get configured employee prefix from state or default
@@ -431,18 +410,9 @@ const SuperAdminDashboard = () => {
     state: '',
     district: '',
     region: '',
-    kycStatus: '',
-    assignmentStatus: '',
-    employeeFilter: ''
+    kycStatus: ''
   });
   
-  const [employeeFilters, setEmployeeFilters] = useState({
-    status: '',
-    role: '',
-    designation: '',
-    state: '',
-    district: ''
-  });
   
   const [fpoFilters, setFpoFilters] = useState({
     state: '',
@@ -499,14 +469,6 @@ const SuperAdminDashboard = () => {
     }
   }, [employees]);
 
-  // Debug effect to monitor employee filters
-  useEffect(() => {
-    console.log('🔍 Employee filters updated:', employeeFilters);
-    if (employees && employees.length > 0) {
-      const filtered = getFilteredEmployees();
-      console.log('🔍 Filtered employees after filter change:', filtered.length);
-    }
-  }, [employeeFilters, employees]);
 
   // Debug effect to monitor delete modal state
   useEffect(() => {
@@ -597,15 +559,15 @@ const SuperAdminDashboard = () => {
         console.log(`🔍 Normalizing employee ${e.name || e.firstName}: status="${e.status}", accessStatus="${e.accessStatus}", normalized="${normalizedStatus}"`);
         
         return {
-          id: e.id,
-          name: e.name || `${[e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ')}`.trim(),
-          contactNumber: e.contactNumber,
-          email: e.email,
+        id: e.id,
+        name: e.name || `${[e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ')}`.trim(),
+        contactNumber: e.contactNumber,
+        email: e.email,
           status: normalizedStatus,
-          role: (e.role && typeof e.role === 'string') ? e.role : (e.role?.name || 'employee'),
-          designation: e.designation || 'KYC Officer',
-          district: e.district,
-          state: e.state
+        role: (e.role && typeof e.role === 'string') ? e.role : (e.role?.name || 'employee'),
+        designation: e.designation || 'KYC Officer',
+        district: e.district,
+        state: e.state
         };
       });
       // If backend returned nothing, keep empty array (do not override with mocks)
@@ -676,71 +638,10 @@ const SuperAdminDashboard = () => {
       const matchesDistrict = !filters.district || farmer.district === filters.district;
       const matchesKycStatus = !filters.kycStatus || farmer.kycStatus === filters.kycStatus;
       
-      // Assignment status filter
-      const isAssigned = farmer.assignedEmployee && String(farmer.assignedEmployee).trim() !== '' && String(farmer.assignedEmployee).toLowerCase() !== 'not assigned';
-      const matchesAssignmentStatus = !filters.assignmentStatus ||
-        (filters.assignmentStatus === 'ASSIGNED' && isAssigned) ||
-        (filters.assignmentStatus === 'UNASSIGNED' && !isAssigned);
-
-      // Assigned employee filter: prefer id, fallback to name contains
-      const empFilter = (filters.employeeFilter || '').toString().trim();
-      const assignedId = farmer.assignedEmployeeId !== undefined && farmer.assignedEmployeeId !== null
-        ? String(farmer.assignedEmployeeId)
-        : '';
-      const assigned = String(farmer.assignedEmployee || '').trim();
-      const matchesEmployee = !empFilter ||
-        (assignedId && assignedId === empFilter) ||
-        assigned === empFilter ||
-        assigned.toLowerCase().includes(empFilter.toLowerCase()) ||
-        empFilter.toLowerCase().includes(assigned.toLowerCase());
-      
-      return matchesState && matchesDistrict && matchesKycStatus && matchesAssignmentStatus && matchesEmployee;
+      return matchesState && matchesDistrict && matchesKycStatus;
     });
   };
 
-  const getFilteredEmployees = () => {
-    console.log('🔍 getFilteredEmployees called');
-    console.log('🔍 employeeFilters:', employeeFilters);
-    console.log('🔍 employees count:', employees?.length || 0);
-    
-    const filtered = (employees || []).filter(employee => {
-      // Make status comparison case-insensitive and handle null/undefined
-      const employeeStatus = (employee.status || '').toString().toUpperCase();
-      const filterStatus = (employeeFilters.status || '').toString().toUpperCase();
-      
-      // Handle different status value formats
-      let matchesStatus = !employeeFilters.status || employeeStatus === filterStatus;
-      
-      // Additional fallback: if exact match fails, try common variations
-      if (employeeFilters.status && !matchesStatus) {
-        const statusVariations = {
-          'ACTIVE': ['ACTIVE', 'APPROVED', 'ENABLED', '1', 'TRUE'],
-          'INACTIVE': ['INACTIVE', 'DISABLED', '0', 'FALSE'],
-          'PENDING': ['PENDING', 'WAITING', 'PENDING_APPROVAL']
-        };
-        
-        const filterVariations = statusVariations[filterStatus] || [filterStatus];
-        const employeeVariations = statusVariations[employeeStatus] || [employeeStatus];
-        
-        matchesStatus = filterVariations.some(fv => employeeVariations.includes(fv));
-      }
-      
-      const matchesRole = !employeeFilters.role || employee.role === employeeFilters.role;
-      const matchesDesignation = !employeeFilters.designation || employee.designation === employeeFilters.designation;
-      const matchesState = !employeeFilters.state || employee.state === employeeFilters.state;
-      const matchesDistrict = !employeeFilters.district || employee.district === employeeFilters.district;
-      
-      // Debug status matching
-      if (employeeFilters.status) {
-        console.log(`🔍 Employee ${employee.name}: status="${employee.status}" (normalized: "${employeeStatus}"), filter="${employeeFilters.status}" (normalized: "${filterStatus}"), matches=${matchesStatus}`);
-      }
-      
-      return matchesStatus && matchesRole && matchesDesignation && matchesState && matchesDistrict;
-    });
-    
-    console.log('🔍 Filtered employees count:', filtered.length);
-    return filtered;
-  };
 
   const getFilteredFPOs = () => {
     const list = Array.isArray(fpos) ? fpos : [];
@@ -997,7 +898,7 @@ const SuperAdminDashboard = () => {
         setViewingEmployee(updatedEmployee);
       }
       if (selectedEmployee && selectedEmployee.id === targetId) {
-        setSelectedEmployee(updatedEmployee);
+      setSelectedEmployee(updatedEmployee);
       }
       
       alert('Employee updated successfully!');
@@ -1100,6 +1001,8 @@ const SuperAdminDashboard = () => {
       alert('Failed to delete selected farmers.');
     }
   };
+
+  // getFarmerDisplayId function is already defined above at line 156
 
   const handleAssignFarmers = async (assignments) => {
     try {
@@ -2113,6 +2016,11 @@ const SuperAdminDashboard = () => {
                       }}
                       onSubmit={async (farmerData) => {
                         try {
+                          console.log('🔍 SuperAdminDashboard received farmerData:', farmerData);
+                          console.log('🔍 Contact number in farmerData:', farmerData.contactNumber);
+                          console.log('🔍 Contact number type:', typeof farmerData.contactNumber);
+                          console.log('🔍 Contact number length:', farmerData.contactNumber?.length);
+                          
                           if (editingFarmer) {
                             const updatedFarmer = await farmersAPI.updateFarmer(editingFarmer.id, farmerData);
                             setFarmers(prev => prev.map(farmer => 
@@ -2120,7 +2028,9 @@ const SuperAdminDashboard = () => {
                             ));
                             alert('Farmer updated successfully!');
                           } else {
+                            console.log('🔍 Creating new farmer with data:', farmerData);
                             const newFarmer = await farmersAPI.createFarmer(farmerData);
+                            console.log('🔍 Created farmer response:', newFarmer);
                             setFarmers(prev => [...prev, newFarmer]);
                             alert('Farmer created successfully!');
                           }
@@ -2338,38 +2248,6 @@ const SuperAdminDashboard = () => {
                       </select>
                     </div>
                     
-                    <div className="filter-group">
-                      <label className="filter-label">Assignment Status</label>
-                      <select 
-                        value={filters.assignmentStatus} 
-                        onChange={(e) => setFilters(prev => ({ ...prev, assignmentStatus: e.target.value }))}
-                        className="filter-select"
-                      >
-                        <option value="">All Assignment Status</option>
-                        <option value="ASSIGNED">Assigned</option>
-                        <option value="UNASSIGNED">Unassigned</option>
-                      </select>
-                    </div>
-                    
-                    <div className="filter-group">
-                      <label className="filter-label">Assigned Employee</label>
-                      <select 
-                        value={filters.employeeFilter} 
-                        onChange={(e) => {
-                          console.log('🔍 Employee filter changed to:', e.target.value);
-                          setFilters(prev => ({ ...prev, employeeFilter: e.target.value }));
-                        }}
-                        className="filter-select"
-                      >
-                        <option value="">All Employees</option>
-                        {employees.map(emp => {
-                          console.log('🔍 Employee in dropdown:', emp);
-                          return (
-                            <option key={emp.id} value={emp.name}>{emp.name}</option>
-                          );
-                        })}
-                      </select>
-                    </div>
                     
                     <div className="filter-actions">
                       <button 
@@ -2378,9 +2256,7 @@ const SuperAdminDashboard = () => {
                           state: '',
                           district: '',
                           region: '',
-                          kycStatus: '',
-                          assignmentStatus: '',
-                          employeeFilter: ''
+                          kycStatus: ''
                         })}
                       >
                         <i className="fas fa-times"></i>
@@ -2391,7 +2267,11 @@ const SuperAdminDashboard = () => {
 
                     <div className="table-scroll-wrapper">
                       <DataTable
-                        data={getFilteredFarmers()}
+                        data={getFilteredFarmers().map(farmer => {
+                          console.log('🔍 Farmer data for DataTable:', farmer);
+                          console.log('🔍 Farmer contactNumber:', farmer.contactNumber);
+                          return farmer;
+                        })}
                         columns={[
                           { 
                             key: 'select', 
@@ -2429,7 +2309,16 @@ const SuperAdminDashboard = () => {
                             render: (value, row) => getFarmerDisplayId(row)
                           },
                           { key: 'name', label: 'Name' },
-                          { key: 'contactNumber', label: 'Phone' },
+                          { 
+                            key: 'contactNumber', 
+                            label: 'Phone',
+                            render: (value) => {
+                              if (!value || value === 'null' || value === '9999999999') {
+                                return <span style={{ color: '#999', fontStyle: 'italic' }}>Not provided</span>;
+                              }
+                              return value;
+                            }
+                          },
                           { key: 'state', label: 'State' },
                           { key: 'district', label: 'District' },
                           { 
@@ -2445,7 +2334,6 @@ const SuperAdminDashboard = () => {
                               return value.toUpperCase();
                             }
                           },
-                          { key: 'assignedEmployee', label: 'Assigned Employee' }
                         ]}
                         customActions={[
                           {
@@ -2522,6 +2410,8 @@ const SuperAdminDashboard = () => {
                   farmerData={viewingFarmer}
                   onBack={() => setViewingFarmer(null)}
                   onSave={handleSaveFarmer}
+                  farmerUniqueIds={farmerUniqueIds}
+                  codeFormats={codeFormats}
                 />
               )}
 
@@ -2635,114 +2525,10 @@ const SuperAdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Employee Filters */}
-                      <div className="filters-section">
-                        <div className="filter-group">
-                          <label className="filter-label">Status</label>
-                          <select 
-                            value={employeeFilters.status} 
-                            onChange={(e) => {
-                              console.log('🔍 Status filter changed to:', e.target.value);
-                              setEmployeeFilters(prev => ({ ...prev, status: e.target.value }));
-                            }}
-                            className="filter-select"
-                          >
-                            <option value="">All Status</option>
-                            <option value="ACTIVE">Active</option>
-                            <option value="INACTIVE">Inactive</option>
-                            <option value="PENDING">Pending</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">Role</label>
-                          <select 
-                            value={employeeFilters.role} 
-                            onChange={(e) => setEmployeeFilters(prev => ({ ...prev, role: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Roles</option>
-                            <option value="employee">Employee</option>
-                            <option value="admin">Admin</option>
-                            <option value="super_admin">Super Admin</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">Designation</label>
-                          <select 
-                            value={employeeFilters.designation} 
-                            onChange={(e) => setEmployeeFilters(prev => ({ ...prev, designation: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Designations</option>
-                            <option value="KYC Officer">KYC Officer</option>
-                            <option value="Field Officer">Field Officer</option>
-                            <option value="Manager">Manager</option>
-                            <option value="Supervisor">Supervisor</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">State</label>
-                          <select 
-                            value={employeeFilters.state} 
-                            onChange={(e) => setEmployeeFilters(prev => ({ ...prev, state: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All States</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Andhrapradesh">Andhrapradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">District</label>
-                          <select 
-                            value={employeeFilters.district} 
-                            onChange={(e) => setEmployeeFilters(prev => ({ ...prev, district: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Districts</option>
-                            <option value="Karimnagar">Karimnagar</option>
-                            <option value="rangareddy">Rangareddy</option>
-                            <option value="kadapa">Kadapa</option>
-                            <option value="Kadapa">Kadapa</option>
-                            <option value="kadpaa">Kadpaa</option>
-                            <option value="Kuppam">Kuppam</option>
-                            <option value="Pune">Pune</option>
-                            <option value="Ahmedabad">Ahmedabad</option>
-                            <option value="Amritsar">Amritsar</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Chennai">Chennai</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-actions">
-                          <button 
-                            className="filter-btn-clear"
-                            onClick={() => setEmployeeFilters({
-                              status: '',
-                              role: '',
-                              designation: '',
-                              state: '',
-                              district: ''
-                            })}
-                          >
-                            <i className="fas fa-times"></i>
-                            Clear Filters
-                          </button>
-                        </div>
-                      </div>
 
                       <div className="table-scroll-wrapper">
                         <DataTable
-                          data={getFilteredEmployees()}
+                          data={employees || []}
                           columns={[
                             { 
                               key: 'id', 
@@ -3031,8 +2817,8 @@ const SuperAdminDashboard = () => {
                       <div className="superadmin-overview-header">
                         <div className="header-left">
                           <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <>
-                              {branding?.logoLight || branding?.logoDark ? (
+                                  <>
+                                    {branding?.logoLight || branding?.logoDark ? (
                                 <img 
                                   src={branding.logoLight || branding.logoDark} 
                                   alt={branding?.name || 'Logo'} 

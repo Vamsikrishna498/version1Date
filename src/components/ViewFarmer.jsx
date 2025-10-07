@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ViewFarmerDetails.css';
+import { getFarmerDisplayId as getFarmerDisplayIdUtil, getConfiguredFarmerPrefix as getConfiguredFarmerPrefixUtil } from '../utils/farmerIdUtils';
 
-const ViewFarmer = ({ farmerData, onBack, onSave }) => {
+const ViewFarmer = ({ farmerData, onBack, onSave, farmerUniqueIds, codeFormats }) => {
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [formData, setFormData] = useState({});
 
 	// Initialize form data when farmerData changes
 	useEffect(() => {
 		if (farmerData) {
+			console.log('🔍 ViewFarmer received farmerData:', farmerData);
+			console.log('🔍 ViewFarmer farmerData keys:', Object.keys(farmerData));
+			console.log('🔍 ViewFarmer farmerData values:', Object.values(farmerData));
+			
 			setFormData({
 				firstName: farmerData.firstName || '',
 				middleName: farmerData.middleName || '',
@@ -20,7 +25,7 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 				fatherName: farmerData.fatherName || farmerData.relationName || farmerData.father || '',
 				nationality: farmerData.nationality || '',
 				alternativeContactNumber: farmerData.alternativeContactNumber || farmerData.altNumber || farmerData.alternateContact || farmerData.alternativeNumber || '',
-				alternativeRelationType: farmerData.alternativeRelationType || farmerData.altRelationType || '',
+				alternativeRelationType: farmerData.alternativeRelationType || farmerData.altRelationType || farmerData.alternativeType || '',
 				state: farmerData.state || '',
 				district: farmerData.district || '',
 				country: farmerData.country || '',
@@ -90,7 +95,7 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 		fatherName: firstValue('fatherName', 'relationName', 'father'),
 		nationality: firstValue('nationality'),
 		alternativeContactNumber: firstValue('alternativeContactNumber', 'altNumber', 'alternateContact', 'alternativeNumber'),
-		alternativeRelationType: firstValue('alternativeRelationType', 'altRelationType'),
+		alternativeRelationType: firstValue('alternativeRelationType', 'altRelationType', 'alternativeType'),
 		state: firstValue('state'),
 		district: firstValue('district'),
 		country: firstValue('country'),
@@ -98,6 +103,8 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 		village: firstValue('village'),
 		pincode: firstValue('pincode')
 	};
+
+	console.log('🔍 ViewFarmer normalized data:', normalized);
 
 	// Helper function to safely render values
 	const safeRender = (value) => {
@@ -109,6 +116,12 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 			return 'Object (see console)';
 		}
 		const str = String(value);
+		
+		// Handle invalid phone numbers
+		if (str === '9999999999' || str === 'null' || str.trim() === '') {
+			return 'Not provided';
+		}
+		
 		return str.trim() === '' ? 'Not provided' : str;
 	};
 
@@ -131,6 +144,14 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 		}
 	};
 
+	// Generate consistent farmer display ID using shared utility
+	const getFarmerDisplayId = (farmer) => {
+		return getFarmerDisplayIdUtil(farmer, {
+			farmerUniqueIds,
+			getConfiguredFarmerPrefix: () => getConfiguredFarmerPrefixUtil(codeFormats)
+		});
+	};
+
 	const handleCancel = () => {
 		setIsEditMode(false);
 		// Reset form data to original values
@@ -147,7 +168,7 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 				fatherName: farmerData.fatherName || farmerData.relationName || farmerData.father || '',
 				nationality: farmerData.nationality || '',
 				alternativeContactNumber: farmerData.alternativeContactNumber || farmerData.altNumber || farmerData.alternateContact || farmerData.alternativeNumber || '',
-				alternativeRelationType: farmerData.alternativeRelationType || farmerData.altRelationType || '',
+				alternativeRelationType: farmerData.alternativeRelationType || farmerData.altRelationType || farmerData.alternativeType || '',
 				state: farmerData.state || '',
 				district: farmerData.district || '',
 				country: farmerData.country || '',
@@ -246,7 +267,10 @@ const ViewFarmer = ({ farmerData, onBack, onSave }) => {
 							</div>
 							<div className="farmer-id-info">
 								<div className="farmer-id-number">
-									ID: {farmerData?.id || farmerData?.farmerId || 'N/A'}
+									ID: {(() => {
+										// Use the same ID generation logic as SuperAdminDashboard
+										return getFarmerDisplayId(farmerData);
+									})()}
 								</div>
 								<div className="farmer-id-name">
 									{formData.name || (formData.firstName ? 

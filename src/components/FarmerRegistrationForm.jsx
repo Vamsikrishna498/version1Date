@@ -150,15 +150,22 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
 
   const { register, handleSubmit, watch, setValue, trigger, clearErrors, setError, formState: { errors } } = methods;
 
+  // Debug API data
+  console.log('🔍 Crop API Data Debug:');
+  console.log('  - cropNames:', cropNames);
+  console.log('  - cropTypes:', cropTypes);
+  console.log('  - cropNames length:', cropNames?.length || 0);
+  console.log('  - cropTypes length:', cropTypes?.length || 0);
+
   // Dynamic crop options from API
   // Build crop options: Crop Names are categories, Crop Types are varieties under each category
-  const cropOptions = cropNames.reduce((acc, crop) => {
+  const cropOptions = (cropNames || []).reduce((acc, crop) => {
     const category = crop.name || 'Other';
     if (!acc[category]) {
       acc[category] = [];
     }
     // Add crop types (varieties) for this crop where parentId matches
-    const varieties = cropTypes.filter(type => type.parentId === crop.id || type.cropNameId === crop.id);
+    const varieties = (cropTypes || []).filter(type => type.parentId === crop.id || type.cropNameId === crop.id);
     if (varieties && varieties.length > 0) {
       acc[category] = varieties.map(variety => variety.name);
     } else {
@@ -168,8 +175,8 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     return acc;
   }, {});
 
-  // If no data from API, provide default crop categories
-  const defaultCropOptions = Object.keys(cropOptions).length === 0 ? {
+  // Always provide comprehensive default crop categories
+  const defaultCropOptions = {
     'Cereals': ['Rice', 'Wheat', 'Maize', 'Jowar', 'Bajra', 'Ragi'],
     'Pulses': ['Red gram', 'Green gram', 'Black gram', 'Bengal gram', 'Lentil'],
     'Cash Crops': ['Cotton', 'Sugarcane', 'Tobacco', 'Jute'],
@@ -177,8 +184,14 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
     'Vegetables': ['Tomato', 'Potato', 'Onion', 'Brinjal', 'Cabbage', 'Cauliflower'],
     'Fruits': ['Mango', 'Banana', 'Grapes', 'Papaya', 'Citrus', 'Pomegranate'],
     'Spices': ['Turmeric', 'Chilli', 'Coriander', 'Cumin', 'Ginger'],
-    'Plantation': ['Coconut', 'Arecanut', 'Coffee', 'Tea', 'Rubber']
-  } : cropOptions;
+    'Plantation': ['Coconut', 'Arecanut', 'Coffee', 'Tea', 'Rubber'],
+    'Other': [] // Add Other category with empty array for custom input
+  };
+
+  // Merge API data with defaults if available
+  const finalCropOptions = Object.keys(cropOptions).length > 0 ? { ...defaultCropOptions, ...cropOptions } : defaultCropOptions;
+  
+  console.log('🔍 Final Crop Options:', finalCropOptions);
 
   const waterSourceOptions = [
     'Borewell',
@@ -198,8 +211,58 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       return;
     }
     
+    console.log('🔍 Form validation passed, submitting data:', data);
+    console.log('🔍 Form is valid:', !Object.keys(errors).length);
+    console.log('🔍 Form errors:', errors);
+    
+    // Check if form is valid
+    if (Object.keys(errors).length > 0) {
+      console.log('❌ Form has validation errors, not submitting');
+      alert('Please fix form validation errors before submitting');
+      return;
+    }
+    
     try {
-      console.log('Form submitted with data:', data);
+      console.log('🔍 Form submitted with data:', data);
+      console.log('🔍 Contact number in form data:', data.contactNumber);
+      console.log('🔍 Contact number type:', typeof data.contactNumber);
+      console.log('🔍 Contact number is empty?', !data.contactNumber);
+      console.log('🔍 Contact number length:', data.contactNumber?.length);
+      console.log('🔍 Contact number trimmed:', data.contactNumber?.trim());
+      console.log('🔍 Contact number after trim length:', data.contactNumber?.trim()?.length);
+      console.log('🔍 All form fields:', Object.keys(data));
+      console.log('🔍 Form data values:', Object.values(data));
+      
+      // Ensure contact number is properly formatted before submission
+      if (data.contactNumber && data.contactNumber.trim() !== '') {
+        const cleanContactNumber = data.contactNumber.replace(/\D/g, '');
+        console.log('🔍 Cleaned contact number:', cleanContactNumber);
+        if (cleanContactNumber.length === 10) {
+          data.contactNumber = cleanContactNumber;
+          console.log('🔍 Set contact number to cleaned value:', data.contactNumber);
+        } else {
+          console.log('🔍 Contact number is not 10 digits, setting to null');
+          data.contactNumber = null;
+        }
+      } else {
+        console.log('🔍 Contact number is empty, setting to null');
+        data.contactNumber = null;
+      }
+      
+      // Check if contactNumber is in the data
+      if ('contactNumber' in data) {
+        console.log('✅ contactNumber field exists in form data');
+        console.log('🔍 contactNumber value:', data.contactNumber);
+        console.log('🔍 contactNumber type:', typeof data.contactNumber);
+        console.log('🔍 contactNumber length:', data.contactNumber?.length);
+        console.log('🔍 contactNumber matches pattern?', /^\d{10}$/.test(data.contactNumber));
+      } else {
+        console.log('❌ contactNumber field MISSING from form data');
+      }
+      
+      // Check form validation errors
+      console.log('🔍 Form validation errors:', errors);
+      console.log('🔍 contactNumber validation error:', errors.contactNumber);
       
       // Call the onSubmit prop which should handle API call and state update
       if (onSubmitProp) {
@@ -415,15 +478,32 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
  
          <label>
         Contact Number <span className="optional"></span>
-        <input type="tel" maxLength={10} {...register("contactNumber")} placeholder="10-digit number"
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v && !/^\d{10}$/.test(v)) {
-              setError('contactNumber', { type: 'pattern', message: 'Enter a valid 10-digit number' });
-            } else {
-              clearErrors('contactNumber');
+        <input 
+          type="tel" 
+          maxLength={10} 
+          className="input"
+          {...register("contactNumber", {
+            onChange: (e) => {
+              const v = e.target.value;
+              console.log('🔍 Contact number field changed to:', v);
+              console.log('🔍 Contact number length:', v.length);
+              console.log('🔍 Contact number type:', typeof v);
+              console.log('🔍 Contact number is valid?', /^\d{10}$/.test(v));
+              
+              // Only allow digits
+              const digitsOnly = v.replace(/\D/g, '');
+              if (digitsOnly !== v) {
+                e.target.value = digitsOnly;
+              }
+              
+              if (v && !/^\d{10}$/.test(v)) {
+                setError('contactNumber', { type: 'pattern', message: 'Enter a valid 10-digit number' });
+              } else {
+                clearErrors('contactNumber');
+              }
             }
-          }}
+          })} 
+          placeholder="10-digit number"
           onBlur={() => trigger('contactNumber')}
         />
       </label>
@@ -640,7 +720,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
               className="input-large"
             >
               <option value="">Select</option>
-              {Object.keys(defaultCropOptions).map((cat) => (
+              {Object.keys(finalCropOptions).map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -648,12 +728,21 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           {cropCategoryStep3 && (
             <>
               <label>Select Crop Name <span className="optional"></span></label>
-              <select {...register("currentCrop")} defaultValue="" className="input-large">
-                <option value="">Select</option>
-                {defaultCropOptions[cropCategoryStep3]?.map((crop) => (
-                  <option key={crop} value={crop}>{crop}</option>
-                ))}
-              </select>
+              {Array.isArray(finalCropOptions[cropCategoryStep3]) && finalCropOptions[cropCategoryStep3].length > 0 ? (
+                <select {...register("currentCrop")} defaultValue="" className="input-large">
+                  <option value="">Select</option>
+                  {finalCropOptions[cropCategoryStep3].map((crop) => (
+                    <option key={crop} value={crop}>{crop}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className="input-large"
+                  placeholder="Enter crop name"
+                  {...register("currentCrop")}
+                />
+              )}
             </>
           )}
           {errors.currentCrop?.message && <p className="error">{errors.currentCrop.message}</p>}
@@ -728,22 +817,31 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
                className="input-large"
                >
               <option value="">Select</option>
-              {Object.keys(defaultCropOptions).map((cat) => (
+              {Object.keys(finalCropOptions).map((cat) => (
               <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
  
               {cropCategoryStep4 && (
-              <>
-                <label>Select Crop Name <span className="optional"></span></label>
-                <select {...register("cropType")} defaultValue="" className="input-large">
-               <option value="">Select</option>
-                {defaultCropOptions[cropCategoryStep4]?.map((crop) => (
-                  <option key={crop} value={crop}>{crop}</option>
-                ))}
-               </select>
-              </>
-               )}
+                <>
+                  <label>Select Crop Name <span className="optional"></span></label>
+                  {Array.isArray(finalCropOptions[cropCategoryStep4]) && finalCropOptions[cropCategoryStep4].length > 0 ? (
+                    <select {...register("cropType")} defaultValue="" className="input-large">
+                      <option value="">Select</option>
+                      {finalCropOptions[cropCategoryStep4].map((crop) => (
+                        <option key={crop} value={crop}>{crop}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="input-large"
+                      placeholder="Enter crop name"
+                      {...register("cropType")}
+                    />
+                  )}
+                </>
+              )}
                {errors.cropType?.message && <p className="error">{errors.cropType.message}</p>}
                 </div>
  

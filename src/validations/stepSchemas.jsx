@@ -48,8 +48,15 @@ import { yupResolver } from "@hookform/resolvers/yup";
       .matches(/^\d{10}$/, "Enter a valid 10-digit alternative number"),
      contactNumber: yup
        .string()
-       .required("Contact number is required")
-       .matches(/^\d{10}$/, "Enter a valid 10-digit contact number"),
+       .notRequired()
+       .test('phone-validation', 'Enter a valid 10-digit contact number', function(value) {
+         // If no value provided, it's valid (not required)
+         if (!value || value.trim() === '') {
+           return true;
+         }
+         // If value provided, it must be exactly 10 digits
+         return /^\d{10}$/.test(value);
+       }),
      alternativeType: yup
        .string()
        .required("Relation is required")

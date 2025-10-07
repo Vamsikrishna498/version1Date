@@ -996,8 +996,8 @@ const AdminDashboard = () => {
               maxWidth: '100%',
               overflow: 'hidden'
             }}>
-              <>
-                {branding?.logoLight || branding?.logoDark ? (
+                    <>
+                      {branding?.logoLight || branding?.logoDark ? (
                   <img 
                     src={branding.logoLight || branding.logoDark} 
                     alt={branding?.name || 'Logo'} 

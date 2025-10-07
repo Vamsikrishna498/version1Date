@@ -828,7 +828,24 @@ export const farmersAPI = {
     if (!farmerDto.gender) farmerDto.gender = 'Male';
     if (!farmerDto.nationality) farmerDto.nationality = 'Indian';
     if (!farmerDto.country) farmerDto.country = 'India';
-    if (!farmerDto.contactNumber) farmerDto.contactNumber = '9999999999';
+    // Debug contact number handling
+    console.log('🔍 Contact number debug:');
+    console.log('  - Original contactNumber:', farmerDto.contactNumber);
+    console.log('  - Type:', typeof farmerDto.contactNumber);
+    console.log('  - Is falsy:', !farmerDto.contactNumber);
+    console.log('  - Length:', farmerDto.contactNumber?.length);
+    console.log('  - Trimmed:', farmerDto.contactNumber?.trim());
+    console.log('  - All farmerDto keys:', Object.keys(farmerDto));
+    console.log('  - All farmerDto values:', Object.values(farmerDto));
+    
+    // REMOVED DEFAULT VALUE LOGIC - Let backend handle empty contact numbers
+    // Only log what we're sending, don't override user input
+    console.log('🔍 Contact number being sent to backend:', farmerDto.contactNumber);
+    console.log('🔍 Contact number type:', typeof farmerDto.contactNumber);
+    console.log('🔍 Contact number is empty?', !farmerDto.contactNumber);
+    
+    // Don't set any default value - let the backend handle it
+    // If user provided a contact number, keep it; if not, send null/empty
     
     // Log the final farmerDto object for debugging
     console.log('🔍 Final farmerDto object (after cleanup):', farmerDto);
@@ -841,19 +858,37 @@ export const farmersAPI = {
     console.log('  - nationality:', farmerDto.nationality);
     console.log('  - country:', farmerDto.country);
     
-    // Ensure contact numbers match pattern (10 digits) - fix if needed
-    if (farmerDto.contactNumber) {
+    // Clean and validate contact number only if provided by user
+    if (farmerDto.contactNumber && farmerDto.contactNumber.toString().trim() !== '') {
+      console.log('🔍 Processing user-provided contact number:', farmerDto.contactNumber);
       // Remove any non-digit characters
-      farmerDto.contactNumber = farmerDto.contactNumber.toString().replace(/\D/g, '');
-      // Pad or truncate to 10 digits if needed
-      if (farmerDto.contactNumber.length !== 10) {
-        console.warn('⚠️ Contact number adjusted to 10 digits:', farmerDto.contactNumber);
-        if (farmerDto.contactNumber.length < 10) {
-          farmerDto.contactNumber = farmerDto.contactNumber.padEnd(10, '0');
-        } else {
-          farmerDto.contactNumber = farmerDto.contactNumber.substring(0, 10);
+      const cleanNumber = farmerDto.contactNumber.toString().replace(/\D/g, '');
+      console.log('🔍 Cleaned number:', cleanNumber);
+      console.log('🔍 Cleaned number length:', cleanNumber.length);
+      
+      // Only process if we have a valid number with digits
+      if (cleanNumber.length > 0) {
+        farmerDto.contactNumber = cleanNumber;
+        console.log('🔍 Set contact number to cleaned value:', farmerDto.contactNumber);
+        
+        // Pad or truncate to 10 digits if needed
+        if (farmerDto.contactNumber.length !== 10) {
+          console.warn('⚠️ Contact number adjusted to 10 digits:', farmerDto.contactNumber);
+          if (farmerDto.contactNumber.length < 10) {
+            farmerDto.contactNumber = farmerDto.contactNumber.padEnd(10, '0');
+          } else {
+            farmerDto.contactNumber = farmerDto.contactNumber.substring(0, 10);
+          }
         }
+      } else {
+        // If the cleaned number is empty, set to null (let backend handle)
+        console.log('🔍 Cleaned contact number is empty, setting to null');
+        farmerDto.contactNumber = null;
       }
+    } else {
+      // If no contact number provided, set to null
+      console.log('🔍 No contact number provided, setting to null');
+      farmerDto.contactNumber = null;
     }
     
     if (farmerDto.alternativeContactNumber) {
