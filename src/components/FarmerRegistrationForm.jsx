@@ -249,6 +249,15 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
         data.contactNumber = null;
       }
       
+      // Handle email validation to avoid unique constraint violation
+      if (data.email && data.email.trim() !== '') {
+        data.email = data.email.trim();
+        console.log('🔍 Email cleaned and set to:', data.email);
+      } else {
+        console.log('🔍 Email is empty, setting to null to avoid unique constraint violation');
+        data.email = null;
+      }
+      
       // Check if contactNumber is in the data
       if ('contactNumber' in data) {
         console.log('✅ contactNumber field exists in form data');
