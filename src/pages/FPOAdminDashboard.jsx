@@ -969,21 +969,7 @@ const FPOAdminDashboard = () => {
                 <p className="overview-description">Manage all modules and details of this FPO.</p>
                       </div>
                       <div className="header-right">
-                <ActionDropdown
-                  item={fpo}
-                  customActions={[
-                    { label: 'Dashboard', className: 'info', onClick: ()=> setFpoEmbeddedTab('overview') },
-                    { label: 'Edit FPO', className: 'primary', onClick: ()=> setShowFPOEditModal(true) },
-                    { label: 'Farm Services', className: 'primary', onClick: ()=> setShowFPOFarmServicesModal(true) },
-                    { label: 'Board Members', className: 'primary', onClick: ()=> setShowFPOBoardMembersModal(true) },
-                    { label: 'Crops', className: 'primary', onClick: ()=> setFpoEmbeddedTab('crops') },
-                    { label: 'Turnover', className: 'primary', onClick: ()=> setFpoEmbeddedTab('turnover') },
-                    { label: 'Products', className: 'primary', onClick: ()=> setFpoEmbeddedTab('products') },
-                    { label: 'Notifications', className: 'primary', onClick: ()=> setFpoEmbeddedTab('notifications') },
-                    { label: 'FPO Users', className: 'primary', onClick: ()=> setShowFPOUsersModal(true) },
-                    { label: 'Close All Modals', className: 'danger', onClick: ()=> { setShowFPOEditModal(false); setShowFPOBoardMembersModal(false); setShowFPOFarmServicesModal(false); } }
-                  ]}
-                        />
+                        {/* ActionDropdown removed to fix dual close button issue */}
                       </div>
                     </div>
 

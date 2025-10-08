@@ -2,7 +2,7 @@
 .fpo-details-view {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f8fafc;
   padding: 0;
   margin: 0;
   overflow-x: hidden;
@@ -10,23 +10,17 @@
 
 /* Header Section */
 .fpo-details-header {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
-  padding: 32px 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: #e5f3e9 !important;
+  color: #374151;
+  padding: 24px 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .fpo-details-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  pointer-events: none;
+  content: none;
 }
 
 .header-content {
@@ -45,15 +39,15 @@
   margin: 0;
   font-size: 2.5rem;
   font-weight: 700;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #374151;
+  text-shadow: none;
   margin-bottom: 8px;
 }
 
 .fpo-subtitle {
   margin: 0;
   font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
   font-weight: 500;
 }
 
@@ -63,9 +57,9 @@
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
   border-radius: 12px;
   width: 50px;
   height: 50px;
@@ -75,21 +69,21 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #e5e7eb !important;
+  border-color: #9ca3af !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Main Content */
 .fpo-details-content {
   padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 /* Info Section */
@@ -102,6 +96,7 @@
   grid-template-columns: 2fr 2fr 1fr;
   gap: 24px;
   margin-bottom: 32px;
+  width: 100%;
 }
 
 .info-card {

@@ -16,31 +16,33 @@
 }
 
 .fpo-product-category-form .form-header {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
+  background: #e5f3e9 !important;
+  color: #374151;
   padding: 32px 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .fpo-product-category-form .form-title {
   margin: 0 0 8px 0;
   font-size: 2rem;
   font-weight: 700;
-  color: white;
+  color: #374151;
 }
 
 .fpo-product-category-form .form-subtitle {
   margin: 0;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
   padding: 0;
   padding-top: 0;
 }
 
 .fpo-product-category-form .form-content {
   padding: 40px;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 .fpo-product-category-form .category-form {
@@ -52,12 +54,14 @@
 
 /* Header Section */
 .product-categories-header {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
+  background: #e5f3e9 !important;
+  background-color: #e5f3e9 !important;
+  color: #374151 !important;
   padding: 32px 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .product-categories-header::before {
@@ -67,8 +71,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  background: transparent;
   pointer-events: none;
+  z-index: 0;
 }
 
 .header-content {
@@ -87,15 +92,15 @@
   margin: 0;
   font-size: 2.5rem;
   font-weight: 700;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #374151 !important;
+  text-shadow: none;
   margin-bottom: 8px;
 }
 
 .product-categories-subtitle {
   margin: 0;
   font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280 !important;
   font-weight: 500;
 }
 
@@ -130,8 +135,9 @@
 /* Content Section */
 .product-categories-content {
   padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 /* Action Bar */
@@ -144,21 +150,21 @@
 }
 
 .create-category-btn {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 16px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
-  min-width: 180px;
-  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 16px 24px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
+  min-width: 180px !important;
+  justify-content: center !important;
 }
 
 .create-category-btn:hover {
@@ -503,15 +509,7 @@
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.25rem;
+  display: none !important;
 }
 
 .stat-info {
@@ -665,21 +663,7 @@
   padding-top: 16px;
 }
 
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.close-button:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
+/* .close-button styles removed - now using .close-btn for consistency */
 
 .form-modal-body {
   padding: 32px;

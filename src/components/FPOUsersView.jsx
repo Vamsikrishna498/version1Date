@@ -769,7 +769,7 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
             <div className="form-modal-header">
               <h3>{editingUser ? 'Edit User' : 'Add New User'}</h3>
               <button 
-                className="close-button" 
+                className="close-btn" 
                 onClick={() => {
                   setShowCreateForm(false);
                   setEditingUser(null);
@@ -910,7 +910,7 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
             <div className="form-modal-header">
               <h3>Update Password</h3>
               <button 
-                className="close-button" 
+                className="close-btn" 
                 onClick={() => {
                   setShowPasswordModal(false);
                   setPasswordUser(null);

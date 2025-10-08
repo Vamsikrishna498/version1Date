@@ -445,35 +445,45 @@
 
 /* Modal Header */
 .modal-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-  color: #ffffff !important;
+  background: #e5f3e9 !important;
+  background-color: #e5f3e9 !important;
+  color: #374151 !important;
   padding: 20px 24px !important;
   border-radius: 16px 16px 0 0 !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
+  border-bottom: 1px solid #e5e7eb !important;
 }
 
 .modal-header h2 {
   margin: 0 !important;
   font-size: 20px !important;
   font-weight: 700 !important;
+  color: #374151 !important;
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: none !important;
-  color: #ffffff !important;
-  font-size: 24px !important;
+  background: #f3f4f6 !important;
+  border: 1px solid #d1d5db !important;
+  color: #374151 !important;
+  font-size: 20px !important;
   cursor: pointer !important;
   padding: 8px 12px !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   transition: all 0.2s ease !important;
+  width: 50px !important;
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  transform: scale(1.1) !important;
+  background: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Modal Body */

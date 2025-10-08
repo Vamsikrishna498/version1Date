@@ -384,7 +384,7 @@ const FPOBoardMembersModal = ({ isOpen, onClose, fpoId, fpoName }) => {
       <div className="modal-content board-members-modal">
         <div className="modal-header">
           <h2>Board Members List</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
         <div className="modal-body">
@@ -525,7 +525,7 @@ const FPOBoardMembersModal = ({ isOpen, onClose, fpoId, fpoName }) => {
               <div className="form-modal-header">
                 <h3>{editingMember ? 'Edit Board Member' : 'Create Board Member'}</h3>
                 <button 
-                  className="close-button" 
+                  className="close-btn" 
                   onClick={() => {
                     setShowCreateForm(false);
                     setEditingMember(null);

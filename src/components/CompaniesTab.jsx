@@ -501,10 +501,10 @@ const CompaniesTab = () => {
         /* Show companies list when not creating/editing */
         <>
           <div className="tab-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, padding: '20px 0' }}>
-            <div>
+        <div>
               <div style={{ fontSize: 32, fontWeight: 700, color: '#1f2937', marginBottom: 4 }}>Companies</div>
               <div style={{ color: '#6b7280', fontSize: 14 }}>Dashboard - Companies</div>
-            </div>
+        </div>
             <button 
               onClick={openCreate}
               style={{
@@ -534,16 +534,16 @@ const CompaniesTab = () => {
               <i className="fas fa-plus" style={{ fontSize: '14px' }}></i>
               Add New Company
             </button>
-          </div>
-          {error && <div className="error-message">{error}</div>}
-          {toast && (
-            <div className={`toast ${toast.type}`} style={{ position: 'fixed', right: 16, bottom: 16, background: toast.type === 'success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '10px 14px', borderRadius: 8 }}>
-              {toast.message}
-            </div>
-          )}
+      </div>
+      {error && <div className="error-message">{error}</div>}
+      {toast && (
+        <div className={`toast ${toast.type}`} style={{ position: 'fixed', right: 16, bottom: 16, background: toast.type === 'success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '10px 14px', borderRadius: 8 }}>
+          {toast.message}
+        </div>
+      )}
 
           <div className="card" style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
-            <div className="table" role="table">
+        <div className="table" role="table">
               <div className="thead" role="row" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', 
@@ -556,16 +556,16 @@ const CompaniesTab = () => {
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                <div>Company Logo</div>
-                <div>Company Name</div>
-                <div>Company Email</div>
-                <div>Details</div>
-                <div>Subscription Plan</div>
-                <div>Status</div>
-                <div>Action</div>
-                <div>Activate</div>
-              </div>
-              {companies.length === 0 && (
+            <div>Company Logo</div>
+            <div>Company Name</div>
+            <div>Company Email</div>
+            <div>Details</div>
+            <div>Subscription Plan</div>
+            <div>Status</div>
+            <div>Action</div>
+            <div>Activate</div>
+          </div>
+          {companies.length === 0 && (
                 <div style={{ 
                   padding: '60px 24px', 
                   color: '#64748b', 
@@ -602,9 +602,9 @@ const CompaniesTab = () => {
                     e.target.style.boxShadow = 'none';
                   }}
                 >
-                  <div>
-                    <LogoCell company={c} />
-                  </div>
+              <div>
+                <LogoCell company={c} />
+              </div>
                   <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '15px' }}>{c.name}</div>
                   <div style={{ color: '#64748b', fontSize: '14px' }}>{c.email}</div>
                   <div style={{ color: '#475569', fontSize: '13px' }}>
@@ -617,8 +617,8 @@ const CompaniesTab = () => {
                     <div>
                       Total Users: <span style={{ fontWeight: '600', color: '#3b82f6' }}>{c.totalUsers || 0}</span>
                     </div>
-                  </div>
-                  <div>
+              </div>
+              <div>
                     <div style={{ marginBottom: '8px', fontWeight: '600', color: '#1e293b' }}>Trial (monthly)</div>
                     <button 
                       className="secondary" 
@@ -644,8 +644,8 @@ const CompaniesTab = () => {
                     >
                       Change
                     </button>
-                  </div>
-                  <div>
+              </div>
+              <div>
                     <span style={{ 
                       padding: '8px 16px', 
                       borderRadius: '20px', 
@@ -657,17 +657,17 @@ const CompaniesTab = () => {
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
                     }}>
-                      {c.status === 'ACTIVE' ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
+                  {c.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                </span>
+              </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button 
                       title="Edit" 
                       onClick={() => { 
-                        setSelected(c); setForm({ ...c }); setOpen(true); 
-                        // Preview this company's branding immediately across app/login
-                        try { if (c?.shortName) localStorage.setItem('tenant', (c.shortName || '').toString().trim()); } catch {}
-                        try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
+                  setSelected(c); setForm({ ...c }); setOpen(true); 
+                  // Preview this company's branding immediately across app/login
+                  try { if (c?.shortName) localStorage.setItem('tenant', (c.shortName || '').toString().trim()); } catch {}
+                  try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
                       }} 
                       style={{ 
                         padding: '10px',
@@ -693,16 +693,16 @@ const CompaniesTab = () => {
                     <button 
                       title="Delete" 
                       onClick={async () => {
-                        if (!window.confirm(`Delete company "${c.name}"? This will also delete all associated users. This action cannot be undone.`)) return;
-                        try {
-                          const response = await companiesAPI.remove(c.id);
-                          setToast({ type: 'success', message: response.message || 'Company deleted successfully' });
-                          await load();
-                        } catch (e) {
-                          const errorMessage = e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Failed to delete company';
-                          console.error('Delete company error:', e);
-                          setToast({ type: 'error', message: errorMessage });
-                        }
+                  if (!window.confirm(`Delete company "${c.name}"? This will also delete all associated users. This action cannot be undone.`)) return;
+                  try {
+                    const response = await companiesAPI.remove(c.id);
+                    setToast({ type: 'success', message: response.message || 'Company deleted successfully' });
+                    await load();
+                  } catch (e) {
+                    const errorMessage = e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Failed to delete company';
+                    console.error('Delete company error:', e);
+                    setToast({ type: 'error', message: errorMessage });
+                  }
                       }} 
                       style={{ 
                         padding: '10px',
@@ -725,9 +725,9 @@ const CompaniesTab = () => {
                     >
                       🗑
                     </button>
-                  </div>
-                  <div>
-                    {activeTenant && (activeTenant === (c?.shortName || c?.name)) ? (
+              </div>
+              <div>
+                {activeTenant && (activeTenant === (c?.shortName || c?.name)) ? (
                       <span style={{ 
                         padding: '8px 16px', 
                         borderRadius: '8px', 
@@ -768,12 +768,12 @@ const CompaniesTab = () => {
                       >
                         Set Active
                       </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
         </>
       )}
     </div>

@@ -10,12 +10,13 @@
 
 /* Header Section */
 .input-shop-header {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
+  background: #e5f3e9 !important;
+  color: #374151;
   padding: 32px 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .input-shop-header::before {
@@ -45,15 +46,15 @@
   margin: 0;
   font-size: 2.5rem;
   font-weight: 700;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #374151;
+  text-shadow: none;
   margin-bottom: 8px;
 }
 
 .input-shop-subtitle {
   margin: 0;
   font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
   font-weight: 500;
 }
 
@@ -63,9 +64,9 @@
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
   border-radius: 12px;
   width: 50px;
   height: 50px;
@@ -75,21 +76,21 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #e5e7eb;
+  border-color: #9ca3af;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Content Section */
 .input-shop-content {
   padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 /* Action Bar */
@@ -102,21 +103,21 @@
 }
 
 .create-shop-btn {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 16px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
-  min-width: 180px;
-  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 16px 24px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
+  min-width: 180px !important;
+  justify-content: center !important;
 }
 
 .create-shop-btn:hover {
@@ -454,15 +455,7 @@
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.25rem;
+  display: none !important;
 }
 
 .stat-info {
@@ -607,21 +600,7 @@
   color: #1f2937;
 }
 
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.close-button:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
+/* .close-button styles removed - now using .close-btn for consistency */
 
 .input-shop-form {
   padding: 32px;
