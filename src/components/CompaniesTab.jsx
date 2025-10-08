@@ -13,6 +13,16 @@ const CompaniesTab = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null); // { type: 'success'|'error', message: string }
+  
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const load = async () => {
     try {
@@ -271,8 +281,44 @@ const CompaniesTab = () => {
 
           {error && <div className="error-message" style={{ background: '#fef2f2', color: '#dc2626', padding: '12px 16px', borderRadius: 8, marginBottom: 20, border: '1px solid #fecaca' }}>{error}</div>}
           {toast && (
-            <div className={`toast ${toast.type}`} style={{ position: 'fixed', right: 16, bottom: 16, background: toast.type === 'success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '10px 14px', borderRadius: 8, zIndex: 1000 }}>
-              {toast.message}
+            <div className={`toast ${toast.type}`} style={{ 
+              position: 'fixed', 
+              top: 20, 
+              left: '50%', 
+              transform: 'translateX(-50%)', 
+              background: toast.type === 'success' ? '#16a34a' : '#dc2626', 
+              color: '#fff', 
+              padding: '12px 20px 12px 20px', 
+              borderRadius: 8, 
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              zIndex: 1000,
+              fontSize: '14px',
+              fontWeight: '500',
+              maxWidth: '400px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ flex: 1 }}>{toast.message}</span>
+              <button 
+                onClick={() => setToast(null)}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: '#fff', 
+                  cursor: 'pointer', 
+                  fontSize: '16px', 
+                  padding: '0', 
+                  marginLeft: '8px',
+                  opacity: 0.8,
+                  lineHeight: 1
+                }}
+                onMouseOver={(e) => e.target.style.opacity = '1'}
+                onMouseOut={(e) => e.target.style.opacity = '0.8'}
+              >
+                ×
+              </button>
             </div>
           )}
 

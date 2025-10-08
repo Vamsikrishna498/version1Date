@@ -46,8 +46,16 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
   });
 
   useEffect(() => {
+    console.log('🔄 FPOUsersView useEffect triggered');
+    console.log('📋 FPO object:', fpo);
+    console.log('📋 FPO ID:', fpo?.id);
+    console.log('📋 FPO Name:', fpo?.fpoName);
+    
     if (fpo?.id) {
+      console.log('✅ FPO ID found, calling loadUsers()');
       loadUsers();
+    } else {
+      console.warn('⚠️ No FPO ID found, skipping loadUsers()');
     }
   }, [fpo?.id]);
 
@@ -68,16 +76,56 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      console.log('Loading users for FPO ID:', fpo.id);
+      console.log('🔄 Loading users for FPO ID:', fpo.id);
       const response = await fpoUsersAPI.list(fpo.id);
-      console.log('Users response:', response);
+      console.log('📋 Users response:', response);
       
       // Handle different response formats
-      const userData = response.data || response || [];
-      console.log('Users data:', userData);
-      setUsers(Array.isArray(userData) ? userData : []);
+      let userData = [];
+      
+      if (Array.isArray(response)) {
+        // Response is already an array
+        userData = response;
+        console.log('📋 Response is array with', userData.length, 'items');
+      } else if (response && Array.isArray(response.data)) {
+        // Response has a data property that is an array
+        userData = response.data;
+        console.log('📋 Response.data is array with', userData.length, 'items');
+      } else if (response && typeof response === 'object') {
+        // Response is an object, try to extract array from common properties
+        userData = response.content || response.users || response.result || [];
+        console.log('📋 Extracted array from response object with', userData.length, 'items');
+      } else {
+        console.warn('⚠️ Unexpected response format:', typeof response, response);
+        userData = [];
+      }
+      
+      console.log('📋 Final users data:', userData);
+      console.log('📋 Users data type:', typeof userData);
+      console.log('📋 Is array:', Array.isArray(userData));
+      
+      if (Array.isArray(userData)) {
+        console.log('✅ Setting users array with', userData.length, 'users');
+        setUsers(userData);
+      } else {
+        console.warn('⚠️ Expected array but got:', typeof userData, userData);
+        setUsers([]);
+      }
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('❌ Error loading users:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error headers:', error.response?.headers);
+      
+      // Show user-friendly error message
+      if (error.response?.status === 403) {
+        console.error('❌ Authentication/Authorization error - user may not have permission');
+      } else if (error.response?.status === 404) {
+        console.error('❌ FPO not found - check FPO ID');
+      } else if (error.response?.status === 500) {
+        console.error('❌ Server error - check backend logs');
+      }
+      
       setUsers([]);
     } finally {
       setLoading(false);
@@ -137,17 +185,19 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
     }
     
     try {
-      console.log('Creating user with data:', formData);
+      console.log('🔄 Creating user with data:', formData);
       
       // Use appropriate API method based on user role
       if (userRole === 'EMPLOYEE') {
+        console.log('📝 Using employee-specific endpoint');
         await fpoUsersAPI.createEmployee(fpo.id, formData);
       } else {
+        console.log('📝 Using regular admin endpoint');
         // For admins and super admins, use the regular create method
         await fpoUsersAPI.create(fpo.id, formData);
       }
       
-      console.log('User created successfully');
+      console.log('✅ User created successfully');
       
       setShowCreateForm(false);
       setFormData({
@@ -162,12 +212,14 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
       
       // Add a small delay to ensure backend processing
       setTimeout(() => {
+        console.log('🔄 Reloading users after creation...');
         loadUsers();
       }, 500);
       
       onToast && onToast('success', 'User created successfully!');
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('❌ Error creating user:', error);
+      console.error('❌ Error response:', error.response?.data);
       let errorMessage = 'Failed to create user. Please try again.';
       
       if (error.response?.data?.message) {
@@ -203,8 +255,9 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
     }
     
     try {
-      console.log('Updating user:', editingUser.id, 'with data:', formData);
-      await fpoUsersAPI.update(fpo.id, editingUser.id, formData);
+      console.log('🔄 Updating user:', editingUser.id, 'with data:', formData);
+      const result = await fpoUsersAPI.update(fpo.id, editingUser.id, formData);
+      console.log('✅ User update result:', result);
       
       setShowCreateForm(false);
       setEditingUser(null);
@@ -219,27 +272,31 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
       setFormErrors({});
       
       onToast && onToast('success', 'User updated successfully!');
-      loadUsers();
+      await loadUsers(); // Reload users after update
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('❌ Error updating user:', error);
+      console.error('❌ Error response:', error.response?.data);
       onToast && onToast('error', 'Error updating user: ' + (error.response?.data?.message || error.message));
     }
   };
 
   const handleToggleActive = async (user) => {
     try {
+      console.log('🔄 Toggling user status for:', user.id, 'from', user.status);
+      
       // Optimistic update
       setUsers(prev => prev.map(u => 
         u.id === user.id ? { ...u, status: (u.status === 'APPROVED' ? 'REJECTED' : 'APPROVED') } : u
       ));
       
       await fpoUsersAPI.toggleActive(fpo.id, user.id, !(user.status === 'APPROVED'));
-      console.log('User status toggled successfully');
+      console.log('✅ User status toggled successfully');
     } catch (error) {
-      console.error('Error toggling user status:', error);
+      console.error('❌ Error toggling user status:', error);
+      console.error('❌ Error response:', error.response?.data);
       onToast && onToast('error', 'Error updating status: ' + (error.response?.data?.message || error.message));
       // Revert optimistic update
-      loadUsers();
+      await loadUsers();
     }
   };
 
@@ -492,25 +549,39 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
       <div className="users-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-user-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingUser(null);
-              setFormData({
-                email: '',
-                phoneNumber: '',
-                firstName: '',
-                lastName: '',
-                role: '',
-                password: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-user-plus"></i>
-            Add User
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-user-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingUser(null);
+                setFormData({
+                  email: '',
+                  phoneNumber: '',
+                  firstName: '',
+                  lastName: '',
+                  role: '',
+                  password: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-user-plus"></i>
+              Add User
+            </button>
+            
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadUsers();
+              }}
+              title="Refresh users list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

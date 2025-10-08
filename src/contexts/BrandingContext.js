@@ -72,17 +72,46 @@ export const BrandingProvider = ({ children }) => {
         }
         }
         const absolutize = (url) => {
-          if (!url) return url;
+          if (!url) {
+            console.log('🔗 absolutize: null/undefined URL');
+            return url;
+          }
+          console.log('🔗 absolutize: processing URL:', url);
         // Already absolute
-          if (url.startsWith('http://') || url.startsWith('https://')) return url;
+          if (url.startsWith('http://') || url.startsWith('https://')) {
+            console.log('🔗 absolutize: already absolute, returning:', url);
+            return url;
+          }
         // Common backend public paths
-        if (url.startsWith('/api/public/')) return apiOrigin + url;
-        if (url.startsWith('/uploads/')) return `${apiOrigin}/api/public${url}`;
-        if (url.startsWith('uploads/')) return `${apiOrigin}/api/public/${url}`;
-        if (url.startsWith('/company-logos/')) return `${apiOrigin}/api/public${url}`;
-        if (url.startsWith('company-logos/')) return `${apiOrigin}/api/public/${url}`;
+        if (url.startsWith('/api/public/')) {
+          const result = apiOrigin + url;
+          console.log('🔗 absolutize: /api/public/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('/uploads/')) {
+          const result = `${apiOrigin}/api/public${url}`;
+          console.log('🔗 absolutize: /uploads/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('uploads/')) {
+          const result = `${apiOrigin}/api/public/${url}`;
+          console.log('🔗 absolutize: uploads/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('/company-logos/')) {
+          const result = `${apiOrigin}/api/public${url}`;
+          console.log('🔗 absolutize: /company-logos/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('company-logos/')) {
+          const result = `${apiOrigin}/api/public/${url}`;
+          console.log('🔗 absolutize: company-logos/ pattern, returning:', result);
+          return result;
+        }
         // Fallback: treat as relative upload path
-        return `${apiOrigin}/api/public/${url.replace(/^\//, '')}`;
+        const result = `${apiOrigin}/api/public/${url.replace(/^\//, '')}`;
+        console.log('🔗 absolutize: fallback pattern, returning:', result);
+        return result;
       };
       const addCacheBust = (u) => (u ? `${u}${u.includes('?') ? '&' : '?'}v=${Date.now()}` : u);
       const normalized = {
