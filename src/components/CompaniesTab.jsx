@@ -1234,8 +1234,8 @@ const CompaniesTab = () => {
               </div>
             </div>
           ))}
-          </div>
         </div>
+      </div>
         </div>
       )}
     </div>

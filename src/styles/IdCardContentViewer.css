@@ -14,15 +14,16 @@
 
 /* Header Section */
 .id-card-header {
-  background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-  color: white;
+  background: #e5f3e9 !important;
+  color: #374151;
   padding: 28px 36px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 8px 32px rgba(21, 128, 61, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .id-card-header::before {
@@ -45,8 +46,8 @@
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: white;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  color: #374151;
+  text-shadow: none;
   position: relative;
   z-index: 1;
   letter-spacing: -0.5px;

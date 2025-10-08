@@ -1,7 +1,7 @@
 /* Registration Form Container */
 .reg-main-content {
   min-height: 100vh;
-  background: #15803d;
+  background: #e5f3e9 !important;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
 }
@@ -9,8 +9,8 @@
 /* Left Info Panel */
 .info-panel {
   flex: 1;
-  background: #15803d;
-  color: white;
+  background: #e5f3e9 !important;
+  color: #374151;
   padding: 60px 40px;
   display: flex;
   flex-direction: column;
@@ -149,7 +149,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
-  background: #15803d;
+  background: #e5f3e9 !important;
   position: relative;
   overflow: hidden;
 }

@@ -605,7 +605,7 @@ const FPOInputShopView = ({ fpo, onClose, onToast }) => {
             <div className="form-modal-header">
               <h3>{editingShop ? 'Edit Input Shop' : 'Add New Input Shop'}</h3>
               <button 
-                className="close-button" 
+                className="close-btn" 
                 onClick={() => {
                   setShowCreateForm(false);
                   setEditingShop(null);

@@ -818,7 +818,7 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
             <div className="form-modal-header">
               <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
               <button 
-                className="close-button" 
+                className="close-btn" 
                 onClick={() => {
                   setShowCreateForm(false);
                   setEditingProduct(null);
