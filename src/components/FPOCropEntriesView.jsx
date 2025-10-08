@@ -50,6 +50,20 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
       // Handle different response formats
       const cropData = response.data || response || [];
       console.log('Crop entries data:', cropData);
+      console.log('First crop entry sample:', cropData[0]);
+      
+      // Debug each crop entry's sowing date
+      if (Array.isArray(cropData)) {
+        cropData.forEach((entry, index) => {
+          console.log(`🔍 Crop entry ${index + 1}:`, {
+            id: entry.id,
+            cropName: entry.cropName,
+            sowingDate: entry.sowingDate,
+            calculatedYear: entry.sowingDate ? new Date(entry.sowingDate).getFullYear() : null
+          });
+        });
+      }
+      
       setCropEntries(Array.isArray(cropData) ? cropData : []);
     } catch (error) {
       console.error('Error loading crop entries:', error);
@@ -94,6 +108,10 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
     }
     
     try {
+      // Convert crop year to sowing date (use June 1st of the selected year)
+      const cropYear = parseInt(formData.cropYear);
+      const sowingDate = new Date(cropYear, 5, 1); // June 1st (month is 0-indexed)
+      
       // Map frontend form data to backend DTO format
       const cropData = {
         farmerId: null,
@@ -101,9 +119,10 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
         variety: 'Default Variety', // Default value
         area: parseFloat(formData.area) || 0,
         season: 'KHARIF', // Default season
-        sowingDate: new Date().toISOString().split('T')[0], // Today's date
+        sowingDate: sowingDate.toISOString().split('T')[0], // Convert crop year to sowing date
         expectedHarvestDate: null,
         expectedYield: parseFloat(formData.production) || 0, // Map production to expectedYield
+        actualYield: parseFloat(formData.production) || 0, // Also set actualYield for production display
         marketPrice: null,
         soilType: null,
         irrigationMethod: null,
@@ -145,7 +164,7 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
       cropYear: cropEntry.sowingDate ? new Date(cropEntry.sowingDate).getFullYear().toString() : '',
       cropName: cropEntry.cropName || '',
       area: cropEntry.area?.toString() || '',
-      production: cropEntry.expectedYield?.toString() || ''
+      production: (cropEntry.actualYield || cropEntry.expectedYield)?.toString() || ''
     });
     setFormErrors({});
     setShowCreateForm(true);
@@ -159,15 +178,20 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
     }
     
     try {
+      // Convert crop year to sowing date (use June 1st of the selected year)
+      const cropYear = parseInt(formData.cropYear);
+      const sowingDate = new Date(cropYear, 5, 1); // June 1st (month is 0-indexed)
+      
       const cropData = {
         farmerId: null,
         cropName: formData.cropName,
         variety: 'Default Variety', // Default value
         area: parseFloat(formData.area) || 0,
         season: 'KHARIF', // Default season
-        sowingDate: new Date().toISOString().split('T')[0], // Today's date
+        sowingDate: sowingDate.toISOString().split('T')[0], // Convert crop year to sowing date
         expectedHarvestDate: null,
         expectedYield: parseFloat(formData.production) || 0, // Map production to expectedYield
+        actualYield: parseFloat(formData.production) || 0, // Also set actualYield for production display
         marketPrice: null,
         soilType: null,
         irrigationMethod: null,
@@ -516,7 +540,43 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
                     <tr key={cropEntry.id || index} className="crop-entry-row">
                       <td className="crop-entry-id">{cropEntry.id || `C${index + 1}`}</td>
                       <td className="crop-entry-year">
-                        {cropEntry.sowingDate ? `${new Date(cropEntry.sowingDate).getFullYear()}-${new Date(cropEntry.sowingDate).getFullYear() + 1}` : '-'}
+                        {(() => {
+                          // Try to get year from sowingDate
+                          if (cropEntry.sowingDate) {
+                            try {
+                              const year = new Date(cropEntry.sowingDate).getFullYear();
+                              console.log('🔍 Displaying crop year for entry', cropEntry.id, ':', `${year}-${year + 1}`);
+                              return `${year}-${year + 1}`;
+                            } catch (e) {
+                              console.error('Error parsing sowing date:', cropEntry.sowingDate, e);
+                            }
+                          }
+                          
+                          // Fallback: try to extract year from other date fields
+                          const dateFields = [
+                            cropEntry.expectedHarvestDate,
+                            cropEntry.actualHarvestDate,
+                            cropEntry.createdAt,
+                            cropEntry.updatedAt
+                          ];
+                          
+                          for (const dateField of dateFields) {
+                            if (dateField) {
+                              try {
+                                const year = new Date(dateField).getFullYear();
+                                console.log('🔍 Using fallback date for entry', cropEntry.id, ':', `${year}-${year + 1}`);
+                                return `${year}-${year + 1}`;
+                              } catch (e) {
+                                continue;
+                              }
+                            }
+                          }
+                          
+                          // Final fallback: use current year
+                          const currentYear = new Date().getFullYear();
+                          console.log('🔍 Using current year for entry', cropEntry.id, ':', `${currentYear}-${currentYear + 1}`);
+                          return `${currentYear}-${currentYear + 1}`;
+                        })()}
                       </td>
                       <td className="crop-entry-name">
                         <span className="crop-name-display">
@@ -530,7 +590,7 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
                       </td>
                       <td className="crop-entry-production">
                         <span className="production-display">
-                          {formatNumber(cropEntry.expectedYield)} MT
+                          {formatNumber(cropEntry.actualYield || cropEntry.expectedYield || 0)} MT
                         </span>
                       </td>
                       <td className="crop-entry-actions">

@@ -414,12 +414,6 @@ const SuperAdminDashboard = () => {
   });
   
   
-  const [fpoFilters, setFpoFilters] = useState({
-    state: '',
-    district: '',
-    status: '',
-    registrationType: ''
-  });
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   // Selected farmer ids for bulk delete
   const [selectedFarmerIds, setSelectedFarmerIds] = useState([]);
@@ -643,17 +637,6 @@ const SuperAdminDashboard = () => {
   };
 
 
-  const getFilteredFPOs = () => {
-    const list = Array.isArray(fpos) ? fpos : [];
-    return list.filter(fpo => {
-      const matchesState = !fpoFilters.state || fpo.state === fpoFilters.state;
-      const matchesDistrict = !fpoFilters.district || fpo.district === fpoFilters.district;
-      const matchesStatus = !fpoFilters.status || fpo.status === fpoFilters.status;
-      const matchesRegistrationType = !fpoFilters.registrationType || fpo.registrationType === fpoFilters.registrationType;
-      
-      return matchesState && matchesDistrict && matchesStatus && matchesRegistrationType;
-    });
-  };
 
   const getFilteredRegistrations = () => {
     console.log('All registrations:', registrations);
@@ -2879,95 +2862,10 @@ const SuperAdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* FPO Filters */}
-                      <div className="filters-section">
-                        <div className="filter-group">
-                          <label className="filter-label">State</label>
-                          <select 
-                            value={fpoFilters.state} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, state: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All States</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Andhrapradesh">Andhrapradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">District</label>
-                          <select 
-                            value={fpoFilters.district} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, district: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Districts</option>
-                            <option value="Karimnagar">Karimnagar</option>
-                            <option value="rangareddy">Rangareddy</option>
-                            <option value="kadapa">Kadapa</option>
-                            <option value="Kadapa">Kadapa</option>
-                            <option value="kadpaa">Kadpaa</option>
-                            <option value="Kuppam">Kuppam</option>
-                            <option value="Pune">Pune</option>
-                            <option value="Ahmedabad">Ahmedabad</option>
-                            <option value="Amritsar">Amritsar</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Chennai">Chennai</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">Status</label>
-                          <select 
-                            value={fpoFilters.status} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, status: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Status</option>
-                            <option value="ACTIVE">Active</option>
-                            <option value="INACTIVE">Inactive</option>
-                            <option value="PENDING">Pending</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">Registration Type</label>
-                          <select 
-                            value={fpoFilters.registrationType} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, registrationType: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Types</option>
-                            <option value="Company">Company</option>
-                            <option value="Cooperative">Cooperative</option>
-                            <option value="Society">Society</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-actions">
-                          <button 
-                            className="filter-btn-clear"
-                            onClick={() => setFpoFilters({
-                              state: '',
-                              district: '',
-                              status: '',
-                              registrationType: ''
-                            })}
-                          >
-                            <i className="fas fa-times"></i>
-                            Clear Filters
-                          </button>
-                        </div>
-                      </div>
 
                       <div className="table-scroll-wrapper">
                         <DataTable
-                          data={getFilteredFPOs()}
+                          data={fpos}
                           columns={[
                             { key: 'fpoId', label: 'Id' },
                             { key: 'fpoName', label: 'FPO name' },

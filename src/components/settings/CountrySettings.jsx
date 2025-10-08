@@ -12,6 +12,7 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
   
   // Form states
   const [showForm, setShowForm] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null); // Track which item is being edited
   
   // Address form state
   const [addressFormData, setAddressFormData] = useState({
@@ -86,19 +87,10 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
       let updatedData;
       
       // Check if we're editing an existing item
-      const editingItem = addressData.find(item => 
-        item.country === addressFormData.country && 
-        item.state === addressFormData.state && 
-        item.district === addressFormData.district &&
-        item.block === addressFormData.block &&
-        item.village === addressFormData.village &&
-        item.zipcode === addressFormData.zipcode
-      );
-
-      if (editingItem) {
+      if (editingItemId) {
         // Update existing item
         updatedData = addressData.map(item => 
-          item.id === editingItem.id 
+          item.id === editingItemId 
             ? {
                 ...item,
                 country: addressFormData.country,
@@ -111,16 +103,16 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
               }
             : item
         );
-        console.log('Address data updated:', editingItem.id);
+        console.log('Address data updated:', editingItemId);
       } else {
         // Create new address entry with ID
         const newAddressEntry = {
           id: Date.now(), // Simple ID generation
-        country: addressFormData.country,
-        state: addressFormData.state,
-        district: addressFormData.district,
-        block: addressFormData.block,
-        village: addressFormData.village,
+          country: addressFormData.country,
+          state: addressFormData.state,
+          district: addressFormData.district,
+          block: addressFormData.block,
+          village: addressFormData.village,
           zipcode: addressFormData.zipcode,
           createdAt: new Date().toISOString()
         };
@@ -135,14 +127,17 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
       localStorage.setItem('countrySettingsData', JSON.stringify(updatedData));
       
       // Reset form
-        setAddressFormData({
-          country: '',
-          state: '',
-          district: '',
-          block: '',
-          village: '',
-          zipcode: ''
-        });
+      setAddressFormData({
+        country: '',
+        state: '',
+        district: '',
+        block: '',
+        village: '',
+        zipcode: ''
+      });
+      
+      // Clear editing state
+      setEditingItemId(null);
       
       // Hide form
       setShowForm(false);
@@ -165,6 +160,7 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
       village: '',
       zipcode: ''
     });
+    setEditingItemId(null);
     setShowForm(false);
   };
 
@@ -194,7 +190,10 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
           <p>{sections.find(s => s.id === activeSection)?.description}</p>
           <button 
             className="add-button"
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingItemId(null);
+              setShowForm(true);
+            }}
           >
             ➕ Add Country Settings
           </button>
@@ -289,7 +288,7 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
                 onClick={handleSaveAddressData}
                 disabled={loading}
               >
-                {loading ? 'Saving...' : 'Save'}
+                {loading ? 'Saving...' : (editingItemId ? 'Update' : 'Save')}
               </button>
             </div>
           </div>
@@ -323,6 +322,7 @@ const CountrySettings = ({ isSuperAdmin, isAdmin }) => {
                       <button 
                         className="edit-btn"
                         onClick={() => {
+                          setEditingItemId(item.id);
                           setAddressFormData({
                             country: item.country,
                             state: item.state,
