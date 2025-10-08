@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { companiesAPI } from '../api/apiService';
+import { companiesAPI, authAPI } from '../api/apiService';
 import { buildCompanyLogoCandidates } from '../contexts/BrandingContext';
 
 const initial = { name: '', shortName: '', email: '', phone: '', defaultTimezone: 'Asia/Kolkata', status: 'ACTIVE' };
@@ -13,6 +13,145 @@ const CompaniesTab = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null); // { type: 'success'|'error', message: string }
+  const [validationErrors, setValidationErrors] = useState({});
+  
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+  };
+
+  const validateShortName = (shortName) => {
+    const shortNameRegex = /^[a-zA-Z0-9_-]{2,20}$/;
+    return shortNameRegex.test(shortName);
+  };
+
+  const validateField = (fieldName, value) => {
+    const errors = { ...validationErrors };
+    
+    switch (fieldName) {
+      case 'name':
+        if (!value || value.trim().length === 0) {
+          errors.name = 'Company name is required';
+        } else if (value.trim().length < 2) {
+          errors.name = 'Company name must be at least 2 characters';
+        } else if (value.trim().length > 100) {
+          errors.name = 'Company name must be less than 100 characters';
+        } else {
+          delete errors.name;
+        }
+        break;
+        
+      case 'shortName':
+        if (!value || value.trim().length === 0) {
+          errors.shortName = 'Company short name is required';
+        } else if (!validateShortName(value.trim())) {
+          errors.shortName = 'Short name must be 2-20 characters, letters, numbers, hyphens, and underscores only';
+        } else {
+          delete errors.shortName;
+        }
+        break;
+        
+      case 'email':
+        if (!value || value.trim().length === 0) {
+          errors.email = 'Company email is required';
+        } else if (!validateEmail(value.trim())) {
+          errors.email = 'Please enter a valid email address';
+        } else {
+          delete errors.email;
+        }
+        break;
+        
+      case 'phone':
+        if (!value || value.trim().length === 0) {
+          errors.phone = 'Company phone is required';
+        } else if (!validatePhone(value.trim())) {
+          errors.phone = 'Please enter a valid phone number';
+        } else {
+          delete errors.phone;
+        }
+        break;
+        
+      case 'adminEmail':
+        if (!value || value.trim().length === 0) {
+          errors.adminEmail = 'Admin email is required';
+        } else if (!validateEmail(value.trim())) {
+          errors.adminEmail = 'Please enter a valid admin email address';
+        } else {
+          delete errors.adminEmail;
+        }
+        break;
+        
+      case 'adminPassword':
+        if (!value || value.trim().length === 0) {
+          errors.adminPassword = 'Admin password is required';
+        } else if (value.trim().length < 6) {
+          errors.adminPassword = 'Admin password must be at least 6 characters';
+        } else if (value.trim().length > 50) {
+          errors.adminPassword = 'Admin password must be less than 50 characters';
+        } else {
+          delete errors.adminPassword;
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateForm = async () => {
+    const fieldsToValidate = ['name', 'shortName', 'email', 'phone', 'adminEmail', 'adminPassword'];
+    let isValid = true;
+    
+    fieldsToValidate.forEach(field => {
+      const fieldValid = validateField(field, field === 'adminEmail' ? admin.email : field === 'adminPassword' ? admin.password : form[field]);
+      if (!fieldValid) isValid = false;
+    });
+    
+    // Check for duplicates against existing companies
+    if (isValid) {
+      const duplicateName = companies.find(c => c.name.toLowerCase() === form.name.toLowerCase() && (!selected || c.id !== selected.id));
+      const duplicateShortName = companies.find(c => c.shortName.toLowerCase() === form.shortName.toLowerCase() && (!selected || c.id !== selected.id));
+      const duplicateEmail = companies.find(c => c.email.toLowerCase() === form.email.toLowerCase() && (!selected || c.id !== selected.id));
+      
+      if (duplicateName) {
+        setValidationErrors(prev => ({ ...prev, name: 'Company name already exists. Please choose a different name.' }));
+        isValid = false;
+      }
+      if (duplicateShortName) {
+        setValidationErrors(prev => ({ ...prev, shortName: 'Company short name already exists. Please choose a different short name.' }));
+        isValid = false;
+      }
+      if (duplicateEmail) {
+        setValidationErrors(prev => ({ ...prev, email: 'Company email already exists. Please choose a different email.' }));
+        isValid = false;
+      }
+
+      // Check for admin email duplicates if provided
+      if (admin.email && admin.email.trim()) {
+        try {
+          const emailCheck = await authAPI.checkEmailAvailability(admin.email);
+          if (!emailCheck.available) {
+            setValidationErrors(prev => ({ ...prev, adminEmail: 'Admin email already exists. Please choose a different email.' }));
+            isValid = false;
+          }
+        } catch (error) {
+          console.warn('Could not check admin email availability:', error);
+          // Continue with validation even if email check fails
+        }
+      }
+    }
+    
+    return isValid;
+  };
   
   // Auto-dismiss toast after 3 seconds
   useEffect(() => {
@@ -65,18 +204,22 @@ const CompaniesTab = () => {
   const handleSave = async () => {
     setError('');
     setLoading(true);
+    
     try {
-      // Basic required validation
-      if (!form.name || !form.shortName || !form.email || !form.phone) {
-        setError('Please fill in all required fields.');
+      // Validate all fields
+      const isFormValid = await validateForm();
+      if (!isFormValid) {
+        setError('Please fix all validation errors before saving.');
         setLoading(false);
         return;
       }
+      
       const payload = { ...form, adminEmail: admin.email, adminPassword: admin.password };
       let saved;
       if (selected?.id) saved = await companiesAPI.update(selected.id, payload);
       else saved = await companiesAPI.create(payload);
       setSelected(saved);
+      
       // Upload logos if provided
       if ((files.dark || files.light || files.smallDark || files.smallLight) && saved?.id) {
         try { 
@@ -85,16 +228,44 @@ const CompaniesTab = () => {
           try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
         } catch {}
       }
+      
       // Persist active tenant for immediate branding on login page and dashboards
       try { if (saved?.shortName) localStorage.setItem('tenant', (saved.shortName || '').toString().trim()); } catch {}
       await load();
       try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
-      setToast({ type: 'success', message: selected?.id ? 'Company updated' : 'Company created' });
+      
+      // Clear validation errors on success
+      setValidationErrors({});
+      setToast({ type: 'success', message: selected?.id ? 'Company updated successfully' : 'Company created successfully' });
       setOpen(false);
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || 'Save failed';
-      setError(msg);
-      setToast({ type: 'error', message: msg });
+      // Handle specific validation errors from backend
+      let errorMessage = 'Save failed';
+      
+      if (e?.response?.data?.error) {
+        // Backend validation error (e.g., duplicate company name)
+        errorMessage = e.response.data.error;
+        
+        // Parse the error message to show field-specific validation
+        if (errorMessage.includes('Company name') && errorMessage.includes('already exists')) {
+          setValidationErrors(prev => ({ ...prev, name: 'Company name already exists. Please choose a different name.' }));
+        } else if (errorMessage.includes('Company short name') && errorMessage.includes('already exists')) {
+          setValidationErrors(prev => ({ ...prev, shortName: 'Company short name already exists. Please choose a different short name.' }));
+        } else if (errorMessage.includes('Company email') && errorMessage.includes('already exists')) {
+          setValidationErrors(prev => ({ ...prev, email: 'Company email already exists. Please choose a different email.' }));
+        } else if (errorMessage.includes('Admin email') && errorMessage.includes('already exists')) {
+          setValidationErrors(prev => ({ ...prev, adminEmail: 'Admin email already exists. Please choose a different email.' }));
+        } else if (errorMessage.includes('Admin phone number') && errorMessage.includes('already exists')) {
+          setValidationErrors(prev => ({ ...prev, phone: 'Admin phone number already exists. Please choose a different phone number.' }));
+        }
+      } else if (e?.response?.data?.message) {
+        errorMessage = e.response.data.message;
+      } else if (e?.message) {
+        errorMessage = e.message;
+      }
+      
+      setError(errorMessage);
+      setToast({ type: 'error', message: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -118,7 +289,24 @@ const CompaniesTab = () => {
   const [tab, setTab] = useState('basic');
   const [admin, setAdmin] = useState({ email: '', password: '' });
 
-  const openCreate = () => { setSelected(null); setForm(initial); setFiles({}); setOpen(true); };
+  const openCreate = () => { 
+    setSelected(null); 
+    setForm(initial); 
+    setFiles({}); 
+    setValidationErrors({});
+    setOpen(true); 
+  };
+
+  const closeModal = () => {
+    console.log('Closing modal');
+    setOpen(false);
+    setSelected(null);
+    setForm(initial);
+    setFiles({});
+    setAdmin({ email: '', password: '' });
+    setTab('basic');
+    setValidationErrors({});
+  };
 
   const apiBase = (process.env.REACT_APP_API_URL || 'http://localhost:8080/api');
   const apiOrigin = apiBase.replace(/\/?api\/?$/, '');
@@ -138,7 +326,7 @@ const CompaniesTab = () => {
     const [idx, setIdx] = useState(0);
     const [hasError, setHasError] = useState(false);
     
-    // Debug logging
+    // Enhanced debug logging for staging environment
     console.log('LogoCell Debug:', {
       company: company?.name,
       companyId: company?.id,
@@ -146,12 +334,15 @@ const CompaniesTab = () => {
       logoDark: company?.logoDark,
       logoSmallLight: company?.logoSmallLight,
       logoSmallDark: company?.logoSmallDark,
+      apiOrigin: apiOrigin,
       candidates: candidates,
-      candidatesLength: candidates.length
+      candidatesLength: candidates.length,
+      environment: process.env.NODE_ENV,
+      apiBase: apiBase
     });
     
-    // If no candidates or all failed to load, show a placeholder
-    if (candidates.length === 0 || (hasError && idx >= candidates.length - 1)) {
+    // Enhanced fallback mechanism for staging
+    const fallbackLogo = () => {
       return (
         <div style={{ 
           height: 40, 
@@ -169,6 +360,11 @@ const CompaniesTab = () => {
           {company?.name ? company.name.charAt(0).toUpperCase() : '🏢'}
         </div>
       );
+    };
+    
+    // If no candidates or all failed to load, show a placeholder
+    if (candidates.length === 0 || (hasError && idx >= candidates.length - 1)) {
+      return fallbackLogo();
     }
     
     return (
@@ -186,9 +382,11 @@ const CompaniesTab = () => {
         }}
         onError={(e) => {
           console.log('Logo load error for company:', company?.name, 'candidate:', candidates[idx], 'error:', e);
+          console.log('Trying next candidate...');
           if (idx < candidates.length - 1) {
             setIdx(idx + 1);
           } else {
+            console.log('All logo candidates failed, showing fallback');
             setHasError(true);
           }
         }}
@@ -264,18 +462,70 @@ const CompaniesTab = () => {
               <div style={{ color: '#6b7280' }}>Dashboard - Companies - {selected?.id ? 'Edit' : 'Add New'}</div>
             </div>
             <button 
-              className="secondary" 
-              onClick={() => {
+              type="button"
+              data-testid="back-to-companies-button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Back to Companies button clicked');
+                console.log('Current open state:', open);
+                
+                // Reset all state with callbacks to ensure proper updates
                 setOpen(false);
                 setSelected(null);
                 setForm(initial);
                 setFiles({});
                 setAdmin({ email: '', password: '' });
                 setTab('basic');
+                setValidationErrors({});
+                
+                // Force a re-render by updating a dummy state
+                setTimeout(() => {
+                  console.log('Modal should be closed now');
+                }, 0);
               }}
-              style={{ padding: '10px 16px', border: '1px solid #d1d5db', background: '#fff', borderRadius: 8 }}
+              style={{ 
+                padding: '12px 20px', 
+                border: '1px solid #d1d5db', 
+                background: '#fff', 
+                borderRadius: 8,
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                zIndex: 1000,
+                position: 'relative',
+                pointerEvents: 'auto',
+                userSelect: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#f9fafb';
+                e.target.style.borderColor = '#9ca3af';
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#fff';
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.target.click();
+                }
+              }}
+              aria-label="Back to Companies list"
+              title="Back to Companies list"
             >
-              <i className="fas fa-arrow-left"></i> Back to Companies
+              <i className="fas fa-arrow-left" style={{ fontSize: '12px' }}></i> 
+              Back to Companies
             </button>
           </div>
 
@@ -368,10 +618,49 @@ const CompaniesTab = () => {
                       <input 
                         placeholder="Please Enter Company Name" 
                         value={form.name} 
-                        onChange={e => setForm({ ...form, name: e.target.value })} 
+                        onChange={e => {
+                          setForm({ ...form, name: e.target.value });
+                          validateField('name', e.target.value);
+                          // Clear duplicate error if user changes the name
+                          if (validationErrors.name && validationErrors.name.includes('already exists')) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors.name;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onBlur={e => {
+                          validateField('name', e.target.value);
+                          // Check for duplicates on blur
+                          const duplicateName = companies.find(c => c.name.toLowerCase() === e.target.value.toLowerCase() && (!selected || c.id !== selected.id));
+                          if (duplicateName) {
+                            setValidationErrors(prev => ({ ...prev, name: 'Company name already exists. Please choose a different name.' }));
+                          }
+                        }}
                         className="input" 
-                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }} 
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px 16px', 
+                          border: `1px solid ${validationErrors.name ? '#ef4444' : '#d1d5db'}`, 
+                          borderRadius: 8, 
+                          fontSize: 14,
+                          backgroundColor: validationErrors.name ? '#fef2f2' : '#fff'
+                        }} 
                       />
+                      {validationErrors.name && (
+                        <div style={{ 
+                          color: '#ef4444', 
+                          fontSize: '12px', 
+                          marginTop: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <span>⚠️</span>
+                          {validationErrors.name}
+                        </div>
+                      )}
                     </div>
                     <div className="field">
                       <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
@@ -380,34 +669,138 @@ const CompaniesTab = () => {
                       <input 
                         placeholder="Please Enter Company Short Name" 
                         value={form.shortName} 
-                        onChange={e => setForm({ ...form, shortName: e.target.value })} 
+                        onChange={e => {
+                          setForm({ ...form, shortName: e.target.value });
+                          validateField('shortName', e.target.value);
+                          // Clear duplicate error if user changes the short name
+                          if (validationErrors.shortName && validationErrors.shortName.includes('already exists')) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors.shortName;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onBlur={e => {
+                          validateField('shortName', e.target.value);
+                          // Check for duplicates on blur
+                          const duplicateShortName = companies.find(c => c.shortName.toLowerCase() === e.target.value.toLowerCase() && (!selected || c.id !== selected.id));
+                          if (duplicateShortName) {
+                            setValidationErrors(prev => ({ ...prev, shortName: 'Company short name already exists. Please choose a different short name.' }));
+                          }
+                        }}
                         className="input" 
-                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }} 
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px 16px', 
+                          border: `1px solid ${validationErrors.shortName ? '#ef4444' : '#d1d5db'}`, 
+                          borderRadius: 8, 
+                          fontSize: 14,
+                          backgroundColor: validationErrors.shortName ? '#fef2f2' : '#fff'
+                        }} 
                       />
+                      {validationErrors.shortName && (
+                        <div style={{ 
+                          color: '#ef4444', 
+                          fontSize: '12px', 
+                          marginTop: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <span>⚠️</span>
+                          {validationErrors.shortName}
+                        </div>
+                      )}
                     </div>
                     <div className="field">
                       <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
                         Company Email<span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input 
+                        type="email"
                         placeholder="Please Enter Company Email" 
                         value={form.email} 
-                        onChange={e => setForm({ ...form, email: e.target.value })} 
+                        onChange={e => {
+                          setForm({ ...form, email: e.target.value });
+                          validateField('email', e.target.value);
+                          // Clear duplicate error if user changes the email
+                          if (validationErrors.email && validationErrors.email.includes('already exists')) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors.email;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onBlur={e => {
+                          validateField('email', e.target.value);
+                          // Check for duplicates on blur
+                          const duplicateEmail = companies.find(c => c.email.toLowerCase() === e.target.value.toLowerCase() && (!selected || c.id !== selected.id));
+                          if (duplicateEmail) {
+                            setValidationErrors(prev => ({ ...prev, email: 'Company email already exists. Please choose a different email.' }));
+                          }
+                        }}
                         className="input" 
-                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }} 
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px 16px', 
+                          border: `1px solid ${validationErrors.email ? '#ef4444' : '#d1d5db'}`, 
+                          borderRadius: 8, 
+                          fontSize: 14,
+                          backgroundColor: validationErrors.email ? '#fef2f2' : '#fff'
+                        }} 
                       />
+                      {validationErrors.email && (
+                        <div style={{ 
+                          color: '#ef4444', 
+                          fontSize: '12px', 
+                          marginTop: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <span>⚠️</span>
+                          {validationErrors.email}
+                        </div>
+                      )}
                     </div>
                     <div className="field">
                       <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
                         Company Phone<span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input 
+                        type="tel"
                         placeholder="Please Enter Company Phone" 
                         value={form.phone} 
-                        onChange={e => setForm({ ...form, phone: e.target.value })} 
+                        onChange={e => {
+                          setForm({ ...form, phone: e.target.value });
+                          validateField('phone', e.target.value);
+                        }}
+                        onBlur={e => validateField('phone', e.target.value)}
                         className="input" 
-                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }} 
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px 16px', 
+                          border: `1px solid ${validationErrors.phone ? '#ef4444' : '#d1d5db'}`, 
+                          borderRadius: 8, 
+                          fontSize: 14,
+                          backgroundColor: validationErrors.phone ? '#fef2f2' : '#fff'
+                        }} 
                       />
+                      {validationErrors.phone && (
+                        <div style={{ 
+                          color: '#ef4444', 
+                          fontSize: '12px', 
+                          marginTop: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <span>⚠️</span>
+                          {validationErrors.phone}
+                        </div>
+                      )}
                     </div>
                     <div className="field">
                       <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
@@ -460,12 +853,58 @@ const CompaniesTab = () => {
                           Email<span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input 
+                          type="email"
                           placeholder="Please Enter Email" 
                           value={admin.email} 
-                          onChange={e => setAdmin({ ...admin, email: e.target.value })} 
+                          onChange={e => {
+                            setAdmin({ ...admin, email: e.target.value });
+                            validateField('adminEmail', e.target.value);
+                            // Clear duplicate error if user changes the email
+                            if (validationErrors.adminEmail && validationErrors.adminEmail.includes('already exists')) {
+                              setValidationErrors(prev => {
+                                const newErrors = { ...prev };
+                                delete newErrors.adminEmail;
+                                return newErrors;
+                              });
+                            }
+                          }}
+                          onBlur={async (e) => {
+                            validateField('adminEmail', e.target.value);
+                            // Check for admin email duplicates on blur
+                            if (e.target.value && e.target.value.trim()) {
+                              try {
+                                const emailCheck = await authAPI.checkEmailAvailability(e.target.value);
+                                if (!emailCheck.available) {
+                                  setValidationErrors(prev => ({ ...prev, adminEmail: 'Admin email already exists. Please choose a different email.' }));
+                                }
+                              } catch (error) {
+                                console.warn('Could not check admin email availability:', error);
+                              }
+                            }
+                          }}
                           className="input" 
-                          style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }} 
+                          style={{ 
+                            width: '100%', 
+                            padding: '12px 16px', 
+                            border: `1px solid ${validationErrors.adminEmail ? '#ef4444' : '#d1d5db'}`, 
+                            borderRadius: 8, 
+                            fontSize: 14,
+                            backgroundColor: validationErrors.adminEmail ? '#fef2f2' : '#fff'
+                          }} 
                         />
+                        {validationErrors.adminEmail && (
+                          <div style={{ 
+                            color: '#ef4444', 
+                            fontSize: '12px', 
+                            marginTop: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <span>⚠️</span>
+                            {validationErrors.adminEmail}
+                          </div>
+                        )}
                       </div>
                       <div className="field">
                         <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
@@ -475,10 +914,34 @@ const CompaniesTab = () => {
                           type="password" 
                           placeholder="Please Enter Password" 
                           value={admin.password} 
-                          onChange={e => setAdmin({ ...admin, password: e.target.value })} 
+                          onChange={e => {
+                            setAdmin({ ...admin, password: e.target.value });
+                            validateField('adminPassword', e.target.value);
+                          }}
+                          onBlur={e => validateField('adminPassword', e.target.value)}
                           className="input" 
-                          style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }} 
+                          style={{ 
+                            width: '100%', 
+                            padding: '12px 16px', 
+                            border: `1px solid ${validationErrors.adminPassword ? '#ef4444' : '#d1d5db'}`, 
+                            borderRadius: 8, 
+                            fontSize: 14,
+                            backgroundColor: validationErrors.adminPassword ? '#fef2f2' : '#fff'
+                          }} 
                         />
+                        {validationErrors.adminPassword && (
+                          <div style={{ 
+                            color: '#ef4444', 
+                            fontSize: '12px', 
+                            marginTop: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <span>⚠️</span>
+                            {validationErrors.adminPassword}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div style={{ color: '#6b7280', fontSize: 14, marginTop: 12 }}>
@@ -503,14 +966,7 @@ const CompaniesTab = () => {
             <div className="form-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '24px 32px', background: '#f9fafb', borderTop: '1px solid #e5e7eb' }}>
               <button 
                 className="secondary" 
-                onClick={() => {
-                  setOpen(false);
-                  setSelected(null);
-                  setForm(initial);
-                  setFiles({});
-                  setAdmin({ email: '', password: '' });
-                  setTab('basic');
-                }} 
+                onClick={closeModal} 
                 style={{ 
                   padding: '12px 24px', 
                   border: '1px solid #d1d5db', 
@@ -545,12 +1001,12 @@ const CompaniesTab = () => {
         </div>
       ) : (
         /* Show companies list when not creating/editing */
-        <>
+        <div>
           <div className="tab-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, padding: '20px 0' }}>
-            <div>
+        <div>
               <div style={{ fontSize: 32, fontWeight: 700, color: '#1f2937', marginBottom: 4 }}>Companies</div>
               <div style={{ color: '#6b7280', fontSize: 14 }}>Dashboard - Companies</div>
-            </div>
+        </div>
             <button 
               onClick={openCreate}
               style={{
@@ -580,19 +1036,19 @@ const CompaniesTab = () => {
               <i className="fas fa-plus" style={{ fontSize: '14px' }}></i>
               Add New Company
             </button>
-          </div>
-          {error && <div className="error-message">{error}</div>}
-          {toast && (
-            <div className={`toast ${toast.type}`} style={{ position: 'fixed', right: 16, bottom: 16, background: toast.type === 'success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '10px 14px', borderRadius: 8 }}>
-              {toast.message}
-            </div>
-          )}
+      </div>
+      {error && <div className="error-message">{error}</div>}
+      {toast && (
+        <div className={`toast ${toast.type}`} style={{ position: 'fixed', right: 16, bottom: 16, background: toast.type === 'success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '10px 14px', borderRadius: 8 }}>
+          {toast.message}
+        </div>
+      )}
 
           <div className="card" style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
-            <div className="table" role="table">
+        <div className="table" role="table">
               <div className="thead" role="row" style={{ 
                 display: 'grid', 
-                gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', 
+                gridTemplateColumns: '180px 1fr 1fr 140px 120px 140px', 
                 padding: '20px 24px', 
                 fontWeight: '700', 
                 color: '#1e293b', 
@@ -602,16 +1058,14 @@ const CompaniesTab = () => {
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                <div>Company Logo</div>
-                <div>Company Name</div>
-                <div>Company Email</div>
-                <div>Details</div>
-                <div>Subscription Plan</div>
-                <div>Status</div>
-                <div>Action</div>
-                <div>Activate</div>
-              </div>
-              {companies.length === 0 && (
+            <div>Company Logo</div>
+            <div>Company Name</div>
+            <div>Company Email</div>
+            <div>Status</div>
+            <div>Action</div>
+            <div>Activate</div>
+          </div>
+          {companies.length === 0 && (
                 <div style={{ 
                   padding: '60px 24px', 
                   color: '#64748b', 
@@ -630,7 +1084,7 @@ const CompaniesTab = () => {
                   role="row" 
                   style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', 
+                    gridTemplateColumns: '180px 1fr 1fr 140px 120px 140px', 
                     alignItems: 'center', 
                     padding: '20px 24px', 
                     borderBottom: '1px solid #f1f5f9',
@@ -648,50 +1102,12 @@ const CompaniesTab = () => {
                     e.target.style.boxShadow = 'none';
                   }}
                 >
-                  <div>
-                    <LogoCell company={c} />
-                  </div>
+              <div>
+                <LogoCell company={c} />
+              </div>
                   <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '15px' }}>{c.name}</div>
                   <div style={{ color: '#64748b', fontSize: '14px' }}>{c.email}</div>
-                  <div style={{ color: '#475569', fontSize: '13px' }}>
-                    <div style={{ marginBottom: '4px' }}>
-                      Verified: <span style={{ color: '#dc2626', fontWeight: '600' }}>✗</span>
-                    </div>
-                    <div style={{ marginBottom: '4px' }}>
-                      Register Date: <span style={{ fontWeight: '500' }}>{new Date(c.createdAt || Date.now()).toLocaleDateString()}</span>
-                    </div>
-                    <div>
-                      Total Users: <span style={{ fontWeight: '600', color: '#3b82f6' }}>{c.totalUsers || 0}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ marginBottom: '8px', fontWeight: '600', color: '#1e293b' }}>Trial (monthly)</div>
-                    <button 
-                      className="secondary" 
-                      style={{ 
-                        padding: '6px 12px',
-                        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        color: '#475569',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)';
-                        e.target.style.transform = 'translateY(-1px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
-                        e.target.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      Change
-                    </button>
-                  </div>
-                  <div>
+              <div>
                     <span style={{ 
                       padding: '8px 16px', 
                       borderRadius: '20px', 
@@ -703,17 +1119,17 @@ const CompaniesTab = () => {
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
                     }}>
-                      {c.status === 'ACTIVE' ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
+                  {c.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                </span>
+              </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button 
                       title="Edit" 
                       onClick={() => { 
-                        setSelected(c); setForm({ ...c }); setOpen(true); 
-                        // Preview this company's branding immediately across app/login
-                        try { if (c?.shortName) localStorage.setItem('tenant', (c.shortName || '').toString().trim()); } catch {}
-                        try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
+                  setSelected(c); setForm({ ...c }); setOpen(true); 
+                  // Preview this company's branding immediately across app/login
+                  try { if (c?.shortName) localStorage.setItem('tenant', (c.shortName || '').toString().trim()); } catch {}
+                  try { window.dispatchEvent(new Event('branding:refresh')); } catch {}
                       }} 
                       style={{ 
                         padding: '10px',
@@ -739,16 +1155,16 @@ const CompaniesTab = () => {
                     <button 
                       title="Delete" 
                       onClick={async () => {
-                        if (!window.confirm(`Delete company "${c.name}"? This will also delete all associated users. This action cannot be undone.`)) return;
-                        try {
-                          const response = await companiesAPI.remove(c.id);
-                          setToast({ type: 'success', message: response.message || 'Company deleted successfully' });
-                          await load();
-                        } catch (e) {
-                          const errorMessage = e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Failed to delete company';
-                          console.error('Delete company error:', e);
-                          setToast({ type: 'error', message: errorMessage });
-                        }
+                  if (!window.confirm(`Delete company "${c.name}"? This will also delete all associated users. This action cannot be undone.`)) return;
+                  try {
+                    const response = await companiesAPI.remove(c.id);
+                    setToast({ type: 'success', message: response.message || 'Company deleted successfully' });
+                    await load();
+                  } catch (e) {
+                    const errorMessage = e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Failed to delete company';
+                    console.error('Delete company error:', e);
+                    setToast({ type: 'error', message: errorMessage });
+                  }
                       }} 
                       style={{ 
                         padding: '10px',
@@ -771,9 +1187,9 @@ const CompaniesTab = () => {
                     >
                       🗑
                     </button>
-                  </div>
-                  <div>
-                    {activeTenant && (activeTenant === (c?.shortName || c?.name)) ? (
+              </div>
+              <div>
+                {activeTenant && (activeTenant === (c?.shortName || c?.name)) ? (
                       <span style={{ 
                         padding: '8px 16px', 
                         borderRadius: '8px', 
@@ -814,13 +1230,13 @@ const CompaniesTab = () => {
                       >
                         Set Active
                       </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
+          ))}
           </div>
-        </>
+        </div>
+        </div>
       )}
     </div>
   );
