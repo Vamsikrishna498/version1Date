@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Roles Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 User Roles Debug Test</h1>
+        <p>This page helps diagnose the 500 error in User & Roles functionality.</p>
+
+        <div class="test-section">
+            <h3>1. Test Debug Endpoint</h3>
+            <p>Check if the user_roles table exists and is accessible.</p>
+            <button onclick="testDebugEndpoint()">Test Debug Endpoint</button>
+            <div id="debug-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Test Roles Endpoint</h3>
+            <p>Test the main roles endpoint that's failing.</p>
+            <button onclick="testRolesEndpoint()">Test Roles Endpoint</button>
+            <div id="roles-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Authentication Test</h3>
+            <p>Check if you're properly authenticated.</p>
+            <button onclick="testAuth()">Test Authentication</button>
+            <div id="auth-result"></div>
+        </div>
+
+        <div class="test-section info">
+            <h3>📋 Manual Steps Required</h3>
+            <p>If the debug endpoint shows that tables don't exist, you need to run these SQL scripts manually:</p>
+            <ol>
+                <li><strong>Open PostgreSQL client</strong> (pgAdmin, psql, or similar)</li>
+                <li><strong>Connect to your DATE database</strong></li>
+                <li><strong>Run the following scripts:</strong>
+                    <ul>
+                        <li><code>create_user_roles_tables.sql</code> - Creates the user_roles table and related tables</li>
+                        <li><code>fix_user_role_assignment.sql</code> - Ensures your user has the correct role</li>
+                    </ul>
+                </li>
+                <li><strong>Restart the backend application</strong></li>
+                <li><strong>Test again</strong></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        
+        // Get auth token from localStorage
+        function getAuthToken() {
+            const user = localStorage.getItem('user');
+            if (user) {
+                const userObj = JSON.parse(user);
+                return userObj.token;
+            }
+            return null;
+        }
+
+        // Make authenticated API request
+        async function makeAuthenticatedRequest(url, options = {}) {
+            const token = getAuthToken();
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            return fetch(url, {
+                ...options,
+                headers
+            });
+        }
+
+        async function testDebugEndpoint() {
+            const resultDiv = document.getElementById('debug-result');
+            resultDiv.innerHTML = '<p>🔄 Testing debug endpoint...</p>';
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/users-roles-management/debug/check-tables`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <div class="status success">✅ Debug Endpoint Working</div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <div class="status error">❌ Debug Endpoint Error (${response.status})</div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <div class="status error">❌ Network Error</div>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testRolesEndpoint() {
+            const resultDiv = document.getElementById('roles-result');
+            resultDiv.innerHTML = '<p>🔄 Testing roles endpoint...</p>';
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/users-roles-management/roles`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <div class="status success">✅ Roles Endpoint Working</div>
+                            <p>Found ${data.length} roles</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <div class="status error">❌ Roles Endpoint Error (${response.status})</div>
+                            <p>This is the same error you're seeing in the User & Roles section.</p>
+                            <pre>${errorText}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <div class="status error">❌ Network Error</div>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testAuth() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.innerHTML = '<p>🔄 Testing authentication...</p>';
+            
+            const token = getAuthToken();
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <div class="status error">❌ No Auth Token</div>
+                        <p>You need to log in first to test the endpoints.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/auth/me`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <div class="status success">✅ Authentication Working</div>
+                            <p>Logged in as: ${data.name || data.email}</p>
+                            <p>Role: ${data.role}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <div class="status error">❌ Authentication Failed (${response.status})</div>
+                            <p>You may need to log in again.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <div class="status error">❌ Network Error</div>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-test on page load if user is logged in
+        window.addEventListener('load', () => {
+            if (getAuthToken()) {
+                console.log('User is logged in, running auto-tests...');
+                setTimeout(() => {
+                    testDebugEndpoint();
+                }, 1000);
+            } else {
+                console.log('User not logged in, please log in first');
+            }
+        });
+    </script>
+</body>
+</html>
