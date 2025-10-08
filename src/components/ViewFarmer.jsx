@@ -135,7 +135,14 @@ const ViewFarmer = ({ farmerData, onBack, onSave, farmerUniqueIds, codeFormats }
 	const handleSave = async () => {
 		try {
 			if (onSave) {
-				await onSave(formData);
+				// Validate and clean email field to avoid unique constraint violation
+				const cleanedFormData = {
+					...formData,
+					email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : null
+				};
+				
+				console.log('🔍 ViewFarmer saving data:', cleanedFormData);
+				await onSave(cleanedFormData);
 				setIsEditMode(false);
 			}
 		} catch (error) {

@@ -2242,7 +2242,6 @@ const SuperAdminDashboard = () => {
                         <option value="">All KYC Status</option>
                         <option value="APPROVED">Approved</option>
                         <option value="PENDING">Pending</option>
-                        <option value="NOT_STARTED">Not Started</option>
                         <option value="REFER_BACK">Refer Back</option>
                         <option value="REJECTED">Rejected</option>
                       </select>
@@ -2325,12 +2324,11 @@ const SuperAdminDashboard = () => {
                             key: 'kycStatus', 
                             label: 'KYC Status',
                             render: (value) => {
-                              if (!value) return 'NOT_STARTED';
+                              if (!value) return 'PENDING';
                               if (value === 'PENDING' || value === 'pending') return 'PENDING';
                               if (value === 'APPROVED' || value === 'approved') return 'APPROVED';
                               if (value === 'REFER_BACK' || value === 'refer_back') return 'REFER_BACK';
                               if (value === 'REJECTED' || value === 'rejected') return 'REJECTED';
-                              if (value === 'NOT_STARTED' || value === 'not_started') return 'NOT_STARTED';
                               return value.toUpperCase();
                             }
                           },

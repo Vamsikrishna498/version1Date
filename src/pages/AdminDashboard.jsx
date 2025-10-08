@@ -241,8 +241,16 @@ const AdminDashboard = () => {
 
       if (farmersData) {
         console.log('🔍 Farmers data loaded from backend:', farmersData);
-        console.log('🔍 Sample farmer with assignment:', farmersData[0]);
-        setFarmers(farmersData);
+        
+        // Transform NOT_STARTED to PENDING for consistency
+        const transformedFarmers = farmersData.map(farmer => ({
+          ...farmer,
+          kycStatus: farmer.kycStatus === 'NOT_STARTED' ? 'PENDING' : farmer.kycStatus
+        }));
+        
+        console.log('🔍 Transformed farmers data:', transformedFarmers);
+        console.log('🔍 Sample farmer with assignment:', transformedFarmers[0]);
+        setFarmers(transformedFarmers);
       }
       if (employeesData) {
         setEmployees(employeesData);
@@ -343,7 +351,7 @@ const AdminDashboard = () => {
         state: 'Andhrapradesh',
         district: 'kadapa',
         region: 'Southern',
-        kycStatus: 'NOT_STARTED',
+        kycStatus: 'PENDING',
         assignmentStatus: 'ASSIGNED',
         assignedEmployee: 'harish reddy',
         assignedDate: '2024-01-10'
@@ -355,7 +363,7 @@ const AdminDashboard = () => {
         state: 'Andhrapradesh',
         district: 'kadapa',
         region: 'Southern',
-        kycStatus: 'NOT_STARTED',
+        kycStatus: 'PENDING',
         assignmentStatus: 'ASSIGNED',
         assignedEmployee: 'harish reddy',
         assignedDate: '2024-01-20'
@@ -367,7 +375,7 @@ const AdminDashboard = () => {
         state: 'Andhrapradesh',
         district: 'Kadapa',
         region: 'Southern',
-        kycStatus: 'NOT_STARTED',
+        kycStatus: 'PENDING',
         assignmentStatus: 'ASSIGNED',
         assignedEmployee: 'harish reddy',
         assignedDate: '2024-01-25'
@@ -379,7 +387,7 @@ const AdminDashboard = () => {
         state: 'Andhrapradesh',
         district: 'kadpaa',
         region: 'Southern',
-        kycStatus: 'NOT_STARTED',
+        kycStatus: 'PENDING',
         assignmentStatus: 'ASSIGNED',
         assignedEmployee: 'karthik kumar',
         assignedDate: '2024-01-12'
@@ -391,7 +399,7 @@ const AdminDashboard = () => {
         state: 'Andhrapradesh',
         district: 'Kuppam',
         region: 'Southern',
-        kycStatus: 'NOT_STARTED',
+        kycStatus: 'PENDING',
         assignmentStatus: 'ASSIGNED',
         assignedEmployee: 'harish reddy',
         assignedDate: '2024-01-12'
@@ -711,8 +719,7 @@ const AdminDashboard = () => {
     
     // Handle different KYC status formats
     const pendingKYC = filteredFarmers.filter(f => 
-      f.kycStatus === 'PENDING' || f.kycStatus === 'pending' || 
-      f.kycStatus === 'NOT_STARTED' || f.kycStatus === 'not_started'
+      f.kycStatus === 'PENDING' || f.kycStatus === 'pending'
     ).length;
     
     const approvedKYC = filteredFarmers.filter(f => 
@@ -753,7 +760,7 @@ const AdminDashboard = () => {
   const getTodoList = () => {
     const unassignedFarmers = (farmers || []).filter(f => !f.assignedEmployee || f.assignedEmployee === 'Not Assigned');
     const overdueKYC = (farmers || []).filter(f => {
-      if ((f.kycStatus === 'PENDING' || f.kycStatus === 'NOT_STARTED') && f.assignedEmployee && f.assignedEmployee !== 'Not Assigned') {
+      if (f.kycStatus === 'PENDING' && f.assignedEmployee && f.assignedEmployee !== 'Not Assigned') {
         // For now, consider all pending KYC as overdue if assigned
         return true;
       }
@@ -887,13 +894,21 @@ const AdminDashboard = () => {
       const targetId = (viewingFarmer && viewingFarmer.id) || (selectedFarmerData && selectedFarmerData.id) || updatedData?.id;
       if (!targetId) throw new Error('No farmer id found to update');
       
-      console.log('🔍 Updating farmer with data:', updatedData);
+      // Transform KYC status to match backend enum and handle email validation
+      const transformedData = {
+        ...updatedData,
+        kycStatus: updatedData.kycStatus === 'NOT_STARTED' ? 'PENDING' : updatedData.kycStatus,
+        // Handle empty email to avoid unique constraint violation
+        email: updatedData.email && updatedData.email.trim() !== '' ? updatedData.email.trim() : null
+      };
+      
+      console.log('🔍 Updating farmer with data:', transformedData);
       console.log('🔍 Farmer ID:', targetId);
       console.log('🔍 Viewing Farmer:', viewingFarmer);
       console.log('🔍 Selected Farmer Data:', selectedFarmerData);
       
       // Update farmer data in backend
-      const updatedFarmer = await farmersAPI.updateFarmer(targetId, updatedData);
+      const updatedFarmer = await farmersAPI.updateFarmer(targetId, transformedData);
       
       console.log('✅ Farmer updated successfully:', updatedFarmer);
       
@@ -1420,7 +1435,6 @@ const AdminDashboard = () => {
                   <option value="">All KYC Status</option>
                   <option value="APPROVED">Approved</option>
                   <option value="PENDING">Pending</option>
-                  <option value="NOT_STARTED">Not Started</option>
                   <option value="REFER_BACK">Refer Back</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
@@ -1487,12 +1501,11 @@ const AdminDashboard = () => {
             key: 'kycStatus', 
             label: 'KYC Status',
             render: (value) => {
-              if (!value) return 'NOT_STARTED';
+              if (!value) return 'PENDING';
               if (value === 'PENDING' || value === 'pending') return 'PENDING';
               if (value === 'APPROVED' || value === 'approved') return 'APPROVED';
               if (value === 'REFER_BACK' || value === 'refer_back') return 'REFER_BACK';
               if (value === 'REJECTED' || value === 'rejected') return 'REJECTED';
-              if (value === 'NOT_STARTED' || value === 'not_started') return 'NOT_STARTED';
               return value.toUpperCase();
             }
           },
@@ -1563,10 +1576,18 @@ const AdminDashboard = () => {
           onBack={() => setViewingFarmer(null)}
           onSave={async (updatedData) => {
             try {
-              console.log('🔍 Updating farmer with data:', updatedData);
+              // Transform KYC status to match backend enum and handle email validation
+              const transformedData = {
+                ...updatedData,
+                kycStatus: updatedData.kycStatus === 'NOT_STARTED' ? 'PENDING' : updatedData.kycStatus,
+                // Handle empty email to avoid unique constraint violation
+                email: updatedData.email && updatedData.email.trim() !== '' ? updatedData.email.trim() : null
+              };
+              
+              console.log('🔍 Updating farmer with data:', transformedData);
               console.log('🔍 Farmer ID:', viewingFarmer.id);
               
-              const updated = await farmersAPI.updateFarmer(viewingFarmer.id, updatedData);
+              const updated = await farmersAPI.updateFarmer(viewingFarmer.id, transformedData);
               
               console.log('✅ Farmer updated successfully:', updated);
               
@@ -1768,7 +1789,14 @@ const AdminDashboard = () => {
                 onSubmit={async (farmerData) => {
                   try {
                     if (editingFarmer) {
-                      const updatedFarmer = await farmersAPI.updateFarmer(editingFarmer.id, farmerData);
+                      // Transform KYC status to match backend enum and handle email validation
+                      const transformedData = {
+                        ...farmerData,
+                        kycStatus: farmerData.kycStatus === 'NOT_STARTED' ? 'PENDING' : farmerData.kycStatus,
+                        // Handle empty email to avoid unique constraint violation
+                        email: farmerData.email && farmerData.email.trim() !== '' ? farmerData.email.trim() : null
+                      };
+                      const updatedFarmer = await farmersAPI.updateFarmer(editingFarmer.id, transformedData);
                       setFarmers(prev => prev.map(farmer => 
                         farmer.id === editingFarmer.id ? updatedFarmer : farmer
                       ));
@@ -1992,8 +2020,7 @@ const AdminDashboard = () => {
                   ).length;
                   
                   const pendingCount = assignedFarmers.filter(f => 
-                    f.kycStatus === 'PENDING' || f.kycStatus === 'pending' || 
-                    f.kycStatus === 'NOT_STARTED' || f.kycStatus === 'not_started'
+                    f.kycStatus === 'PENDING' || f.kycStatus === 'pending'
                   ).length;
                   
                   const referBackCount = assignedFarmers.filter(f => 
