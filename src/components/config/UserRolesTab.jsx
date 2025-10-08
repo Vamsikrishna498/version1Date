@@ -33,6 +33,7 @@ const UserRolesTab = () => {
   const availablePermissions = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
 
   useEffect(() => {
+    console.log('🔄 UserRolesTab mounted, loading data...');
     loadRoles();
     loadUsers();
   }, []);
@@ -56,9 +57,17 @@ const UserRolesTab = () => {
       console.log('🔄 Loading roles...');
       const response = await rbacAPI.getAllRoles();
       console.log('📋 Roles response:', response);
-      const rolesData = response?.data || response || [];
+      
+      // The rbacAPI.getAllRoles() already returns response.data, so we don't need .data again
+      const rolesData = Array.isArray(response) ? response : (response?.data || []);
       console.log('📋 Roles data:', rolesData);
-      setRoles(rolesData);
+      
+      if (Array.isArray(rolesData)) {
+        setRoles(rolesData);
+      } else {
+        console.warn('⚠️ Expected array but got:', typeof rolesData, rolesData);
+        setRoles([]);
+      }
     } catch (error) {
       console.error('❌ Failed to load roles:', error);
       setError('Failed to load user roles: ' + error.message);
@@ -83,19 +92,26 @@ const UserRolesTab = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      setError('');
+      
+      console.log('🔄 Submitting role data:', formData);
       
       if (editingRole) {
+        console.log('📝 Updating existing role:', editingRole.id);
         await rbacAPI.updateRole(editingRole.id, formData);
       } else {
+        console.log('➕ Creating new role');
         await rbacAPI.createRole(formData);
       }
       
+      console.log('✅ Role saved successfully');
       setShowForm(false);
       setEditingRole(null);
       resetForm();
-      loadRoles();
+      await loadRoles(); // Reload roles after creation
     } catch (error) {
-      setError('Failed to save user role: ' + error.message);
+      console.error('❌ Error saving role:', error);
+      setError('Failed to save user role: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -157,7 +173,9 @@ const UserRolesTab = () => {
       setError(''); // Clear any previous errors
       setSuccessMessage(''); // Clear any previous success messages
       
+      console.log('🔄 Assigning role:', assignmentData);
       const result = await rbacAPI.assignRoleToUser(assignmentData);
+      console.log('✅ Role assignment result:', result);
       
       // Find the user and role names for the success message
       const user = users.find(u => u.id.toString() === assignmentData.userId);
@@ -177,7 +195,8 @@ const UserRolesTab = () => {
       }, 5000);
       
     } catch (error) {
-      setError('Failed to assign role: ' + error.message);
+      console.error('❌ Error assigning role:', error);
+      setError('Failed to assign role: ' + (error.response?.data?.message || error.message));
       setSuccessMessage(''); // Clear success message on error
     } finally {
       setLoading(false);
@@ -410,7 +429,12 @@ const UserRolesTab = () => {
               </div>
 
       <div className="roles-grid">
-        {filteredRoles.map((role) => (
+        {filteredRoles.length === 0 ? (
+          <div className="empty-state">
+            <p>No roles found. {roles.length === 0 ? 'Create your first role to get started.' : 'Try adjusting your search terms.'}</p>
+          </div>
+        ) : (
+          filteredRoles.map((role) => (
           <div key={role.id} className="role-card">
             <div className="role-header">
               <h3>{role.roleName}</h3>
@@ -456,7 +480,8 @@ const UserRolesTab = () => {
               </span>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
             </>
           )}
