@@ -496,7 +496,31 @@ const Login = () => {
       <header className="topbar">
         <div className="topbar-content">
           <div className="topbar-left">
-            <img src={branding?.logoLight || branding?.logoDark || defaultLogo} alt={branding?.name || 'Logo'} className="topbar-logo" />
+            {(() => {
+              const logoSrc = branding?.logoLight || branding?.logoDark || defaultLogo;
+              console.log('🖼️ Login Logo Debug:', {
+                branding: branding,
+                logoLight: branding?.logoLight,
+                logoDark: branding?.logoDark,
+                defaultLogo: defaultLogo,
+                finalSrc: logoSrc,
+                brandingName: branding?.name
+              });
+              return (
+                <img 
+                  src={logoSrc} 
+                  alt={branding?.name || 'Logo'} 
+                  className="topbar-logo"
+                  onError={(e) => {
+                    console.error('❌ Logo failed to load:', logoSrc, e);
+                    e.target.src = defaultLogo;
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Logo loaded successfully:', logoSrc);
+                  }}
+                />
+              );
+            })()}
             <div className="topbar-date">
               <span className="date-text">{getCurrentDate()}</span>
             </div>

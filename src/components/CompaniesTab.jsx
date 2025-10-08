@@ -13,6 +13,16 @@ const CompaniesTab = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null); // { type: 'success'|'error', message: string }
+  
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const load = async () => {
     try {
@@ -203,19 +213,53 @@ const CompaniesTab = () => {
       </div>
       {error && <div className="error-message">{error}</div>}
       {toast && (
-        <div className={`toast ${toast.type}`} style={{ position: 'fixed', right: 16, bottom: 16, background: toast.type === 'success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '10px 14px', borderRadius: 8 }}>
-          {toast.message}
+        <div className={`toast ${toast.type}`} style={{ 
+          position: 'fixed', 
+          top: 20, 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          background: toast.type === 'success' ? '#16a34a' : '#dc2626', 
+          color: '#fff', 
+          padding: '12px 20px 12px 20px', 
+          borderRadius: 8, 
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          fontSize: '14px',
+          fontWeight: '500',
+          maxWidth: '400px',
+          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button 
+            onClick={() => setToast(null)}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#fff', 
+              cursor: 'pointer', 
+              fontSize: '16px', 
+              padding: '0', 
+              marginLeft: '8px',
+              opacity: 0.8,
+              lineHeight: 1
+            }}
+            onMouseOver={(e) => e.target.style.opacity = '1'}
+            onMouseOut={(e) => e.target.style.opacity = '0.8'}
+          >
+            ×
+          </button>
         </div>
       )}
 
       <div className="card" style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div className="table" role="table">
-          <div className="thead" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', padding: '12px 16px', fontWeight: 600, color: '#374151', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+          <div className="thead" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 140px 120px 140px 140px', padding: '12px 16px', fontWeight: 600, color: '#374151', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
             <div>Company Logo</div>
             <div>Company Name</div>
             <div>Company Email</div>
-            <div>Details</div>
-            <div>Subscription Plan</div>
             <div>Status</div>
             <div>Action</div>
             <div>Activate</div>
@@ -224,21 +268,12 @@ const CompaniesTab = () => {
             <div style={{ padding: 24, color: '#6b7280' }}>No companies found.</div>
           )}
           {companies.map(c => (
-            <div key={c.id} className="tbody-row" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 1.4fr 1fr 140px 120px 140px 140px', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
+            <div key={c.id} className="tbody-row" role="row" style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr 140px 120px 140px 140px', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
               <div>
                 <LogoCell company={c} />
               </div>
               <div>{c.name}</div>
               <div>{c.email}</div>
-              <div style={{ color: '#374151', fontSize: 14 }}>
-                <div>Verified: <span style={{ color: '#dc2626' }}>✗</span></div>
-                <div>Register Date: {new Date(c.createdAt || Date.now()).toLocaleDateString()}</div>
-                <div>Total Users: {c.totalUsers || 0}</div>
-              </div>
-              <div>
-                <div style={{ marginBottom: 6 }}>Trial (monthly)</div>
-                <button className="secondary" style={{ padding: '6px 10px' }}>Change</button>
-              </div>
               <div>
                 <span style={{ padding: '6px 10px', borderRadius: 9999, background: c.status === 'ACTIVE' ? '#dcfce7' : '#fee2e2', color: c.status === 'ACTIVE' ? '#166534' : '#991b1b' }}>
                   {c.status === 'ACTIVE' ? 'Active' : 'Inactive'}

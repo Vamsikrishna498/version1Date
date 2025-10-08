@@ -11762,3 +11762,61 @@ td {
     opacity: 1;
   }
 }
+
+/* Main Content Area - Fix scrolling issue */
+.dashboard-main {
+  flex: 1;
+  margin-left: 280px;
+  margin-top: 96px;
+  padding: 32px;
+  background: #f8fafc;
+  min-height: calc(100vh - 96px);
+  transition: margin-left 0.3s ease;
+  overflow-y: auto;
+  max-height: calc(100vh - 96px);
+}
+
+.dashboard-main.sidebar-collapsed {
+  margin-left: 80px;
+}
+
+/* Ensure edit farmer form is scrollable */
+.dashboard-main .panel {
+  overflow: visible;
+}
+
+.dashboard-main .panel .farmer-wrapper.dashboard-mode {
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* Make sure the panel containing the edit farmer form is scrollable */
+.dashboard-main .panel:has(.farmer-wrapper.dashboard-mode) {
+  overflow: visible;
+  max-height: none;
+}
+
+/* Make the farmer registration form scrollable when in dashboard */
+.dashboard-main .farmer-wrapper.dashboard-mode {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.dashboard-main .farmer-wrapper.dashboard-mode::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-main .farmer-wrapper.dashboard-mode::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.dashboard-main .farmer-wrapper.dashboard-mode::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.dashboard-main .farmer-wrapper.dashboard-mode::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
