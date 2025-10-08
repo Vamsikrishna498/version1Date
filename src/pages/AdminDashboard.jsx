@@ -834,41 +834,99 @@ const AdminDashboard = () => {
 
   const handleSaveEmployee = async (updatedData) => {
     try {
+      // Determine the correct employee id (viewing page or selected modal)
+      const targetId = (viewingEmployee && viewingEmployee.id) || (selectedEmployeeData && selectedEmployeeData.id) || updatedData?.id;
+      if (!targetId) throw new Error('No employee id found to update');
+      
+      console.log('🔍 Updating employee with data:', updatedData);
+      console.log('🔍 Employee ID:', targetId);
+      console.log('🔍 Viewing Employee:', viewingEmployee);
+      console.log('🔍 Selected Employee Data:', selectedEmployeeData);
+      
       // Update employee data in backend
-      const updatedEmployee = await employeesAPI.updateEmployee(selectedEmployeeData.id, updatedData);
+      const updatedEmployee = await employeesAPI.updateEmployee(targetId, updatedData);
+      
+      console.log('✅ Employee updated successfully:', updatedEmployee);
       
       // Update local state
       setEmployees(prev => prev.map(emp => 
-        emp.id === selectedEmployeeData.id ? updatedEmployee : emp
+        emp.id === targetId ? updatedEmployee : emp
       ));
       
-      // Update selected employee data
-      setSelectedEmployeeData(updatedEmployee);
+      // Update viewing/selected state
+      if (viewingEmployee && viewingEmployee.id === targetId) {
+        setViewingEmployee(updatedEmployee);
+      }
+      if (selectedEmployeeData && selectedEmployeeData.id === targetId) {
+        setSelectedEmployeeData(updatedEmployee);
+      }
       
       alert('Employee updated successfully!');
     } catch (error) {
-      console.error('Error updating employee:', error);
-      alert('Failed to update employee. Please try again.');
+      console.error('❌ Error updating employee:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to update employee. Please try again.';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Failed to update employee: ${errorMessage}`);
     }
   };
 
   const handleSaveFarmer = async (updatedData) => {
     try {
+      // Determine the correct farmer id (viewing page or selected modal)
+      const targetId = (viewingFarmer && viewingFarmer.id) || (selectedFarmerData && selectedFarmerData.id) || updatedData?.id;
+      if (!targetId) throw new Error('No farmer id found to update');
+      
+      console.log('🔍 Updating farmer with data:', updatedData);
+      console.log('🔍 Farmer ID:', targetId);
+      console.log('🔍 Viewing Farmer:', viewingFarmer);
+      console.log('🔍 Selected Farmer Data:', selectedFarmerData);
+      
       // Update farmer data in backend
-      const updatedFarmer = await farmersAPI.updateFarmer(selectedFarmerData.id, updatedData);
+      const updatedFarmer = await farmersAPI.updateFarmer(targetId, updatedData);
+      
+      console.log('✅ Farmer updated successfully:', updatedFarmer);
       
       // Update local state
       setFarmers(prev => prev.map(farmer => 
-        farmer.id === selectedFarmerData.id ? updatedFarmer : farmer
+        farmer.id === targetId ? updatedFarmer : farmer
       ));
       
-      // Update selected farmer data
-      setSelectedFarmerData(updatedFarmer);
+      // Update viewing/selected state
+      if (viewingFarmer && viewingFarmer.id === targetId) {
+        setViewingFarmer(updatedFarmer);
+      }
+      if (selectedFarmerData && selectedFarmerData.id === targetId) {
+        setSelectedFarmerData(updatedFarmer);
+      }
       
       alert('Farmer updated successfully!');
     } catch (error) {
-      console.error('Error updating farmer:', error);
-      alert('Failed to update farmer. Please try again.');
+      console.error('❌ Error updating farmer:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to update farmer. Please try again.';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Failed to update farmer: ${errorMessage}`);
     }
   };
 
@@ -1486,11 +1544,6 @@ const AdminDashboard = () => {
                   }
                 },
                 {
-                  label: 'Edit',
-                  className: 'action-btn-small primary',
-                  onClick: handleEditFarmer
-                },
-                {
                   label: 'KYC',
                   className: 'action-btn-small warning',
             onClick: handleKYCDocumentUpload
@@ -1510,13 +1563,32 @@ const AdminDashboard = () => {
           onBack={() => setViewingFarmer(null)}
           onSave={async (updatedData) => {
             try {
+              console.log('🔍 Updating farmer with data:', updatedData);
+              console.log('🔍 Farmer ID:', viewingFarmer.id);
+              
               const updated = await farmersAPI.updateFarmer(viewingFarmer.id, updatedData);
+              
+              console.log('✅ Farmer updated successfully:', updated);
+              
               setFarmers(prev => prev.map(f => f.id === viewingFarmer.id ? updated : f));
               setViewingFarmer(updated);
               alert('Farmer updated successfully!');
             } catch (e) {
-              console.error('Error updating farmer:', e);
-              alert('Failed to update farmer');
+              console.error('❌ Error updating farmer:', e);
+              console.error('❌ Error response:', e.response?.data);
+              console.error('❌ Error status:', e.response?.status);
+              
+              let errorMessage = 'Failed to update farmer. Please try again.';
+              
+              if (e.response?.data?.error) {
+                errorMessage = e.response.data.error;
+              } else if (e.response?.data?.message) {
+                errorMessage = e.response.data.message;
+              } else if (e.message) {
+                errorMessage = e.message;
+              }
+              
+              alert(`Failed to update farmer: ${errorMessage}`);
             }
           }}
         />
@@ -2047,11 +2119,6 @@ const AdminDashboard = () => {
                     alert(`Unable to open or generate ID card: ${e.response?.data?.message || e.message}`);
                   }
                 }
-              },
-              {
-                label: 'Edit',
-                className: 'action-btn-small primary',
-                onClick: handleEditEmployee
               }
             ]}
           />
@@ -2126,7 +2193,13 @@ const AdminDashboard = () => {
               onSubmit={async (employeeData) => {
                 try {
                   if (editingEmployee) {
+                    console.log('🔍 Updating employee with data:', employeeData);
+                    console.log('🔍 Employee ID:', editingEmployee.id);
+                    
                     const updatedEmployee = await employeesAPI.updateEmployee(editingEmployee.id, employeeData);
+                    
+                    console.log('✅ Employee updated successfully:', updatedEmployee);
+                    
                     setEmployees(prev => prev.map(employee => 
                       employee.id === editingEmployee.id ? updatedEmployee : employee
                     ));
@@ -2250,7 +2323,13 @@ const AdminDashboard = () => {
                 onSubmit={async (employeeData) => {
                   try {
                     if (editingEmployee) {
+                      console.log('🔍 Updating employee with data:', employeeData);
+                      console.log('🔍 Employee ID:', editingEmployee.id);
+                      
                       const updatedEmployee = await employeesAPI.updateEmployee(editingEmployee.id, employeeData);
+                      
+                      console.log('✅ Employee updated successfully:', updatedEmployee);
+                      
                       setEmployees(prev => prev.map(employee => 
                         employee.id === editingEmployee.id ? updatedEmployee : employee
                       ));

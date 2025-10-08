@@ -980,7 +980,8 @@ export const farmersAPI = {
 
   // Update farmer
   updateFarmer: async (id, farmerData) => {
-    const response = await api.put(`/super-admin/farmers/${id}`, farmerData);
+    // Use the admin endpoint instead of super-admin for better field mapping
+    const response = await api.put(`/admin/farmers/${id}`, farmerData);
     return response.data;
   },
 
@@ -1037,7 +1038,8 @@ export const employeesAPI = {
 
   // Update employee
   updateEmployee: async (id, employeeData) => {
-    const response = await api.put(`/super-admin/employees/${id}`, employeeData);
+    // Use the admin endpoint instead of super-admin for better field mapping
+    const response = await api.put(`/admin/employees/${id}`, employeeData);
     return response.data;
   },
 
