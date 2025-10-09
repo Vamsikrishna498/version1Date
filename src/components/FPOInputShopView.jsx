@@ -342,23 +342,39 @@ const FPOInputShopView = ({ fpo, onClose, onToast }) => {
       <div className="input-shop-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-shop-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingShop(null);
-              setFormData({
-                shopName: '',
-                seedLicense: '',
-                pesticideLicense: '',
-                fertiliserLicense: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-store"></i>
-            Add Input Shop
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-shop-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingShop(null);
+                setFormData({
+                  shopName: '',
+                  seedLicense: '',
+                  pesticideLicense: '',
+                  fertiliserLicense: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-store"></i>
+              Add Input Shop
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadShops();
+              }}
+              title="Refresh input shops list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

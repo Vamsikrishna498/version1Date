@@ -374,20 +374,18 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       className="input"
                       placeholder="First Name"
+                      maxLength={50}
                       {...register("firstName", { required: "First Name is required", validate: validateAlpha })}
                       onFocus={() => setFocusedField('firstName')}
                       onBlur={() => setFocusedField('')}
                       onChange={(e) => {
-                        const v = e.target.value;
-                        setValue('firstName', v, { shouldValidate: true, shouldDirty: true });
-                        if (v && !alphaOnly.test(v)) {
-                          setError('firstName', { type: 'pattern', message: 'Only alphabets and spaces allowed' });
-                        } else {
-                          clearFieldErrors('firstName');
+                        const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                        if (value.length <= 50) {
+                          setValue('firstName', value, { shouldValidate: true, shouldDirty: true });
                         }
                       }}
                     />
-                    {focusedField === 'firstName' && !watch("firstName") && <p className="field-hint">Please enter first name</p>}
+                    {focusedField === 'firstName' && !watch("firstName") && <p className="field-hint">Please enter first name using only alphabets</p>}
                     {errors.firstName && <p className="error">{errors.firstName.message}</p>}
                   </div>
 
@@ -399,20 +397,18 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       className="input"
                       placeholder="Middle Name"
+                      maxLength={50}
                       {...register("middleName", { required: "Middle Name is required", validate: validateAlpha })}
                       onFocus={() => setFocusedField('middleName')}
                       onBlur={() => setFocusedField('')}
                       onChange={(e) => {
-                        const v = e.target.value;
-                        setValue('middleName', v, { shouldValidate: true, shouldDirty: true });
-                        if (v && !alphaOnly.test(v)) {
-                          setError('middleName', { type: 'pattern', message: 'Only alphabets and spaces allowed' });
-                        } else {
-                          clearFieldErrors('middleName');
+                        const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                        if (value.length <= 50) {
+                          setValue('middleName', value, { shouldValidate: true, shouldDirty: true });
                         }
                       }}
                     />
-                    {focusedField === 'middleName' && !watch("middleName") && <p className="field-hint">Please enter middle name</p>}
+                    {focusedField === 'middleName' && !watch("middleName") && <p className="field-hint">Please enter middle name using only alphabets</p>}
                     {errors.middleName && <p className="error">{errors.middleName.message}</p>}
                   </div>
 
@@ -424,20 +420,18 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                     <input
                       className="input"
                       placeholder="Last Name"
+                      maxLength={50}
                       {...register("lastName", { required: "Last Name is required", validate: validateAlpha })}
                       onFocus={() => setFocusedField('lastName')}
                       onBlur={() => setFocusedField('')}
                       onChange={(e) => {
-                        const v = e.target.value;
-                        setValue('lastName', v, { shouldValidate: true, shouldDirty: true });
-                        if (v && !alphaOnly.test(v)) {
-                          setError('lastName', { type: 'pattern', message: 'Only alphabets and spaces allowed' });
-                        } else {
-                          clearFieldErrors('lastName');
+                        const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                        if (value.length <= 50) {
+                          setValue('lastName', value, { shouldValidate: true, shouldDirty: true });
                         }
                       }}
                     />
-                    {focusedField === 'lastName' && !watch("lastName") && <p className="field-hint">Please enter last name</p>}
+                    {focusedField === 'lastName' && !watch("lastName") && <p className="field-hint">Please enter last name using only alphabets</p>}
                     {errors.lastName && <p className="error">{errors.lastName.message}</p>}
                   </div>
                 </div>
@@ -513,7 +507,7 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                   <label className="label">Contact Number
                     <span className="required">*</span></label>
                   <input
-                    type="text"
+                    type="tel"
                     className="input"
                     {...register("contactNumber", {
                       required: "Contact Number is required",
@@ -522,12 +516,18 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                         message: "Enter a valid 10-digit number",
                       },
                     })}
-                    placeholder=""
+                    placeholder="Enter 10-digit phone number"
+                    maxLength={10}
                     onFocus={() => setFocusedField('contactNumber')}
                     onBlur={() => setFocusedField('')}
-                    onChange={(e) => setValue('contactNumber', e.target.value, { shouldValidate: true, shouldDirty: true })}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value.length <= 10) {
+                        setValue('contactNumber', value, { shouldValidate: true, shouldDirty: true });
+                      }
+                    }}
                   />
-                  {focusedField === 'contactNumber' && !watch("contactNumber") && <p className="field-hint">Please enter 10-digit contact number</p>}
+                  {focusedField === 'contactNumber' && !watch("contactNumber") && <p className="field-hint">Please enter 10-digit contact number using only numbers</p>}
                   <p className="error">{errors.contactNumber?.message}</p>
                 </div>
 
@@ -544,12 +544,14 @@ const EmployeeRegistrationForm = ({ isInDashboard = false, editData = null, onCl
                         message: "Invalid email address",
                       },
                     })}
-                    placeholder=""
+                    placeholder="Enter email address"
+                    maxLength={100}
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField('')}
                     onChange={(e) => {
-                      setValue('email', e.target.value, { shouldValidate: true, shouldDirty: true });
-                      checkEmailAvailability(e.target.value);
+                      const value = e.target.value.replace(/[^A-Za-z0-9@._-]/g, '');
+                      setValue('email', value, { shouldValidate: true, shouldDirty: true });
+                      checkEmailAvailability(value);
                     }}
                   />
                   {focusedField === 'email' && !watch("email") && <p className="field-hint">Please enter email address</p>}

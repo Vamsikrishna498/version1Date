@@ -1,4 +1,61 @@
 /* FPO Input Shop View - Professional Full Width Layout */
+
+/* Field Hints */
+.field-hint {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #1e40af;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: fieldHintFadeIn 0.3s ease-out;
+}
+
+.field-hint::before {
+  content: "💡";
+  font-size: 0.875rem;
+}
+
+@keyframes fieldHintFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Error Messages */
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.error-message::before {
+  display: none;
+}
+
+.form-group .error-message::before {
+  display: none;
+}
+
+.form-group .error-message {
+  margin-top: 4px;
+  margin-bottom: 0;
+  padding: 0;
+}
 .fpo-input-shop-view {
   width: 100%;
   min-height: 100vh;
@@ -102,6 +159,17 @@
   gap: 24px;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.refresh-container {
+  display: flex;
+  align-items: center;
+}
+
 .create-shop-btn {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
   color: white !important;
@@ -130,11 +198,37 @@
   font-size: 0.875rem;
 }
 
+.refresh-btn {
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.25);
+  min-width: 120px;
+  justify-content: center;
+}
+
+.refresh-btn:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(107, 114, 128, 0.35);
+}
+
+.refresh-btn i {
+  font-size: 0.875rem;
+}
+
 /* Filter Section */
 .filter-section {
-  display: flex;
-  gap: 16px;
-  align-items: center;
+  display: none !important;
 }
 
 .search-container {
@@ -642,6 +736,10 @@
   color: #1f2937;
   background: white;
   transition: all 0.3s ease;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  line-height: 44px !important;
 }
 
 .form-input:focus {
@@ -653,6 +751,9 @@
 .form-input.error {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
 }
 
 .form-input::placeholder {

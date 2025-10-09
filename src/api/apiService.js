@@ -1763,6 +1763,21 @@ export const fpoUsersAPI = {
     const response = await api.post(`/fpo/${fpoId}/users`, payload);
     return response.data;
   },
+  update: async (fpoId, userId, userData) => {
+    const payload = {
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: userData.role,
+    };
+    // Only include password if it's provided and not empty
+    if (userData.password && userData.password.trim()) {
+      payload.password = userData.password;
+    }
+    const response = await api.put(`/fpo/${fpoId}/users/${userId}`, payload);
+    return response.data;
+  },
   toggleActive: async (fpoId, userId, active) => {
     const response = await api.put(`/fpo/${fpoId}/users/${userId}/status`, { active });
     return response.data;

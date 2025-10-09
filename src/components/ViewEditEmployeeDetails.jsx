@@ -138,8 +138,16 @@ const ViewEditEmployeeDetails = ({ employeeData, employee, onClose, onUpdate }) 
           <label>First Name *</label>
           <input
             type="text"
-            {...register('firstName', { required: 'First name is required' })}
+            {...register('firstName', { 
+              required: 'First name is required',
+              pattern: {
+                value: /^[A-Za-z]{2,50}$/,
+                message: 'First name must contain only alphabets (2-50 characters)'
+              }
+            })}
             disabled={!isEditing}
+            maxLength={50}
+            placeholder="Enter first name (alphabets only)"
           />
           {errors.firstName && <span className="error">{errors.firstName.message}</span>}
         </div>
@@ -147,8 +155,16 @@ const ViewEditEmployeeDetails = ({ employeeData, employee, onClose, onUpdate }) 
           <label>Last Name *</label>
           <input
             type="text"
-            {...register('lastName', { required: 'Last name is required' })}
+            {...register('lastName', { 
+              required: 'Last name is required',
+              pattern: {
+                value: /^[A-Za-z]{2,50}$/,
+                message: 'Last name must contain only alphabets (2-50 characters)'
+              }
+            })}
             disabled={!isEditing}
+            maxLength={50}
+            placeholder="Enter last name (alphabets only)"
           />
           {errors.lastName && <span className="error">{errors.lastName.message}</span>}
         </div>
@@ -167,6 +183,8 @@ const ViewEditEmployeeDetails = ({ employeeData, employee, onClose, onUpdate }) 
               }
             })}
             disabled={!isEditing}
+            maxLength={100}
+            placeholder="Enter email address"
           />
           {errors.email && <span className="error">{errors.email.message}</span>}
         </div>
@@ -182,6 +200,8 @@ const ViewEditEmployeeDetails = ({ employeeData, employee, onClose, onUpdate }) 
               }
             })}
             disabled={!isEditing}
+            maxLength={10}
+            placeholder="Enter 10-digit phone number"
           />
           {errors.phone && <span className="error">{errors.phone.message}</span>}
         </div>

@@ -24,6 +24,7 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
   });
 
   const [errors, setErrors] = useState({});
+  const [focusedField, setFocusedField] = useState('');
   const [loading, setLoading] = useState(false);
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -64,9 +65,46 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let filteredValue = value;
+    
+    // Apply input restrictions based on field type
+    switch (name) {
+      case 'fpoName':
+        filteredValue = value.replace(/[^A-Za-z0-9\s&.,()-]/g, '');
+        if (filteredValue.length > 100) filteredValue = filteredValue.substring(0, 100);
+        break;
+      case 'ceoName':
+        filteredValue = value.replace(/[^A-Za-z\s]/g, '');
+        if (filteredValue.length > 50) filteredValue = filteredValue.substring(0, 50);
+        break;
+      case 'phoneNumber':
+        filteredValue = value.replace(/[^0-9]/g, '');
+        if (filteredValue.length > 10) filteredValue = filteredValue.substring(0, 10);
+        break;
+      case 'email':
+        filteredValue = value.replace(/[^A-Za-z0-9@._-]/g, '');
+        if (filteredValue.length > 100) filteredValue = filteredValue.substring(0, 100);
+        break;
+      case 'state':
+      case 'district':
+        filteredValue = value.replace(/[^A-Za-z\s]/g, '');
+        if (filteredValue.length > 50) filteredValue = filteredValue.substring(0, 50);
+        break;
+      case 'village':
+        filteredValue = value.replace(/[^A-Za-z0-9\s]/g, '');
+        if (filteredValue.length > 50) filteredValue = filteredValue.substring(0, 50);
+        break;
+      case 'pincode':
+        filteredValue = value.replace(/[^0-9]/g, '');
+        if (filteredValue.length > 6) filteredValue = filteredValue.substring(0, 6);
+        break;
+      default:
+        break;
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: filteredValue
     }));
     
     // Clear error when user starts typing
@@ -81,39 +119,58 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
   const validateForm = () => {
     const newErrors = {};
 
+    // FPO Name validation - alphabets, spaces, and common business characters
     if (!formData.fpoName.trim()) {
       newErrors.fpoName = 'FPO Name is required';
+    } else if (!/^[A-Za-z0-9\s&.,()-]{2,100}$/.test(formData.fpoName.trim())) {
+      newErrors.fpoName = 'FPO Name must contain only letters, numbers, spaces and common business characters (2-100 characters)';
     }
 
+    // CEO Name validation - only alphabets and spaces
     if (!formData.ceoName.trim()) {
       newErrors.ceoName = 'CEO Name is required';
+    } else if (!/^[A-Za-z\s]{2,50}$/.test(formData.ceoName.trim())) {
+      newErrors.ceoName = 'CEO Name must contain only alphabets and spaces (2-50 characters)';
     }
 
+    // Phone number validation - exactly 10 digits
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone Number is required';
-    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'Phone number must be 10 digits';
+    } else if (!/^[0-9]{10}$/.test(formData.phoneNumber.trim())) {
+      newErrors.phoneNumber = 'Phone number must be exactly 10 digits';
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email validation - proper email format
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       newErrors.email = 'Please provide a valid email address';
     }
 
+    // State validation - alphabets and spaces
     if (!formData.state.trim()) {
       newErrors.state = 'State is required';
+    } else if (!/^[A-Za-z\s]{2,50}$/.test(formData.state.trim())) {
+      newErrors.state = 'State must contain only alphabets and spaces';
     }
+
+    // District validation - alphabets and spaces
     if (!formData.district.trim()) {
       newErrors.district = 'District is required';
+    } else if (!/^[A-Za-z\s]{2,50}$/.test(formData.district.trim())) {
+      newErrors.district = 'District must contain only alphabets and spaces';
     }
 
+    // Village validation - alphabets, numbers, spaces
     if (!formData.village.trim()) {
       newErrors.village = 'Village is required';
+    } else if (!/^[A-Za-z0-9\s]{2,50}$/.test(formData.village.trim())) {
+      newErrors.village = 'Village must contain only letters, numbers and spaces (2-50 characters)';
     }
 
+    // Pincode validation - exactly 6 digits
     if (!formData.pincode.trim()) {
       newErrors.pincode = 'Pincode is required';
-    } else if (!/^\d{6}$/.test(formData.pincode)) {
-      newErrors.pincode = 'Pincode must be 6 digits';
+    } else if (!/^[0-9]{6}$/.test(formData.pincode.trim())) {
+      newErrors.pincode = 'Pincode must be exactly 6 digits';
     }
 
     setErrors(newErrors);
@@ -198,7 +255,17 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
                   value={formData.fpoName}
                   onChange={handleInputChange}
                   className={errors.fpoName ? 'error' : ''}
+                  maxLength={100}
+                  placeholder="Enter FPO name"
+                  onFocus={() => setFocusedField('fpoName')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'fpoName' && !formData.fpoName && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter FPO name using letters, numbers, spaces and common business characters (2-100 characters)
+                  </div>
+                )}
                 {errors.fpoName && <span className="error-message">{errors.fpoName}</span>}
               </div>
               <div className="form-group">
@@ -223,7 +290,17 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
                   value={formData.ceoName}
                   onChange={handleInputChange}
                   className={errors.ceoName ? 'error' : ''}
+                  maxLength={50}
+                  placeholder="Enter CEO name (alphabets only)"
+                  onFocus={() => setFocusedField('ceoName')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'ceoName' && !formData.ceoName && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter CEO name using only alphabets and spaces (2-50 characters)
+                  </div>
+                )}
                 {errors.ceoName && <span className="error-message">{errors.ceoName}</span>}
               </div>
             </div>
@@ -238,8 +315,17 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
                   className={errors.phoneNumber ? 'error' : ''}
-                  maxLength="10"
+                  maxLength={10}
+                  placeholder="Enter 10-digit phone number"
+                  onFocus={() => setFocusedField('phoneNumber')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'phoneNumber' && !formData.phoneNumber && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter exactly 10 digits (numbers only, no spaces or special characters)
+                  </div>
+                )}
                 {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
               </div>
               <div className="form-group">
@@ -251,7 +337,17 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
                   value={formData.email}
                   onChange={handleInputChange}
                   className={errors.email ? 'error' : ''}
+                  maxLength={100}
+                  placeholder="Enter email address"
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'email' && !formData.email && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter a valid email address (example: user@domain.com)
+                  </div>
+                )}
                 {errors.email && <span className="error-message">{errors.email}</span>}
               </div>
             </div>
@@ -306,7 +402,7 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
               </div>
               <div className="form-group">
                 <label htmlFor="village">Village</label>
-                <input type="text" id="village" name="village" value={formData.village} onChange={handleInputChange} className={errors.village ? 'error' : ''} />
+                <input type="text" id="village" name="village" value={formData.village} onChange={handleInputChange} className={errors.village ? 'error' : ''} maxLength={50} placeholder="Enter village name" />
                 {errors.village && <span className="error-message">{errors.village}</span>}
               </div>
             </div>
@@ -325,7 +421,8 @@ const FPOCreationForm = ({ onClose, onFPOCreated, onSubmit, fpoData, onToast }) 
                   value={formData.pincode}
                   onChange={handleInputChange}
                   className={errors.pincode ? 'error' : ''}
-                  maxLength="6"
+                  maxLength={6}
+                  placeholder="Enter 6-digit pincode"
                 />
                 {errors.pincode && <span className="error-message">{errors.pincode}</span>}
               </div>

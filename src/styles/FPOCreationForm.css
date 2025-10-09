@@ -1,4 +1,60 @@
 /* FPO Creation Form Styles */
+
+/* Field Hints */
+.field-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1e40af;
+  font-weight: 500;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.field-hint i {
+  color: #3b82f6;
+  font-size: 0.875rem;
+}
+
+/* Error Messages */
+.error-message {
+  display: block;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 4px;
+  margin-bottom: 0;
+  padding: 0;
+  line-height: 1.2;
+}
+
+/* Remove any existing error message styling that might have icons or extra spacing */
+.form-group .error-message::before {
+  display: none !important;
+}
+
+.form-group .error-message {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 4px 0 0 0 !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .fpo-creation-modal {
   max-width: 800px;
   width: 100%;
@@ -56,11 +112,17 @@
 .form-group input,
 .form-group select {
   padding: 12px 15px;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   font-size: 0.9rem;
   transition: all 0.3s ease;
   background: white;
+  width: 100%;
+  box-sizing: border-box;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  line-height: 44px !important;
 }
 
 .form-group select {
@@ -72,13 +134,17 @@
 .form-group select:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
 
 .form-group input.error,
 .form-group select.error {
   border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+  box-shadow: 0 0 0 1px rgba(220, 53, 69, 0.2);
+  background: #fefefe;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
 }
 
 .form-group input:disabled,

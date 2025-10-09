@@ -567,23 +567,39 @@ const FPOProductsView = ({ fpo, onClose, onToast }) => {
       <div className="products-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-product-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingProduct(null);
-              setFormData({
-                inputShop: '',
-                categoryId: '',
-                productName: '',
-                quantitySold: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-plus-circle"></i>
-            Add Product
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-product-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingProduct(null);
+                setFormData({
+                  inputShop: '',
+                  categoryId: '',
+                  productName: '',
+                  quantitySold: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-plus-circle"></i>
+              Add Product
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadProducts();
+              }}
+              title="Refresh products list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

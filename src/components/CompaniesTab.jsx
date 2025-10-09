@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { companiesAPI } from '../api/apiService';
 import { buildCompanyLogoCandidates } from '../contexts/BrandingContext';
+import PasswordInput from './PasswordInput';
 
 const initial = { name: '', shortName: '', email: '', phone: '', defaultTimezone: 'Asia/Kolkata', status: 'ACTIVE' };
 
@@ -471,8 +472,7 @@ const CompaniesTab = () => {
                         <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
                           Password<span style={{ color: '#ef4444' }}>*</span>
                         </label>
-                        <input 
-                          type="password" 
+                        <PasswordInput 
                           placeholder="Please Enter Password" 
                           value={admin.password} 
                           onChange={e => setAdmin({ ...admin, password: e.target.value })} 

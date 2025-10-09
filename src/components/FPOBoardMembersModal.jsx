@@ -388,29 +388,45 @@ const FPOBoardMembersModal = ({ isOpen, onClose, fpoId, fpoName }) => {
         </div>
 
         <div className="modal-body">
-          {/* Create Board Members Button */}
-          <div className="create-section">
-            <button 
-              className="create-button"
-              onClick={() => {
-                setShowCreateForm(true);
-                setEditingMember(null);
-                setFormData({
-                  name: '',
-                  designation: '',
-                  phoneNumber: '',
-                  location: '',
-                  email: '',
-                  role: 'MEMBER'
-                });
-              }}
-            >
-              + Create Board Members
-            </button>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-buttons">
+              <button 
+                className="create-button"
+                onClick={() => {
+                  setShowCreateForm(true);
+                  setEditingMember(null);
+                  setFormData({
+                    name: '',
+                    designation: '',
+                    phoneNumber: '',
+                    location: '',
+                    email: '',
+                    role: 'MEMBER'
+                  });
+                }}
+              >
+                + Create Board Members
+              </button>
+            </div>
+            
+            <div className="refresh-container">
+              <button 
+                className="refresh-btn"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  loadBoardMembers();
+                }}
+                title="Refresh board members list"
+              >
+                <i className="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
           </div>
 
-          {/* Filter Section */}
-          <div className="filter-section">
+          {/* Filter Section - Hidden */}
+          <div className="filter-section" style={{ display: 'none' }}>
             <div className="filter-label">
               <span>Filter</span>
             </div>

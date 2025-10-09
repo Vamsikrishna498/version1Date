@@ -1511,8 +1511,8 @@ const SuperAdminDashboard = () => {
             className={`nav-item ${activeTab === 'companies' ? 'active' : ''}`}
             onClick={() => setActiveTab('companies')}
           >
-            <i className="fas fa-building"></i>
-            <span>Companies</span>
+            <span className="material-symbols-outlined">business</span>
+            <span className="nav-text">Companies</span>
           </div>
 
           <div 

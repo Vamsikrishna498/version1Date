@@ -2970,95 +2970,58 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* FPO Filters */}
-                      <div className="filters-section">
-                        <div className="filter-group">
-                          <label className="filter-label">State</label>
-                          <select 
-                            value={fpoFilters.state} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, state: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All States</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Andhrapradesh">Andhrapradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">District</label>
-                          <select 
-                            value={fpoFilters.district} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, district: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Districts</option>
-                            <option value="Karimnagar">Karimnagar</option>
-                            <option value="rangareddy">Rangareddy</option>
-                            <option value="kadapa">Kadapa</option>
-                            <option value="Kadapa">Kadapa</option>
-                            <option value="kadpaa">Kadpaa</option>
-                            <option value="Kuppam">Kuppam</option>
-                            <option value="Pune">Pune</option>
-                            <option value="Ahmedabad">Ahmedabad</option>
-                            <option value="Amritsar">Amritsar</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Chennai">Chennai</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">Status</label>
-                          <select 
-                            value={fpoFilters.status} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, status: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Status</option>
-                            <option value="ACTIVE">Active</option>
-                            <option value="INACTIVE">Inactive</option>
-                            <option value="PENDING">Pending</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-group">
-                          <label className="filter-label">Registration Type</label>
-                          <select 
-                            value={fpoFilters.registrationType} 
-                            onChange={(e) => setFpoFilters(prev => ({ ...prev, registrationType: e.target.value }))}
-                            className="filter-select"
-                          >
-                            <option value="">All Types</option>
-                            <option value="Company">Company</option>
-                            <option value="Cooperative">Cooperative</option>
-                            <option value="Society">Society</option>
-                          </select>
-                        </div>
-                        
-                        <div className="filter-actions">
+                      {/* Refresh Button */}
+                      <div className="refresh-section" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
                           <button 
-                            className="filter-btn-clear"
-                            onClick={() => setFpoFilters({
-                              state: '',
-                              district: '',
-                              status: '',
-                              registrationType: ''
-                            })}
-                          >
-                            <i className="fas fa-times"></i>
-                            Clear Filters
+                          className="refresh-btn"
+                          onClick={async () => {
+                            try {
+                              setLoading(true);
+                              console.log('🔄 Refreshing FPO data...');
+                              await fetchData();
+                              console.log('✅ FPO data refreshed successfully');
+                            } catch (error) {
+                              console.error('❌ Error refreshing FPO data:', error);
+                              setError('Failed to refresh data. Please try again.');
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                          style={{
+                            background: 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '12px 20px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 4px 12px rgba(107, 114, 128, 0.25)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transform: 'translateY(0)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = 'linear-gradient(135deg, #4b5563 0%, #6b7280 100%)';
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 8px 20px rgba(107, 114, 128, 0.35)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)';
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(107, 114, 128, 0.25)';
+                          }}
+                        >
+                          <i className="fas fa-sync-alt"></i>
+                          Refresh
                           </button>
-                        </div>
                       </div>
 
                       <div className="table-scroll-wrapper">
                         <DataTable
-                          data={getFilteredFPOs()}
+                          data={fpos}
                           columns={[
                             { key: 'fpoId', label: 'Id', render: (v, row) => (row.fpoId || row.id || '') },
                             { key: 'fpoName', label: 'FPO name' },
