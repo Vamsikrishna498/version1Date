@@ -21,8 +21,13 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
     maxValue: '',
     description: '',
     parentId: '',
+    userType: '',
     isActive: true
   });
+  
+  // Validation states
+  const [validationErrors, setValidationErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const sections = [
     { 
@@ -47,6 +52,136 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
       fieldType: 'text'
     }
   ];
+
+  // Validation functions
+  const validateField = (fieldName, value) => {
+    switch (fieldName) {
+      case 'name':
+        if (!value || value.trim().length === 0) {
+          return 'Name is required';
+        }
+        if (value.trim().length < 2) {
+          return 'Name must be at least 2 characters';
+        }
+        if (value.trim().length > 100) {
+          return 'Name must be less than 100 characters';
+        }
+        return null;
+        
+      case 'userType':
+        if (!value || value.trim().length === 0) {
+          return 'User type is required';
+        }
+        return null;
+        
+      case 'minValue':
+        if (!value || value.toString().trim().length === 0) {
+          return 'Minimum age is required';
+        }
+        const minNum = parseInt(value);
+        if (isNaN(minNum)) {
+          return 'Minimum age must be a valid number';
+        }
+        if (minNum < 1) {
+          return 'Minimum age must be at least 1';
+        }
+        if (minNum > 100) {
+          return 'Minimum age must not exceed 100';
+        }
+        return null;
+        
+      case 'maxValue':
+        if (!value || value.toString().trim().length === 0) {
+          return 'Maximum age is required';
+        }
+        const maxNum = parseInt(value);
+        if (isNaN(maxNum)) {
+          return 'Maximum age must be a valid number';
+        }
+        if (maxNum < 1) {
+          return 'Maximum age must be at least 1';
+        }
+        if (maxNum > 100) {
+          return 'Maximum age must not exceed 100';
+        }
+        // Check if max is greater than min
+        const minValue = parseInt(formData.minValue);
+        if (!isNaN(minValue) && maxNum <= minValue) {
+          return 'Maximum age must be greater than minimum age';
+        }
+        return null;
+        
+      case 'parentId':
+        if (activeSection === 'type' && (!value || value.trim().length === 0)) {
+          return 'Education type is required';
+        }
+        return null;
+        
+      default:
+        return null;
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    const fieldsToValidate = ['name'];
+    
+    if (activeSection === 'age') {
+      fieldsToValidate.push('userType', 'minValue', 'maxValue');
+    } else if (activeSection === 'type') {
+      fieldsToValidate.push('parentId');
+    }
+    
+    console.log('Validating form with data:', formData);
+    console.log('Fields to validate:', fieldsToValidate);
+    
+    fieldsToValidate.forEach(field => {
+      const error = validateField(field, formData[field]);
+      if (error) {
+        errors[field] = error;
+        console.log(`Validation error for ${field}:`, error);
+      }
+    });
+    
+    console.log('Validation errors:', errors);
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    // Special validation for maxValue when minValue changes
+    if (field === 'minValue' && formData.maxValue) {
+      const maxError = validateField('maxValue', formData.maxValue);
+      if (maxError) {
+        setValidationErrors(prev => ({ ...prev, maxValue: maxError }));
+      } else {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.maxValue;
+          return newErrors;
+        });
+      }
+    }
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const error = validateField(field, formData[field]);
+    if (error) {
+      setValidationErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -103,6 +238,27 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Mark all fields as touched first to show validation errors
+    const allFields = ['name'];
+    if (activeSection === 'age') {
+      allFields.push('userType', 'minValue', 'maxValue');
+    } else if (activeSection === 'type') {
+      allFields.push('parentId');
+    }
+    
+    const touchedFields = {};
+    allFields.forEach(field => {
+      touchedFields[field] = true;
+    });
+    setTouched(touchedFields);
+    
+    // Validate form after marking fields as touched
+    if (!validateForm()) {
+      setError('Please fix all validation errors before saving.');
+      return;
+    }
+    
     try {
       setLoading(true);
       
@@ -114,6 +270,7 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
           minValue: parseInt(formData.minValue),
           maxValue: parseInt(formData.maxValue),
           description: formData.description,
+          userType: formData.userType,
           isActive: formData.isActive
         };
         
@@ -173,8 +330,11 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
       maxValue: item.maxValue || '',
       description: item.description || '',
       parentId: item.parentId || '',
+      userType: item.userType || '',
       isActive: item.isActive !== false
     });
+    setValidationErrors({});
+    setTouched({});
     setShowModal(true);
   };
 
@@ -224,13 +384,16 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
 
   const resetForm = () => {
     setFormData({
-      name: activeSection === 'age' ? 'DATE Application' : '',
+      name: '',
       minValue: activeSection === 'age' ? '18' : '',
       maxValue: activeSection === 'age' ? '90' : '',
       description: '',
       parentId: '',
+      userType: activeSection === 'age' ? 'GLOBAL' : '',
       isActive: true
     });
+    setValidationErrors({});
+    setTouched({});
   };
 
   const getCurrentData = () => {
@@ -300,6 +463,7 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
               <thead>
                 <tr>
                   <th>Name</th>
+                  {activeSection === 'age' && <th>User Type</th>}
                   {activeSection === 'age' && <th>Min Value</th>}
                   {activeSection === 'age' && <th>Max Value</th>}
                   {activeSection === 'type' && <th>Education Type</th>}
@@ -312,6 +476,7 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
                 {currentData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.name}</td>
+                  {activeSection === 'age' && <td>{item.userType || 'GLOBAL'}</td>}
                   {activeSection === 'age' && <td>{item.minValue}</td>}
                   {activeSection === 'age' && <td>{item.maxValue}</td>}
                   {activeSection === 'type' && (
@@ -356,7 +521,12 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
               <h3>
                 {editingItem ? 'Edit' : 'Add'} {sections.find(s => s.id === activeSection)?.label}
               </h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
+              <button className="close-btn" onClick={() => {
+              setShowModal(false);
+              setValidationErrors({});
+              setTouched({});
+              setError('');
+            }}>×</button>
             </div>
             
             <form onSubmit={handleSubmit} className="global-area-form">
@@ -365,12 +535,45 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onBlur={() => handleBlur('name')}
                   required
-                  className="form-control"
-                  placeholder={activeSection === 'age' ? 'Enter project name (e.g., DATE Application)' : `Enter ${activeSection} name`}
+                  className={`form-control ${validationErrors.name && (touched.name || Object.keys(validationErrors).length > 0) ? 'error' : ''}`}
+                  placeholder={activeSection === 'age' ? 'Enter project name (e.g., DATE Application, Farmer Registration, Employee Module)' : `Enter ${activeSection} name`}
                 />
+                {validationErrors.name && (touched.name || Object.keys(validationErrors).length > 0) && (
+                  <div className="validation-error">
+                    <span className="error-icon">⚠️</span>
+                    {validationErrors.name}
+                  </div>
+                )}
               </div>
+              
+              {activeSection === 'age' && (
+                <div className="form-group">
+                  <label>User Type *</label>
+                  <select
+                    value={formData.userType}
+                    onChange={(e) => handleInputChange('userType', e.target.value)}
+                    onBlur={() => handleBlur('userType')}
+                    required
+                    className={`form-control ${validationErrors.userType && (touched.userType || Object.keys(validationErrors).length > 0) ? 'error' : ''}`}
+                  >
+                    <option value="">Select User Type</option>
+                    <option value="GLOBAL">Global (All Users)</option>
+                    <option value="FARMER">Farmer</option>
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="FPO">FPO Member</option>
+                  </select>
+                  {validationErrors.userType && (touched.userType || Object.keys(validationErrors).length > 0) && (
+                    <div className="validation-error">
+                      <span className="error-icon">⚠️</span>
+                      {validationErrors.userType}
+                    </div>
+                  )}
+                </div>
+              )}
               
               {activeSection === 'age' && (
                 <>
@@ -380,13 +583,20 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
                     <input
                       type="number"
                       value={formData.minValue}
-                      onChange={(e) => setFormData({ ...formData, minValue: e.target.value })}
+                      onChange={(e) => handleInputChange('minValue', e.target.value)}
+                      onBlur={() => handleBlur('minValue')}
                       required
-                      className="form-control"
+                      className={`form-control ${validationErrors.minValue && (touched.minValue || Object.keys(validationErrors).length > 0) ? 'error' : ''}`}
                       placeholder="Enter minimum age"
                       min="1"
                       max="100"
                     />
+                    {validationErrors.minValue && (touched.minValue || Object.keys(validationErrors).length > 0) && (
+                      <div className="validation-error">
+                        <span className="error-icon">⚠️</span>
+                        {validationErrors.minValue}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="form-group">
@@ -394,13 +604,20 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
                     <input
                       type="number"
                       value={formData.maxValue}
-                      onChange={(e) => setFormData({ ...formData, maxValue: e.target.value })}
+                      onChange={(e) => handleInputChange('maxValue', e.target.value)}
+                      onBlur={() => handleBlur('maxValue')}
                       required
-                      className="form-control"
+                      className={`form-control ${validationErrors.maxValue && (touched.maxValue || Object.keys(validationErrors).length > 0) ? 'error' : ''}`}
                       placeholder="Enter maximum age"
                       min="1"
                       max="100"
                     />
+                    {validationErrors.maxValue && (touched.maxValue || Object.keys(validationErrors).length > 0) && (
+                      <div className="validation-error">
+                        <span className="error-icon">⚠️</span>
+                        {validationErrors.maxValue}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -436,18 +653,27 @@ const GlobalAreaSettings = ({ isSuperAdmin, isAdmin }) => {
               </div>
               
               <div className="form-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                  Active
+                <label className="checkbox-label">
+                  <div className="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      className="checkbox-input"
+                    />
+                    <span className="checkmark"></span>
+                  </div>
+                  <span className="checkbox-text">Active</span>
                 </label>
               </div>
               
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setShowModal(false);
+                  setValidationErrors({});
+                  setTouched({});
+                  setError('');
+                }}>
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={loading}>
