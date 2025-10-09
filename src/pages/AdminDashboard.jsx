@@ -2120,20 +2120,27 @@ const AdminDashboard = () => {
                     console.log('📋 Existing ID cards found:', list);
                     
                     if (Array.isArray(list) && list.length > 0) {
-                      const activeCard = list.find(card => card.status === 'ACTIVE') || list[0];
-                      console.log('✅ Using existing ID card:', activeCard.cardId);
-                      setCurrentCardId(activeCard.cardId);
-                      setShowIdCardModal(true);
-                      return;
+                      // Only consider EMPLOYEE cards that belong to this employee
+                      const employeeCards = list.filter(card => (
+                        String(card.holderId) === String(employee.id) &&
+                        (card.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(card.cardId || ''))
+                      ));
+                      const activeCard = employeeCards.find(card => card.status === 'ACTIVE') || employeeCards[0];
+                      if (activeCard && (activeCard.cardType === 'EMPLOYEE' || /(^|-)EMP(LOYEE)?(-|$)/i.test(activeCard.cardId || ''))) {
+                        console.log('✅ Using existing EMPLOYEE ID card:', activeCard.cardId);
+                        setCurrentCardId(activeCard.cardId);
+                        setShowIdCardModal(true);
+                        return;
+                      }
                     }
                     
-                    // If no existing cards, generate a new one
-                    console.log('🔄 No existing ID cards found, generating new one...');
+                    // If no existing EMPLOYEE cards, generate a new one
+                    console.log('🔄 No existing EMPLOYEE cards found, generating new one...');
                     const gen = await idCardAPI.generateEmployeeIdCard(employee.id);
                     console.log('🎯 Generated ID card response:', gen);
                     
                     if (gen && gen.cardId) {
-                      console.log('✅ Successfully generated ID card:', gen.cardId);
+                      console.log('✅ Successfully generated EMPLOYEE ID card:', gen.cardId);
                       setCurrentCardId(gen.cardId);
                       setShowIdCardModal(true);
                     } else {
