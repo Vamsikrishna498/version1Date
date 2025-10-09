@@ -348,7 +348,7 @@ const UserRolesTab = () => {
                   </div>
                   
                   <div className="form-group">
-                    <label className="checkbox-label">
+                    <label className={`checkbox-label ${formData.isActive ? 'checked' : ''}`}>
                       <input
                         type="checkbox"
                         checked={formData.isActive}

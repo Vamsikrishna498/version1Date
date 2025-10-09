@@ -137,19 +137,16 @@ const EditRoleModal = ({
               />
             </div>
 
-            {/* Status */}
+            {/* Active Status */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+              <label className={`checkbox-label ${formData.isActive ? 'checked' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                />
+                Active
               </label>
-              <select
-                value={formData.isActive}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.value === 'true' }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value={true}>Active</option>
-                <option value={false}>Inactive</option>
-              </select>
             </div>
 
             {/* Select Modules */}
