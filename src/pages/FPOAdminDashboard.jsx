@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
 import { fpoAPI, fpoUsersAPI, farmersAPI, employeesAPI } from '../api/apiService';
 import ActionDropdown from '../components/ActionDropdown';
 import '../styles/Dashboard.css';
@@ -26,6 +27,7 @@ const FPOAdminDashboard = () => {
   const { fpoId: urlFpoId } = useParams();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
   
   // Use URL FPO ID if available, otherwise fall back to user's FPO ID for consistency
   const fpoId = urlFpoId || user?.fpoId || user?.assignedFpoId || user?.fpo?.id || user?.fpo?.fpoId;
@@ -297,8 +299,27 @@ const FPOAdminDashboard = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <div className="logo-section">
-            <h1 className="logo-title">DATE</h1>
-            <p className="logo-subtitle">Digital Agristack</p>
+            {branding?.logoLight ? (
+              <img 
+                src={branding.logoLight} 
+                alt={branding.name || 'Company Logo'} 
+                className="company-logo"
+                style={{ 
+                  height: '40px', 
+                  maxWidth: '200px', 
+                  objectFit: 'contain',
+                  marginRight: '12px'
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+            ) : null}
+            <div style={{ display: branding?.logoLight ? 'none' : 'block' }}>
+              <h1 className="logo-title">{branding?.name || 'DATE'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Digital Agristack'}</p>
+            </div>
           </div>
         </div>
         <div className="header-right">

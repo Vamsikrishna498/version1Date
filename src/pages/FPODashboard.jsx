@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
 import { fpoAPI } from '../api/apiService';
 import '../styles/Dashboard.css';
 import '../styles/FPODashboard.css';
@@ -18,6 +19,7 @@ import FPONotifications from '../components/FPONotifications';
 
 const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = false }) => {
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
   const { fpoId: urlFpoId } = useParams();
   const fpoId = propFpoId || urlFpoId; // Use prop first, then URL param
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -289,7 +291,29 @@ const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = fa
     <div className="dashboard fpo-dashboard-container">
       <header className="dashboard-header">
         <div className="header-left">
-          <h1>FPO Management Dashboard</h1>
+          <div className="logo-section">
+            {branding?.logoLight ? (
+              <img 
+                src={branding.logoLight} 
+                alt={branding.name || 'Company Logo'} 
+                className="company-logo"
+                style={{ 
+                  height: '40px', 
+                  maxWidth: '200px', 
+                  objectFit: 'contain',
+                  marginRight: '12px'
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+            ) : null}
+            <div style={{ display: branding?.logoLight ? 'none' : 'block' }}>
+              <h1 className="logo-title">{branding?.name || 'DATE'}</h1>
+              <p className="logo-subtitle">{branding?.shortName || 'Digital Agristack'}</p>
+            </div>
+          </div>
           <p className="greeting">
             {getGreeting()}, {user?.name || 'User'}!
           </p>
