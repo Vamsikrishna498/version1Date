@@ -150,12 +150,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
 
   const { register, handleSubmit, watch, setValue, trigger, clearErrors, setError, formState: { errors } } = methods;
 
-  // Debug API data
-  console.log('🔍 Crop API Data Debug:');
-  console.log('  - cropNames:', cropNames);
-  console.log('  - cropTypes:', cropTypes);
-  console.log('  - cropNames length:', cropNames?.length || 0);
-  console.log('  - cropTypes length:', cropTypes?.length || 0);
+  // Debug API data - removed console logs for production
 
   // Dynamic crop options from API
   // Build crop options: Crop Names are categories, Crop Types are varieties under each category
@@ -191,7 +186,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
   // Merge API data with defaults if available
   const finalCropOptions = Object.keys(cropOptions).length > 0 ? { ...defaultCropOptions, ...cropOptions } : defaultCropOptions;
   
-  console.log('🔍 Final Crop Options:', finalCropOptions);
+  // Final crop options ready
 
   const waterSourceOptions = [
     'Borewell',
@@ -211,67 +206,38 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       return;
     }
     
-    console.log('🔍 Form validation passed, submitting data:', data);
-    console.log('🔍 Form is valid:', !Object.keys(errors).length);
-    console.log('🔍 Form errors:', errors);
+    // Form validation passed, submitting data
     
     // Check if form is valid
     if (Object.keys(errors).length > 0) {
-      console.log('❌ Form has validation errors, not submitting');
+      // Form has validation errors, not submitting
       alert('Please fix form validation errors before submitting');
       return;
     }
     
     try {
-      console.log('🔍 Form submitted with data:', data);
-      console.log('🔍 Contact number in form data:', data.contactNumber);
-      console.log('🔍 Contact number type:', typeof data.contactNumber);
-      console.log('🔍 Contact number is empty?', !data.contactNumber);
-      console.log('🔍 Contact number length:', data.contactNumber?.length);
-      console.log('🔍 Contact number trimmed:', data.contactNumber?.trim());
-      console.log('🔍 Contact number after trim length:', data.contactNumber?.trim()?.length);
-      console.log('🔍 All form fields:', Object.keys(data));
-      console.log('🔍 Form data values:', Object.values(data));
+      // Form submitted with data
       
       // Ensure contact number is properly formatted before submission
       if (data.contactNumber && data.contactNumber.trim() !== '') {
         const cleanContactNumber = data.contactNumber.replace(/\D/g, '');
-        console.log('🔍 Cleaned contact number:', cleanContactNumber);
         if (cleanContactNumber.length === 10) {
           data.contactNumber = cleanContactNumber;
-          console.log('🔍 Set contact number to cleaned value:', data.contactNumber);
         } else {
-          console.log('🔍 Contact number is not 10 digits, setting to null');
           data.contactNumber = null;
         }
       } else {
-        console.log('🔍 Contact number is empty, setting to null');
         data.contactNumber = null;
       }
       
       // Handle email validation to avoid unique constraint violation
       if (data.email && data.email.trim() !== '') {
         data.email = data.email.trim();
-        console.log('🔍 Email cleaned and set to:', data.email);
       } else {
-        console.log('🔍 Email is empty, setting to null to avoid unique constraint violation');
         data.email = null;
       }
       
-      // Check if contactNumber is in the data
-      if ('contactNumber' in data) {
-        console.log('✅ contactNumber field exists in form data');
-        console.log('🔍 contactNumber value:', data.contactNumber);
-        console.log('🔍 contactNumber type:', typeof data.contactNumber);
-        console.log('🔍 contactNumber length:', data.contactNumber?.length);
-        console.log('🔍 contactNumber matches pattern?', /^\d{10}$/.test(data.contactNumber));
-      } else {
-        console.log('❌ contactNumber field MISSING from form data');
-      }
-      
-      // Check form validation errors
-      console.log('🔍 Form validation errors:', errors);
-      console.log('🔍 contactNumber validation error:', errors.contactNumber);
+      // Contact number field validation complete
       
       // Call the onSubmit prop which should handle API call and state update
       if (onSubmitProp) {
@@ -316,7 +282,6 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       />
     ) : photoPreview ? (
       <>
-        {console.log("👨‍🌾 Fetched photo URL:", photoPreview)}
                  <img
            src={photoPreview}
            alt="Farmer"
@@ -324,7 +289,7 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           onError={(e) => {
             e.target.style.display = "none";
             e.target.nextSibling.style.display = "block";
-            console.log("❌ Failed to load fetched photo:", photoPreview);
+            // Failed to load fetched photo
           }}
         />
         <span style={{ display: "none", color: "#666" }}>Photo not available</span>
@@ -385,42 +350,63 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       <input
         className="input"
         placeholder="First Name"
+        maxLength={50}
         {...register("firstName", { 
           required: "First Name is required",
-          pattern: { value: /^[A-Za-z\s]{2,26}$/, message: "Only letters (2-26) are allowed" }
+          pattern: { value: /^[A-Za-z\s]{2,50}$/, message: "Only letters (2-50) are allowed" }
         })}
         onFocus={() => setFocusedField('firstName')}
         onBlur={() => setFocusedField('')}
+        onChange={(e) => {
+          const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+          if (value.length <= 50) {
+            setValue('firstName', value, { shouldValidate: true, shouldDirty: true });
+          }
+        }}
       />
-      {focusedField === 'firstName' && !watch("firstName") && <p className="field-hint">Please enter first name</p>}
+      {focusedField === 'firstName' && !watch("firstName") && <p className="field-hint">Please enter first name using only alphabets</p>}
       {errors.firstName && <p className="error">{errors.firstName.message}</p>}
  
      <label className="label">Middle Name<span className="required">*</span></label>
       <input
         className="input"
         placeholder="Middle Name"
+        maxLength={50}
         {...register("middleName", { 
           required: "Middle Name is required",
-          pattern: { value: /^[A-Za-z\s]{1,26}$/, message: "Only letters are allowed" }
+          pattern: { value: /^[A-Za-z\s]{1,50}$/, message: "Only letters are allowed" }
         })}
         onFocus={() => setFocusedField('middleName')}
         onBlur={() => setFocusedField('')}
+        onChange={(e) => {
+          const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+          if (value.length <= 50) {
+            setValue('middleName', value, { shouldValidate: true, shouldDirty: true });
+          }
+        }}
       />
-      {focusedField === 'middleName' && !watch("middleName") && <p className="field-hint">Please enter middle name</p>}
+      {focusedField === 'middleName' && !watch("middleName") && <p className="field-hint">Please enter middle name using only alphabets</p>}
       {errors.middleName && <p className="error">{errors.middleName.message}</p>}
  
       <label className="label">Last Name<span className="required">*</span></label>
       <input
         className="input"
         placeholder="Last Name"
+        maxLength={50}
         {...register("lastName", { 
           required: "Last Name is required",
-          pattern: { value: /^[A-Za-z\s]{2,26}$/, message: "Only letters (2-26) are allowed" }
+          pattern: { value: /^[A-Za-z\s]{2,50}$/, message: "Only letters (2-50) are allowed" }
         })}
         onFocus={() => setFocusedField('lastName')}
         onBlur={() => setFocusedField('')}
+        onChange={(e) => {
+          const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+          if (value.length <= 50) {
+            setValue('lastName', value, { shouldValidate: true, shouldDirty: true });
+          }
+        }}
       />
-      {focusedField === 'lastName' && !watch("lastName") && <p className="field-hint">Please enter last name</p>}
+      {focusedField === 'lastName' && !watch("lastName") && <p className="field-hint">Please enter last name using only alphabets</p>}
       {errors.lastName && <p className="error">{errors.lastName.message}</p>}
      </div>
  
@@ -492,30 +478,20 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
           maxLength={10} 
           className="input"
           {...register("contactNumber", {
-            onChange: (e) => {
-              const v = e.target.value;
-              console.log('🔍 Contact number field changed to:', v);
-              console.log('🔍 Contact number length:', v.length);
-              console.log('🔍 Contact number type:', typeof v);
-              console.log('🔍 Contact number is valid?', /^\d{10}$/.test(v));
-              
-              // Only allow digits
-              const digitsOnly = v.replace(/\D/g, '');
-              if (digitsOnly !== v) {
-                e.target.value = digitsOnly;
-              }
-              
-              if (v && !/^\d{10}$/.test(v)) {
-                setError('contactNumber', { type: 'pattern', message: 'Enter a valid 10-digit number' });
-              } else {
-                clearErrors('contactNumber');
-              }
-            }
+            pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit number" }
           })} 
           placeholder="10-digit number"
-          onBlur={() => trigger('contactNumber')}
+          onFocus={() => setFocusedField('contactNumber')}
+          onBlur={() => { setFocusedField(''); trigger('contactNumber'); }}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^0-9]/g, '');
+            if (value.length <= 10) {
+              setValue('contactNumber', value, { shouldValidate: true, shouldDirty: true });
+            }
+          }}
         />
       </label>
+      {focusedField === 'contactNumber' && !watch("contactNumber") && <p className="field-hint">Please enter 10-digit contact number</p>}
       {errors.contactNumber?.message && <p className="error">{errors.contactNumber.message}</p>}
       
       <label>
@@ -528,8 +504,13 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
             pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Please enter a valid email address" }
           })} 
           placeholder="Enter email address"
+          maxLength={100}
           onFocus={() => setFocusedField('email')}
           onBlur={() => { setFocusedField(''); trigger('email'); }}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^A-Za-z0-9@._-]/g, '');
+            setValue('email', value, { shouldValidate: true, shouldDirty: true });
+          }}
         />
       </label>
       {focusedField === 'email' && !watch("email") && <p className="field-hint">Please enter email address</p>}
@@ -538,18 +519,24 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
       <label>
 
         Father Name <span className="optional"></span>
-        <input type="text" {...register("fatherName")} placeholder="Enter father's name"
-          onChange={(e)=>{
-            const v = e.target.value;
-            if (v && !/^[A-Za-z\s]{2,40}$/.test(v)) {
-              setError('fatherName', { type: 'pattern', message: 'Only letters are allowed' });
-            } else {
-              clearErrors('fatherName');
+        <input 
+          type="text" 
+          maxLength={50}
+          {...register("fatherName", {
+            pattern: { value: /^[A-Za-z\s]{2,50}$/, message: "Only letters are allowed" }
+          })} 
+          placeholder="Enter father's name"
+          onFocus={() => setFocusedField('fatherName')}
+          onBlur={() => { setFocusedField(''); trigger('fatherName'); }}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+            if (value.length <= 50) {
+              setValue('fatherName', value, { shouldValidate: true, shouldDirty: true });
             }
           }}
-          onBlur={() => trigger('fatherName')}
         />
       </label>
+      {focusedField === 'fatherName' && !watch("fatherName") && <p className="field-hint">Please enter father's name using only alphabets</p>}
       {errors.fatherName?.message && <p className="error">{errors.fatherName.message}</p>}
  
       <label>
@@ -570,18 +557,24 @@ const FarmerRegistrationForm = ({ isInDashboard = false, editData = null, onClos
  
       <label>
         Alternative Number <span className="optional"></span>
-        <input type="tel" maxLength={10} {...register("alternativeNumber")} placeholder="10-digit number"
-          onChange={(e)=>{
-            const v = e.target.value;
-            if (v && !/^\d{10}$/.test(v)) {
-              setError('alternativeNumber', { type: 'pattern', message: 'Must be 10 digits' });
-            } else {
-              clearErrors('alternativeNumber');
+        <input 
+          type="tel" 
+          maxLength={10} 
+          {...register("alternativeNumber", {
+            pattern: { value: /^[0-9]{10}$/, message: "Must be 10 digits" }
+          })} 
+          placeholder="10-digit number"
+          onFocus={() => setFocusedField('alternativeNumber')}
+          onBlur={() => { setFocusedField(''); trigger('alternativeNumber'); }}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^0-9]/g, '');
+            if (value.length <= 10) {
+              setValue('alternativeNumber', value, { shouldValidate: true, shouldDirty: true });
             }
           }}
-          onBlur={() => trigger('alternativeNumber')}
         />
       </label>
+      {focusedField === 'alternativeNumber' && !watch("alternativeNumber") && <p className="field-hint">Please enter 10-digit alternative number</p>}
       {errors.alternativeNumber?.message && <p className="error">{errors.alternativeNumber.message}</p>}
      
     </div>

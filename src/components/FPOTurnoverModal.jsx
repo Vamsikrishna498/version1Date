@@ -194,25 +194,41 @@ const FPOTurnoverModal = ({ isOpen, onClose, fpoId, fpoName }) => {
         </div>
         
         <div className="modal-body">
-          {/* Create Turnover Button */}
-          <div className="create-section">
-            <button 
-              className="create-button"
-              onClick={() => {
-                setEditingTurnover(null);
-                setFormData({
-                  financialYear: '',
-                  turnoverAmount: ''
-                });
-                setShowCreateForm(true);
-              }}
-            >
-              + Create Turnover
-            </button>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-buttons">
+              <button 
+                className="create-button"
+                onClick={() => {
+                  setEditingTurnover(null);
+                  setFormData({
+                    financialYear: '',
+                    turnoverAmount: ''
+                  });
+                  setShowCreateForm(true);
+                }}
+              >
+                + Create Turnover
+              </button>
+            </div>
+            
+            <div className="refresh-container">
+              <button 
+                className="refresh-btn"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  loadTurnovers();
+                }}
+                title="Refresh turnover records list"
+              >
+                <i className="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
           </div>
 
-          {/* Filter Section */}
-          <div className="filter-section">
+          {/* Filter Section - Hidden */}
+          <div className="filter-section" style={{ display: 'none' }}>
             <div className="filter-label">FILTER</div>
             <div className="filter-inputs">
               <input

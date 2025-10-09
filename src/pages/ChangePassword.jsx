@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import api from '../api/apiService';
+import PasswordInput from '../components/PasswordInput';
 
 import '../styles/Login.css';
 import logo from '../assets/rightlogo.png';
@@ -126,11 +127,25 @@ const ChangePassword = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="auth-field">
               <label>New Password</label>
-              <input type="password" name="newPassword" value={form.newPassword} onChange={handleChange} required placeholder="Enter your new password" disabled={!!success} />
+              <PasswordInput
+                name="newPassword"
+                value={form.newPassword}
+                onChange={handleChange}
+                required
+                placeholder="Enter your new password"
+                disabled={!!success}
+              />
             </div>
             <div className="auth-field">
               <label>Confirm New Password</label>
-              <input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} required placeholder="Confirm your new password" disabled={!!success} />
+              <PasswordInput
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                placeholder="Confirm your new password"
+                disabled={!!success}
+              />
             </div>
             {error && <div className="error-text">{error}</div>}
             {success && <div className="success-text">{success}</div>}

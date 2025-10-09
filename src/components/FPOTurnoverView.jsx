@@ -364,21 +364,37 @@ const FPOTurnoverView = ({ fpo, onClose, onToast }) => {
       <div className="turnover-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-turnover-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingTurnover(null);
-              setFormData({
-                financialYear: '',
-                turnoverAmount: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-plus"></i>
-            Add Turnover Record
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-turnover-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingTurnover(null);
+                setFormData({
+                  financialYear: '',
+                  turnoverAmount: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-plus"></i>
+              Add Turnover Record
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadTurnovers();
+              }}
+              title="Refresh turnover records list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

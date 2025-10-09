@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fpoAPI } from '../api/apiService';
+import '../styles/FPOInputShopView.css';
 
 const FPOInputShopModal = ({ isOpen, onClose, fpoId, fpoName }) => {
   const [shops, setShops] = useState([]);
@@ -15,6 +16,8 @@ const FPOInputShopModal = ({ isOpen, onClose, fpoId, fpoName }) => {
     pesticideLicense: '',
     fertiliserLicense: ''
   });
+  const [formErrors, setFormErrors] = useState({});
+  const [focusedField, setFocusedField] = useState('');
 
   useEffect(() => {
     if (isOpen && fpoId) loadShops();
@@ -119,10 +122,29 @@ const FPOInputShopModal = ({ isOpen, onClose, fpoId, fpoName }) => {
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
-          <div className="create-section">
-            <button className="create-button" onClick={() => { setEditing(null); setFormData({ shopName: '', seedLicense: '', pesticideLicense: '', fertiliserLicense: '' }); setShowForm(true); }}>+ Create Input Shop</button>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-buttons">
+              <button className="create-button" onClick={() => { setEditing(null); setFormData({ shopName: '', seedLicense: '', pesticideLicense: '', fertiliserLicense: '' }); setShowForm(true); }}>+ Create Input Shop</button>
+            </div>
+            
+            <div className="refresh-container">
+              <button 
+                className="refresh-btn"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  loadShops();
+                }}
+                title="Refresh input shops list"
+              >
+                <i className="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
           </div>
-          <div className="filter-section">
+          
+          {/* Filter Section - Hidden */}
+          <div className="filter-section" style={{ display: 'none' }}>
             <div className="filter-label">FILTER</div>
             <div className="filter-inputs">
               <input className="search-input" placeholder="Search here..." value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} />
@@ -185,19 +207,72 @@ const FPOInputShopModal = ({ isOpen, onClose, fpoId, fpoName }) => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Shop Name *</label>
-                    <input type="text" value={formData.shopName} onChange={(e)=>setFormData({...formData, shopName: e.target.value})} required className={!formData.shopName ? 'required-field' : ''} />
+                    <input 
+                      type="text" 
+                      value={formData.shopName} 
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^A-Za-z0-9\s&.,()-]/g, '').substring(0, 100);
+                        setFormData({...formData, shopName: value});
+                      }}
+                      onFocus={() => setFocusedField('shopName')}
+                      onBlur={() => setFocusedField('')}
+                      required 
+                      maxLength={100}
+                      className={`form-input ${!formData.shopName ? 'required-field' : ''}`}
+                      placeholder="Enter shop name"
+                    />
+                    {focusedField === 'shopName' && !formData.shopName && <div className="field-hint">Please enter shop name (letters, numbers, spaces, and common business characters)</div>}
                   </div>
                   <div className="form-group">
                     <label>Seed License</label>
-                    <input type="text" value={formData.seedLicense} onChange={(e)=>setFormData({...formData, seedLicense: e.target.value})} />
+                    <input 
+                      type="text" 
+                      value={formData.seedLicense} 
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^A-Za-z0-9\s&.,()-]/g, '').substring(0, 50);
+                        setFormData({...formData, seedLicense: value});
+                      }}
+                      onFocus={() => setFocusedField('seedLicense')}
+                      onBlur={() => setFocusedField('')}
+                      maxLength={50}
+                      className="form-input"
+                      placeholder="Enter seed license number"
+                    />
+                    {focusedField === 'seedLicense' && !formData.seedLicense && <div className="field-hint">Please enter seed license number</div>}
                   </div>
                   <div className="form-group">
                     <label>Pesticide License</label>
-                    <input type="text" value={formData.pesticideLicense} onChange={(e)=>setFormData({...formData, pesticideLicense: e.target.value})} />
+                    <input 
+                      type="text" 
+                      value={formData.pesticideLicense} 
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^A-Za-z0-9\s&.,()-]/g, '').substring(0, 50);
+                        setFormData({...formData, pesticideLicense: value});
+                      }}
+                      onFocus={() => setFocusedField('pesticideLicense')}
+                      onBlur={() => setFocusedField('')}
+                      maxLength={50}
+                      className="form-input"
+                      placeholder="Enter pesticide license number"
+                    />
+                    {focusedField === 'pesticideLicense' && !formData.pesticideLicense && <div className="field-hint">Please enter pesticide license number</div>}
                   </div>
                   <div className="form-group">
                     <label>Fertiliser License</label>
-                    <input type="text" value={formData.fertiliserLicense} onChange={(e)=>setFormData({...formData, fertiliserLicense: e.target.value})} />
+                    <input 
+                      type="text" 
+                      value={formData.fertiliserLicense} 
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^A-Za-z0-9\s&.,()-]/g, '').substring(0, 50);
+                        setFormData({...formData, fertiliserLicense: value});
+                      }}
+                      onFocus={() => setFocusedField('fertiliserLicense')}
+                      onBlur={() => setFocusedField('')}
+                      maxLength={50}
+                      className="form-input"
+                      placeholder="Enter fertiliser license number"
+                    />
+                    {focusedField === 'fertiliserLicense' && !formData.fertiliserLicense && <div className="field-hint">Please enter fertiliser license number</div>}
                   </div>
                 </div>
                 <div className="form-actions">

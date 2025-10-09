@@ -358,21 +358,37 @@ const FPOFarmServicesView = ({ fpo, onClose, onToast }) => {
       <div className="farm-services-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-service-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingService(null);
-              setFormData({
-                serviceType: '',
-                description: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-plus"></i>
-            Add Farm Service
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-service-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingService(null);
+                setFormData({
+                  serviceType: '',
+                  description: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-plus"></i>
+              Add Farm Service
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadFarmServices();
+              }}
+              title="Refresh farm services list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

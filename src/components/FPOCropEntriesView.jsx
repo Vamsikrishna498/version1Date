@@ -11,6 +11,7 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
   const [editingCropEntry, setEditingCropEntry] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [focusedField, setFocusedField] = useState('');
 
   // Form state for creating/editing crop entries
   const [formData, setFormData] = useState({
@@ -76,24 +77,32 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
   const validateForm = () => {
     const errors = {};
     
+    // Crop year validation - 4 digits, reasonable range
     if (!formData.cropYear.trim()) {
       errors.cropYear = 'Crop year is required';
+    } else if (!/^(19|20)\d{2}$/.test(formData.cropYear.trim())) {
+      errors.cropYear = 'Please enter a valid 4-digit year (1900-2099)';
     }
     
+    // Crop name validation - alphabets, spaces, and common characters
     if (!formData.cropName.trim()) {
       errors.cropName = 'Crop name is required';
+    } else if (!/^[A-Za-z\s&.,()-]{2,50}$/.test(formData.cropName.trim())) {
+      errors.cropName = 'Crop name must contain only letters, spaces and common characters (2-50 characters)';
     }
     
+    // Area validation - positive decimal numbers
     if (!formData.area.trim()) {
       errors.area = 'Area is required';
-    } else if (isNaN(parseFloat(formData.area)) || parseFloat(formData.area) < 0) {
-      errors.area = 'Please enter a valid positive number';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.area.trim()) || parseFloat(formData.area) <= 0) {
+      errors.area = 'Please enter a valid positive number (up to 2 decimal places)';
     }
     
+    // Production validation - positive decimal numbers
     if (!formData.production.trim()) {
       errors.production = 'Production is required';
-    } else if (isNaN(parseFloat(formData.production)) || parseFloat(formData.production) < 0) {
-      errors.production = 'Please enter a valid positive number';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.production.trim()) || parseFloat(formData.production) <= 0) {
+      errors.production = 'Please enter a valid positive number (up to 2 decimal places)';
     }
     
     setFormErrors(errors);
@@ -237,7 +246,37 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
   };
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    let filteredValue = value;
+    
+    // Apply input restrictions based on field type
+    switch (field) {
+      case 'cropYear':
+        filteredValue = value.replace(/[^0-9]/g, '');
+        if (filteredValue.length > 4) filteredValue = filteredValue.substring(0, 4);
+        break;
+      case 'cropName':
+        filteredValue = value.replace(/[^A-Za-z\s&.,()-]/g, '');
+        if (filteredValue.length > 50) filteredValue = filteredValue.substring(0, 50);
+        break;
+      case 'area':
+      case 'production':
+        // Allow numbers and one decimal point
+        filteredValue = value.replace(/[^0-9.]/g, '');
+        // Ensure only one decimal point
+        const parts = filteredValue.split('.');
+        if (parts.length > 2) {
+          filteredValue = parts[0] + '.' + parts.slice(1).join('');
+        }
+        // Limit to 2 decimal places
+        if (parts.length === 2 && parts[1].length > 2) {
+          filteredValue = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        break;
+      default:
+        break;
+    }
+    
+    setFormData(prev => ({ ...prev, [field]: filteredValue }));
     
     // Clear error when user starts typing
     if (formErrors[field]) {
@@ -348,7 +387,16 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
                   onChange={(e) => updateField('cropYear', e.target.value)}
                   className={`form-input ${formErrors.cropYear ? 'error' : ''}`}
                   placeholder="e.g., 2023"
+                  maxLength={4}
+                  onFocus={() => setFocusedField('cropYear')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'cropYear' && !formData.cropYear && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter a 4-digit year (1900-2099)
+                  </div>
+                )}
                 {formErrors.cropYear && <span className="error-message">{formErrors.cropYear}</span>}
               </div>
 
@@ -363,7 +411,16 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
                   onChange={(e) => updateField('cropName', e.target.value)}
                   className={`form-input ${formErrors.cropName ? 'error' : ''}`}
                   placeholder="Enter crop name (e.g., Rice, Wheat)"
+                  maxLength={50}
+                  onFocus={() => setFocusedField('cropName')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'cropName' && !formData.cropName && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter crop name using letters, spaces and common characters (e.g., Rice, Wheat, Corn)
+                  </div>
+                )}
                 {formErrors.cropName && <span className="error-message">{formErrors.cropName}</span>}
               </div>
 
@@ -380,7 +437,16 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
                   placeholder="Enter area in acres"
                   min="0"
                   step="0.01"
+                  maxLength={10}
+                  onFocus={() => setFocusedField('area')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'area' && !formData.area && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter area in acres as a positive number (e.g., 5.5, 10.25)
+                  </div>
+                )}
                 {formErrors.area && <span className="error-message">{formErrors.area}</span>}
               </div>
 
@@ -397,7 +463,16 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
                   placeholder="Enter production in metric tons"
                   min="0"
                   step="0.01"
+                  maxLength={10}
+                  onFocus={() => setFocusedField('production')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'production' && !formData.production && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter production in metric tons as a positive number (e.g., 2.5, 15.75)
+                  </div>
+                )}
                 {formErrors.production && <span className="error-message">{formErrors.production}</span>}
               </div>
             </div>
@@ -458,23 +533,39 @@ const FPOCropEntriesView = ({ fpo, onClose, onToast }) => {
       <div className="crop-entries-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-crop-entry-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingCropEntry(null);
-              setFormData({
-                cropYear: '',
-                cropName: '',
-                area: '',
-                production: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-seedling"></i>
-            Add Crop Entry
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-crop-entry-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingCropEntry(null);
+                setFormData({
+                  cropYear: '',
+                  cropName: '',
+                  area: '',
+                  production: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-seedling"></i>
+              Add Crop Entry
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadCropEntries();
+              }}
+              title="Refresh crop entries list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

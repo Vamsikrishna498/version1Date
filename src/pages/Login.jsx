@@ -4,6 +4,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import { authAPI } from '../api/apiService';
 import defaultLogo from '../assets/rightlogo.png';
 import { useBranding } from '../contexts/BrandingContext';
+import PasswordInput from '../components/PasswordInput';
 import '../styles/Login.css';
 
 const generateCaptcha = () => {
@@ -618,23 +619,14 @@ const Login = () => {
               {/* Password Field */}
               <div className="auth-field">
                 <label>Enter password</label>
-                <div className="auth-password">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    placeholder="Enter password"
-                  />
-                  <button
-                    type="button"
-                    className="auth-eye"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    👁️
-                  </button>
-                </div>
+                <PasswordInput
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="Enter password"
+                  className="auth-password"
+                />
                 {passwordError && <div className="auth-error">{passwordError}</div>}
               </div>
 

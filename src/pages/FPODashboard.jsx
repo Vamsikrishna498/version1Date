@@ -10,7 +10,7 @@ import UserProfileDropdown from '../components/UserProfileDropdown';
 import FPOList from '../components/FPOList';
 import FPOCreationForm from '../components/FPOCreationForm';
 import FPOBoardMembers from '../components/FPOBoardMembers';
-import FPOFarmServicesModal from '../components/FPOFarmServicesModal';
+import FPOFarmServicesView from '../components/FPOFarmServicesView';
 import FPOServices from '../components/FPOServices';
 import FPOCrops from '../components/FPOCrops';
 import FPOTurnover from '../components/FPOTurnover';
@@ -29,7 +29,8 @@ const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = fa
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFPOCreationForm, setShowFPOCreationForm] = useState(false);
-  const [showFarmServicesModal, setShowFarmServicesModal] = useState(false);
+  const [showFarmServices, setShowFarmServices] = useState(false);
+  const [selectedFPOForFarmServices, setSelectedFPOForFarmServices] = useState(null);
   const [stats, setStats] = useState({
     totalFPOs: 0,
     activeFPOs: 0,
@@ -221,7 +222,10 @@ const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = fa
               <h3>Farm Services</h3>
               <button 
                 className="btn btn-primary"
-                onClick={() => setShowFarmServicesModal(true)}
+                onClick={() => {
+                  setSelectedFPOForFarmServices(selectedFPO);
+                  setShowFarmServices(true);
+                }}
               >
                 + Create Farm Service
               </button>
@@ -417,13 +421,13 @@ const FPODashboard = ({ initialTab = 'overview', fpoId: propFpoId, embedded = fa
         />
       )}
 
-      {showFarmServicesModal && selectedFPO && (
-        <FPOFarmServicesModal
-          isOpen={showFarmServicesModal}
-          onClose={() => setShowFarmServicesModal(false)}
-          fpoId={selectedFPO.id}
-          fpoName={selectedFPO.fpoName}
-        />
+      {showFarmServices && selectedFPOForFarmServices && (
+        <div className="section-card" style={{ padding: 0 }}>
+          <FPOFarmServicesView
+            fpo={selectedFPOForFarmServices}
+            onClose={() => { setShowFarmServices(false); setSelectedFPOForFarmServices(null); }}
+          />
+        </div>
       )}
     </div>
   );

@@ -11,6 +11,7 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
   const [editingMember, setEditingMember] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [focusedField, setFocusedField] = useState('');
 
   // Form state for creating/editing board members
   const [formData, setFormData] = useState({
@@ -65,26 +66,35 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
   const validateForm = () => {
     const errors = {};
     
+    // Name validation - only alphabets and spaces
     if (!formData.name.trim()) {
       errors.name = 'Name is required';
+    } else if (!/^[A-Za-z\s]{2,50}$/.test(formData.name.trim())) {
+      errors.name = 'Name must contain only alphabets and spaces (2-50 characters)';
     }
     
+    // Designation validation - alphabets, spaces, and common business characters
     if (!formData.designation.trim()) {
       errors.designation = 'Designation is required';
+    } else if (!/^[A-Za-z\s&.,()-]{2,50}$/.test(formData.designation.trim())) {
+      errors.designation = 'Designation must contain only letters, spaces and common business characters (2-50 characters)';
     }
     
+    // Phone number validation - exactly 10 digits
     if (!formData.phoneNumber.trim()) {
       errors.phoneNumber = 'Phone number is required';
-    } else if (!/^[0-9+\-\s()]{10,}$/.test(formData.phoneNumber.replace(/\s/g, ''))) {
-      errors.phoneNumber = 'Please enter a valid phone number';
+    } else if (!/^[0-9]{10}$/.test(formData.phoneNumber.trim())) {
+      errors.phoneNumber = 'Phone number must be exactly 10 digits';
     }
     
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email validation - proper email format
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       errors.email = 'Please enter a valid email address';
     }
     
-    if (formData.linkedinProfileUrl && !/^https?:\/\/.+/i.test(formData.linkedinProfileUrl)) {
-      errors.linkedinProfileUrl = 'Please enter a valid URL';
+    // LinkedIn URL validation
+    if (formData.linkedinProfileUrl && !/^https?:\/\/.+/i.test(formData.linkedinProfileUrl.trim())) {
+      errors.linkedinProfileUrl = 'Please enter a valid URL starting with http:// or https://';
     }
     
     setFormErrors(errors);
@@ -280,7 +290,38 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
   };
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    let filteredValue = value;
+    
+    // Apply input restrictions based on field type
+    switch (field) {
+      case 'name':
+        filteredValue = value.replace(/[^A-Za-z\s]/g, '');
+        if (filteredValue.length > 50) filteredValue = filteredValue.substring(0, 50);
+        break;
+      case 'designation':
+        filteredValue = value.replace(/[^A-Za-z\s&.,()-]/g, '');
+        if (filteredValue.length > 50) filteredValue = filteredValue.substring(0, 50);
+        break;
+      case 'phoneNumber':
+        filteredValue = value.replace(/[^0-9]/g, '');
+        if (filteredValue.length > 10) filteredValue = filteredValue.substring(0, 10);
+        break;
+      case 'email':
+        filteredValue = value.replace(/[^A-Za-z0-9@._-]/g, '');
+        if (filteredValue.length > 100) filteredValue = filteredValue.substring(0, 100);
+        break;
+      case 'linkedinProfileUrl':
+        if (filteredValue.length > 200) filteredValue = filteredValue.substring(0, 200);
+        break;
+      case 'location':
+        filteredValue = value.replace(/[^A-Za-z0-9\s&.,()-]/g, '');
+        if (filteredValue.length > 100) filteredValue = filteredValue.substring(0, 100);
+        break;
+      default:
+        break;
+    }
+    
+    setFormData(prev => ({ ...prev, [field]: filteredValue }));
     
     // Clear error when user starts typing
     if (formErrors[field]) {
@@ -340,8 +381,17 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
                   value={formData.name}
                   onChange={(e) => updateField('name', e.target.value)}
                   className={`form-input ${formErrors.name ? 'error' : ''}`}
-                  placeholder="Enter full name"
+                  placeholder="Enter full name (alphabets only)"
+                  maxLength={50}
+                  onFocus={() => setFocusedField('name')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'name' && !formData.name && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter full name using only alphabets and spaces (2-50 characters)
+                  </div>
+                )}
                 {formErrors.name && <span className="error-message">{formErrors.name}</span>}
               </div>
 
@@ -356,7 +406,16 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
                   onChange={(e) => updateField('designation', e.target.value)}
                   className={`form-input ${formErrors.designation ? 'error' : ''}`}
                   placeholder="Enter designation"
+                  maxLength={50}
+                  onFocus={() => setFocusedField('designation')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'designation' && !formData.designation && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter designation using letters, spaces and common business characters (2-50 characters)
+                  </div>
+                )}
                 {formErrors.designation && <span className="error-message">{formErrors.designation}</span>}
               </div>
 
@@ -370,8 +429,17 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
                   value={formData.phoneNumber}
                   onChange={(e) => updateField('phoneNumber', e.target.value)}
                   className={`form-input ${formErrors.phoneNumber ? 'error' : ''}`}
-                  placeholder="Enter phone number"
+                  placeholder="Enter 10-digit phone number"
+                  maxLength={10}
+                  onFocus={() => setFocusedField('phoneNumber')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'phoneNumber' && !formData.phoneNumber && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter exactly 10 digits (numbers only, no spaces or special characters)
+                  </div>
+                )}
                 {formErrors.phoneNumber && <span className="error-message">{formErrors.phoneNumber}</span>}
               </div>
 
@@ -386,7 +454,16 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
                   onChange={(e) => updateField('email', e.target.value)}
                   className={`form-input ${formErrors.email ? 'error' : ''}`}
                   placeholder="Enter email address"
+                  maxLength={100}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'email' && !formData.email && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter a valid email address (example: user@domain.com)
+                  </div>
+                )}
                 {formErrors.email && <span className="error-message">{formErrors.email}</span>}
               </div>
 
@@ -401,7 +478,16 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
                   onChange={(e) => updateField('linkedinProfileUrl', e.target.value)}
                   className={`form-input ${formErrors.linkedinProfileUrl ? 'error' : ''}`}
                   placeholder="https://linkedin.com/in/username"
+                  maxLength={200}
+                  onFocus={() => setFocusedField('linkedinProfileUrl')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'linkedinProfileUrl' && !formData.linkedinProfileUrl && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter a valid LinkedIn profile URL starting with http:// or https://
+                  </div>
+                )}
                 {formErrors.linkedinProfileUrl && <span className="error-message">{formErrors.linkedinProfileUrl}</span>}
               </div>
 
@@ -416,7 +502,16 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
                   onChange={(e) => updateField('location', e.target.value)}
                   className="form-input"
                   placeholder="Enter location"
+                  maxLength={100}
+                  onFocus={() => setFocusedField('location')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'location' && !formData.location && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter location using letters, numbers, spaces and common characters
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -494,26 +589,42 @@ const FPOBoardMembersView = ({ fpo, onClose, onToast }) => {
       <div className="board-members-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-member-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingMember(null);
-              setFormData({
-                name: '',
-                designation: '',
-                phoneNumber: '',
-                email: '',
-                linkedinProfileUrl: '',
-                location: '',
-                role: 'MEMBER'
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-plus"></i>
-            Add Board Member
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-member-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingMember(null);
+                setFormData({
+                  name: '',
+                  designation: '',
+                  phoneNumber: '',
+                  email: '',
+                  linkedinProfileUrl: '',
+                  location: '',
+                  role: 'MEMBER'
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-plus"></i>
+              Add Board Member
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadBoardMembers();
+              }}
+              title="Refresh board members list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

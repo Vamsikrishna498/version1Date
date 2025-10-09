@@ -376,20 +376,36 @@ const FPOProductCategoriesView = ({ fpo, onClose, onToast }) => {
       <div className="product-categories-content">
         {/* Action Bar */}
         <div className="action-bar">
-          <button 
-            className="create-category-btn"
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingCategory(null);
-              setFormData({
-                categoryName: ''
-              });
-              setFormErrors({});
-            }}
-          >
-            <i className="fas fa-tags"></i>
-            Add Category
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="create-category-btn"
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingCategory(null);
+                setFormData({
+                  categoryName: ''
+                });
+                setFormErrors({});
+              }}
+            >
+              <i className="fas fa-tags"></i>
+              Add Category
+            </button>
+          </div>
+          
+          <div className="refresh-container">
+            <button 
+              className="refresh-btn"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                loadCategories();
+              }}
+              title="Refresh product categories list"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Refresh
+            </button>
+          </div>
 
           {/* Filter Section */}
           <div className="filter-section">

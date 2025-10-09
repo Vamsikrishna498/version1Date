@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { companiesAPI, authAPI } from '../api/apiService';
 import { buildCompanyLogoCandidates } from '../contexts/BrandingContext';
+import PasswordInput from './PasswordInput';
 
 const initial = { name: '', shortName: '', email: '', phone: '', defaultTimezone: 'Asia/Kolkata', status: 'ACTIVE' };
 
@@ -1216,9 +1217,8 @@ const CompaniesTab = () => {
                         <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
                           Password<span style={{ color: '#ef4444' }}>{selected?.id ? '' : '*'}</span>
                         </label>
-                        <input 
-                          type="password" 
-                          placeholder="Please Enter Strong Password (8+ chars, mixed case, numbers, symbols)" 
+                        <PasswordInput 
+                          placeholder="Please Enter Password" 
                           value={admin.password} 
                           onChange={e => handleInputChange('password', e.target.value, true)}
                           onBlur={e => {

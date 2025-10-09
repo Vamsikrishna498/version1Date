@@ -95,10 +95,29 @@ const FPOProductCategoriesModal = ({ isOpen, onClose, fpoId }) => {
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
-          <div className="create-section">
-            <button className="create-button" onClick={() => { setEditing(null); setFormData({ categoryName: '' }); setShowForm(true); }}>+ Create Product Category</button>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-buttons">
+              <button className="create-button" onClick={() => { setEditing(null); setFormData({ categoryName: '' }); setShowForm(true); }}>+ Create Product Category</button>
+            </div>
+            
+            <div className="refresh-container">
+              <button 
+                className="refresh-btn"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  load();
+                }}
+                title="Refresh product categories list"
+              >
+                <i className="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
           </div>
-          <div className="filter-section">
+          
+          {/* Filter Section - Hidden */}
+          <div className="filter-section" style={{ display: 'none' }}>
             <div className="filter-label">FILTER</div>
             <div className="filter-inputs">
               <input className="search-input" placeholder="Search here..." value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} />

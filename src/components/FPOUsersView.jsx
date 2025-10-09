@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fpoUsersAPI } from '../api/apiService';
+import PasswordInput from './PasswordInput';
 import '../styles/FPOUsersView.css';
 
 const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
@@ -12,16 +13,17 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [focusedField, setFocusedField] = useState('');
   const [passwordUser, setPasswordUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
   // User types available for selection based on user role
   const getUserTypes = () => {
     const allUserTypes = [
-      { value: 'ADMIN', label: 'Admin', icon: 'fas fa-user-shield', color: '#ef4444' },
-      { value: 'EMPLOYEE', label: 'Employee', icon: 'fas fa-user-tie', color: '#3b82f6' },
-      { value: 'FARMER', label: 'Farmer', icon: 'fas fa-seedling', color: '#10b981' },
-      { value: 'FPO', label: 'FPO', icon: 'fas fa-building', color: '#8b5cf6' }
+      { value: 'ADMIN', label: 'Admin', icon: 'fas fa-user-shield', color: '#dc2626', bgColor: '#fef2f2', borderColor: '#fecaca' },
+      { value: 'EMPLOYEE', label: 'Employee', icon: 'fas fa-user-tie', color: '#2563eb', bgColor: '#eff6ff', borderColor: '#bfdbfe' },
+      { value: 'FARMER', label: 'Farmer', icon: 'fas fa-seedling', color: '#059669', bgColor: '#ecfdf5', borderColor: '#a7f3d0' },
+      { value: 'FPO', label: 'FPO', icon: 'fas fa-building', color: '#7c3aed', bgColor: '#faf5ff', borderColor: '#c4b5fd' }
     ];
     
     // For employees, only allow FPO-scoped roles
@@ -135,22 +137,32 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
   const validateForm = () => {
     const errors = {};
     
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
-    }
-    
-    if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = 'Phone number is required';
-    }
-    
+    // First Name validation - only alphabets, 2-50 characters
     if (!formData.firstName.trim()) {
       errors.firstName = 'First name is required';
+    } else if (!/^[A-Za-z]{2,50}$/.test(formData.firstName.trim())) {
+      errors.firstName = 'First name must contain only alphabets (2-50 characters)';
     }
     
+    // Last Name validation - only alphabets, 2-50 characters
     if (!formData.lastName.trim()) {
       errors.lastName = 'Last name is required';
+    } else if (!/^[A-Za-z]{2,50}$/.test(formData.lastName.trim())) {
+      errors.lastName = 'Last name must contain only alphabets (2-50 characters)';
+    }
+    
+    // Email validation - proper email format
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    // Phone number validation - exactly 10 digits
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = 'Phone number is required';
+    } else if (!/^[0-9]{10}$/.test(formData.phoneNumber.trim())) {
+      errors.phoneNumber = 'Phone number must be exactly 10 digits';
     }
     
     if (!formData.role) {
@@ -167,10 +179,17 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
       }
     }
     
-    if (!formData.password.trim()) {
+    // Password validation - minimum 8 characters with complexity
+    // For editing users, password is optional (only validate if provided)
+    if (formData.password.trim()) {
+      if (formData.password.length < 8) {
+        errors.password = 'Password must be at least 8 characters';
+      } else if (!/(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/.test(formData.password)) {
+        errors.password = 'Password must contain uppercase, lowercase, and number';
+      }
+    } else if (!editingUser) {
+      // Password is required only when creating new users
       errors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
     }
     
     setFormErrors(errors);
@@ -345,6 +364,16 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
     return userType ? userType.color : '#6b7280';
   };
 
+  const getUserBgColor = (role) => {
+    const userType = USER_TYPES.find(type => type.value === role);
+    return userType ? userType.bgColor : '#f3f4f6';
+  };
+
+  const getUserBorderColor = (role) => {
+    const userType = USER_TYPES.find(type => type.value === role);
+    return userType ? userType.borderColor : '#d1d5db';
+  };
+
   const getTotalUsers = () => {
     return users.length;
   };
@@ -394,16 +423,21 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
     }
   };
 
-  // Full-page form view (like Turnover form) when creating/editing
-  if (showCreateForm) {
+  // Full-page form view (like Turnover form) when creating/editing or updating password
+  if (showCreateForm || showPasswordModal) {
     return (
       <div className="fpo-user-form">
         <div className="form-header">
           <div className="header-content">
             <div className="header-left">
-              <h1 className="form-title">{editingUser ? 'Edit User' : 'Add New User'}</h1>
+              <h1 className="form-title">
+                {showPasswordModal ? 'Update Password' : (editingUser ? 'Edit User' : 'Add New User')}
+              </h1>
               <p className="form-subtitle">
-                {editingUser ? 'Update user details' : 'Add a new user for ' + (fpo?.fpoName || 'FPO')}
+                {showPasswordModal 
+                  ? `Update password for ${passwordUser?.firstName || ''} ${passwordUser?.lastName || ''}`.trim()
+                  : (editingUser ? 'Update user details' : 'Add a new user for ' + (fpo?.fpoName || 'FPO'))
+                }
               </p>
             </div>
             <div className="header-right">
@@ -411,7 +445,10 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                 className="close-btn"
                 onClick={() => {
                   setShowCreateForm(false);
+                  setShowPasswordModal(false);
                   setEditingUser(null);
+                  setPasswordUser(null);
+                  setNewPassword('');
                   setFormErrors({});
                 }}
                 title="Close"
@@ -423,17 +460,86 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
         </div>
 
         <div className="form-content">
-          <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="user-form">
+          {showPasswordModal ? (
+            // Password Update Form
+            <form onSubmit={handleUpdatePassword} className="user-form">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">User Name</label>
+                  <input
+                    type="text"
+                    value={`${passwordUser?.firstName || ''} ${passwordUser?.lastName || ''}`.trim()}
+                    className="form-input"
+                    disabled
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    value={passwordUser?.email || ''}
+                    className="form-input"
+                    disabled
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label className="form-label">New Password <span className="required">*</span></label>
+                  <PasswordInput
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="form-input"
+                    placeholder="Enter new password (min 8 chars with uppercase, lowercase, number)"
+                    maxLength={50}
+                  />
+                </div>
+              </div>
+              
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordUser(null);
+                    setNewPassword('');
+                  }}
+                >
+                  <i className="fas fa-times"></i>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-key"></i>
+                  Update Password
+                </button>
+              </div>
+            </form>
+          ) : (
+            // User Create/Edit Form
+            <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="user-form">
             <div className="form-grid">
               <div className="form-group">
                 <label className="form-label">First Name <span className="required">*</span></label>
                 <input
                   type="text"
                   value={formData.firstName}
-                  onChange={(e) => updateField('firstName', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^A-Za-z]/g, '');
+                    if (value.length <= 50) {
+                      updateField('firstName', value);
+                    }
+                  }}
                   className={`form-input ${formErrors.firstName ? 'error' : ''}`}
-                  placeholder="Enter first name"
+                  placeholder="Enter first name (alphabets only)"
+                  maxLength={50}
+                  onFocus={() => setFocusedField('firstName')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'firstName' && !formData.firstName && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter first name using only alphabets (2-50 characters)
+                  </div>
+                )}
                 {formErrors.firstName && <span className="error-message">{formErrors.firstName}</span>}
               </div>
               <div className="form-group">
@@ -441,10 +547,24 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                 <input
                   type="text"
                   value={formData.lastName}
-                  onChange={(e) => updateField('lastName', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^A-Za-z]/g, '');
+                    if (value.length <= 50) {
+                      updateField('lastName', value);
+                    }
+                  }}
                   className={`form-input ${formErrors.lastName ? 'error' : ''}`}
-                  placeholder="Enter last name"
+                  placeholder="Enter last name (alphabets only)"
+                  maxLength={50}
+                  onFocus={() => setFocusedField('lastName')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'lastName' && !formData.lastName && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter last name using only alphabets (2-50 characters)
+                  </div>
+                )}
                 {formErrors.lastName && <span className="error-message">{formErrors.lastName}</span>}
               </div>
               <div className="form-group">
@@ -452,21 +572,47 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => updateField('email', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^A-Za-z0-9@._-]/g, '');
+                    updateField('email', value);
+                  }}
                   className={`form-input ${formErrors.email ? 'error' : ''}`}
                   placeholder="Enter email address"
+                  maxLength={100}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'email' && !formData.email && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter a valid email address (example: user@domain.com)
+                  </div>
+                )}
                 {formErrors.email && <span className="error-message">{formErrors.email}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">Phone Number <span className="required">*</span></label>
                 <input
-                  type="text"
+                  type="tel"
                   value={formData.phoneNumber}
-                  onChange={(e) => updateField('phoneNumber', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    if (value.length <= 10) {
+                      updateField('phoneNumber', value);
+                    }
+                  }}
                   className={`form-input ${formErrors.phoneNumber ? 'error' : ''}`}
-                  placeholder="Enter phone number"
+                  placeholder="Enter 10-digit phone number"
+                  maxLength={10}
+                  onFocus={() => setFocusedField('phoneNumber')}
+                  onBlur={() => setFocusedField('')}
                 />
+                {focusedField === 'phoneNumber' && !formData.phoneNumber && (
+                  <div className="field-hint">
+                    <i className="fas fa-info-circle"></i>
+                    Enter exactly 10 digits (numbers only, no spaces or special characters)
+                  </div>
+                )}
                 {formErrors.phoneNumber && <span className="error-message">{formErrors.phoneNumber}</span>}
               </div>
               <div className="form-group">
@@ -488,12 +634,16 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
               {!editingUser && (
                 <div className="form-group full-width">
                   <label className="form-label">Password <span className="required">*</span></label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={formData.password}
-                    onChange={(e) => updateField('password', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z0-9@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/?]/g, '');
+                      updateField('password', value);
+                    }}
                     className={`form-input ${formErrors.password ? 'error' : ''}`}
-                    placeholder="Enter password"
+                    placeholder="Enter password (min 8 chars with uppercase, lowercase, number)"
+                    maxLength={50}
+                    error={!!formErrors.password}
                   />
                   {formErrors.password && <span className="error-message">{formErrors.password}</span>}
                 </div>
@@ -519,6 +669,7 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
               </button>
             </div>
           </form>
+          )}
         </div>
       </div>
     );
@@ -569,7 +720,9 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
               <i className="fas fa-user-plus"></i>
               Add User
             </button>
-            
+          </div>
+          
+          <div className="refresh-container">
             <button 
               className="refresh-btn"
               onClick={() => {
@@ -647,7 +800,10 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                 ) : (
                   filteredUsers.map((user, index) => {
                     const userColor = getUserColor(user.role);
+                    const userBgColor = getUserBgColor(user.role);
+                    const userBorderColor = getUserBorderColor(user.role);
                     const userIcon = getUserIcon(user.role);
+                    
                     
                     return (
                       <tr key={user.id || index} className="user-row">
@@ -662,9 +818,13 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                           <span 
                             className="type-badge"
                             style={{ 
-                              backgroundColor: `${userColor}20`,
+                              backgroundColor: 'transparent',
                               color: userColor,
-                              border: `1px solid ${userColor}40`
+                              border: `1px solid ${userColor}`,
+                              boxShadow: 'none',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              padding: '6px 12px'
                             }}
                           >
                             <i className={userIcon}></i>
@@ -714,16 +874,68 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                               <div className={`dropdown-menu ${index >= 2 ? 'dropdown-menu-bottom' : 'dropdown-menu-top'}`}>
                                 <button 
                                   className="dropdown-item-enhanced edit-item"
+                                  style={{
+                                    background: 'white',
+                                    color: '#3b82f6',
+                                    fontWeight: '500',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
+                                    margin: '2px 8px',
+                                    padding: '10px 16px',
+                                    width: 'calc(100% - 16px)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '14px',
+                                    transition: 'all 0.2s ease',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.background = '#f8fafc';
+                                    e.target.style.borderColor = '#3b82f6';
+                                    e.target.style.color = '#1d4ed8';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.background = 'white';
+                                    e.target.style.borderColor = '#e5e7eb';
+                                    e.target.style.color = '#3b82f6';
+                                  }}
                                   onClick={() => {
                                     handleEditUser(user);
                                     setActiveDropdown(null);
                                   }}
                                 >
-                                  <i className="fas fa-edit"></i>
+                                  <i className="fas fa-edit" style={{ fontSize: '12px' }}></i>
                                   Edit
                                 </button>
                                 <button 
                                   className="dropdown-item-enhanced password-item"
+                                  style={{
+                                    background: 'white',
+                                    color: '#059669',
+                                    fontWeight: '500',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
+                                    margin: '2px 8px',
+                                    padding: '10px 16px',
+                                    width: 'calc(100% - 16px)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '14px',
+                                    transition: 'all 0.2s ease',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.background = '#f0fdf4';
+                                    e.target.style.borderColor = '#059669';
+                                    e.target.style.color = '#047857';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.background = 'white';
+                                    e.target.style.borderColor = '#e5e7eb';
+                                    e.target.style.color = '#059669';
+                                  }}
                                   onClick={() => {
                                     setPasswordUser(user);
                                     setNewPassword('');
@@ -731,7 +943,7 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                                     setActiveDropdown(null);
                                   }}
                                 >
-                                  <i className="fas fa-key"></i>
+                                  <i className="fas fa-key" style={{ fontSize: '12px' }}></i>
                                   Change Password
                                 </button>
                               </div>
@@ -833,8 +1045,8 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
         )}
       </div>
 
-      {/* Create/Edit Form Modal */}
-      {showCreateForm && (
+      {/* Create/Edit Form Modal - DISABLED: Now using full-width form */}
+      {false && showCreateForm && (
         <div className="form-modal-overlay">
           <div className="form-modal-content">
             <div className="form-modal-header">
@@ -860,9 +1072,15 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                     id="firstName"
                     type="text"
                     value={formData.firstName}
-                    onChange={(e) => updateField('firstName', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z]/g, '');
+                      if (value.length <= 50) {
+                        updateField('firstName', value);
+                      }
+                    }}
                     className={`form-input ${formErrors.firstName ? 'error' : ''}`}
-                    placeholder="Enter first name"
+                    placeholder="Enter first name (alphabets only)"
+                    maxLength={50}
                   />
                   {formErrors.firstName && <span className="error-message">{formErrors.firstName}</span>}
                 </div>
@@ -875,9 +1093,15 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                     id="lastName"
                     type="text"
                     value={formData.lastName}
-                    onChange={(e) => updateField('lastName', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z]/g, '');
+                      if (value.length <= 50) {
+                        updateField('lastName', value);
+                      }
+                    }}
                     className={`form-input ${formErrors.lastName ? 'error' : ''}`}
-                    placeholder="Enter last name"
+                    placeholder="Enter last name (alphabets only)"
+                    maxLength={50}
                   />
                   {formErrors.lastName && <span className="error-message">{formErrors.lastName}</span>}
                 </div>
@@ -890,9 +1114,13 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z0-9@._-]/g, '');
+                      updateField('email', value);
+                    }}
                     className={`form-input ${formErrors.email ? 'error' : ''}`}
                     placeholder="Enter email address"
+                    maxLength={100}
                   />
                   {formErrors.email && <span className="error-message">{formErrors.email}</span>}
                 </div>
@@ -905,9 +1133,15 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                     id="phoneNumber"
                     type="tel"
                     value={formData.phoneNumber}
-                    onChange={(e) => updateField('phoneNumber', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value.length <= 10) {
+                        updateField('phoneNumber', value);
+                      }
+                    }}
                     className={`form-input ${formErrors.phoneNumber ? 'error' : ''}`}
-                    placeholder="Enter phone number"
+                    placeholder="Enter 10-digit phone number"
+                    maxLength={10}
                   />
                   {formErrors.phoneNumber && <span className="error-message">{formErrors.phoneNumber}</span>}
                 </div>
@@ -934,15 +1168,19 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                 
                 <div className="form-group">
                   <label htmlFor="password" className="form-label">
-                    Password <span className="required">*</span>
+                    Password {!editingUser && <span className="required">*</span>}
                   </label>
-                  <input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     value={formData.password}
-                    onChange={(e) => updateField('password', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z0-9@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/?]/g, '');
+                      updateField('password', value);
+                    }}
                     className={`form-input ${formErrors.password ? 'error' : ''}`}
-                    placeholder="Enter password"
+                    placeholder={editingUser ? "Enter new password (optional, min 8 chars with uppercase, lowercase, number)" : "Enter password (min 8 chars with uppercase, lowercase, number)"}
+                    maxLength={50}
+                    error={!!formErrors.password}
                   />
                   {formErrors.password && <span className="error-message">{formErrors.password}</span>}
                 </div>
@@ -974,8 +1212,8 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
         </div>
       )}
 
-      {/* Password Update Modal */}
-      {showPasswordModal && (
+      {/* Password Update Modal - DISABLED: Now using full-width form */}
+      {false && showPasswordModal && (
         <div className="form-modal-overlay">
           <div className="form-modal-content">
             <div className="form-modal-header">
@@ -1015,9 +1253,8 @@ const FPOUsersView = ({ fpo, onClose, onToast, userRole = 'EMPLOYEE' }) => {
                   <label htmlFor="newPassword" className="form-label">
                     New Password <span className="required">*</span>
                   </label>
-                  <input
+                  <PasswordInput
                     id="newPassword"
-                    type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="form-input"

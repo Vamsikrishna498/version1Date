@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fpoUsersAPI } from '../api/apiService';
+import PasswordInput from './PasswordInput';
 
 // Restrict to FPO-scoped roles only
 const USER_TYPES = ['FPO', 'EMPLOYEE', 'FARMER'];
@@ -51,10 +52,29 @@ const FPOUsersModal = ({ isOpen, onClose, fpoId }) => {
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
-          <div className="create-section">
-            <button className="create-button" onClick={()=>{ setEditing(null); setFormData({ email: '', phoneNumber: '', firstName: '', lastName: '', role: '', password: '' }); setShowForm(true); }}>+ Create FPO User</button>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-buttons">
+              <button className="create-button" onClick={()=>{ setEditing(null); setFormData({ email: '', phoneNumber: '', firstName: '', lastName: '', role: '', password: '' }); setShowForm(true); }}>+ Create FPO User</button>
+            </div>
+            
+            <div className="refresh-container">
+              <button 
+                className="refresh-btn"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  load();
+                }}
+                title="Refresh FPO users list"
+              >
+                <i className="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
           </div>
-          <div className="filter-section">
+          
+          {/* Filter Section - Hidden */}
+          <div className="filter-section" style={{ display: 'none' }}>
             <div className="filter-label">FILTER</div>
             <div className="filter-inputs">
               <input className="search-input" placeholder="Search here..." value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} />
@@ -133,7 +153,7 @@ const FPOUsersModal = ({ isOpen, onClose, fpoId }) => {
                       {USER_TYPES.map(t=> (<option key={t} value={t}>{t}</option>))}
                     </select>
                   </div>
-                  <div className="form-group"><label>Password *</label><input type="password" value={formData.password} onChange={(e)=>setFormData({...formData,password:e.target.value})} required /></div>
+                  <div className="form-group"><label>Password *</label><PasswordInput value={formData.password} onChange={(e)=>setFormData({...formData,password:e.target.value})} required /></div>
                 </div>
                 <div className="form-actions">
                   <button type="button" className="cancel-btn" onClick={()=>setShowForm(false)}>Cancel</button>
@@ -158,7 +178,7 @@ const FPOUsersModal = ({ isOpen, onClose, fpoId }) => {
                   <div className="form-group"><label>Enter First name *</label><input value={passwordUser?.firstName||''} disabled /></div>
                   <div className="form-group"><label>Enter Last name *</label><input value={passwordUser?.lastName||''} disabled /></div>
                   <div className="form-group"><label>Enter email *</label><input value={passwordUser?.email||''} disabled /></div>
-                  <div className="form-group" style={{gridColumn:'1 / span 2'}}><label>Enter Password *</label><input type="password" value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} required /></div>
+                  <div className="form-group" style={{gridColumn:'1 / span 2'}}><label>Enter Password *</label><PasswordInput value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} required /></div>
                 </div>
                 <div className="form-actions">
                   <button type="button" className="cancel-btn" onClick={()=>setShowPasswordModal(false)}>Close</button>

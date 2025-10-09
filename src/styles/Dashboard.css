@@ -719,6 +719,28 @@
   font-size: 24px;
 }
 
+.dashboard-sidebar.collapsed .nav-item .fas,
+.dashboard-sidebar.collapsed .nav-item .far,
+.dashboard-sidebar.collapsed .nav-item .fab,
+.dashboard-sidebar.collapsed .nav-item i[class*="fa-"] {
+  margin: 0 !important;
+  font-size: 20px !important;
+  color: #374151 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* General rule for Font Awesome icons in collapsed sidebar */
+.dashboard-sidebar.collapsed .nav-item i.fas,
+.dashboard-sidebar.collapsed .nav-item i.far,
+.dashboard-sidebar.collapsed .nav-item i.fab {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  font-size: 20px !important;
+}
+
 /* Sidebar Logo Section */
 .sidebar-logo-section {
   text-align: center;
@@ -1073,8 +1095,6 @@
 /* Logout item special styling */
 
 .nav-item.logout {
-
-  margin-top: 20px;
 
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 
@@ -4759,6 +4779,10 @@ table td:last-child {
   border-radius: 0;
   font-size: 14px;
   transition: border-color 0.2s ease;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  line-height: 44px !important;
 }
 
 .form-group select {

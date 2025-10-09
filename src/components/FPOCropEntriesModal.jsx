@@ -214,27 +214,43 @@ const FPOCropEntriesModal = ({ isOpen, onClose, fpoId, fpoName }) => {
         </div>
         
         <div className="modal-body">
-          {/* Create Crop Entry Button */}
-          <div className="create-section">
-            <button 
-              className="create-button"
-              onClick={() => {
-                setEditingCropEntry(null);
-                setFormData({
-                  cropYear: '',
-                  cropName: '',
-                  area: '',
-                  production: ''
-                });
-                setShowCreateForm(true);
-              }}
-            >
-              + Create Crop Entry
-            </button>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-buttons">
+              <button 
+                className="create-button"
+                onClick={() => {
+                  setEditingCropEntry(null);
+                  setFormData({
+                    cropYear: '',
+                    cropName: '',
+                    area: '',
+                    production: ''
+                  });
+                  setShowCreateForm(true);
+                }}
+              >
+                + Create Crop Entry
+              </button>
+            </div>
+            
+            <div className="refresh-container">
+              <button 
+                className="refresh-btn"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  loadCropEntries();
+                }}
+                title="Refresh crop entries list"
+              >
+                <i className="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
           </div>
 
-          {/* Filter Section */}
-          <div className="filter-section">
+          {/* Filter Section - Hidden */}
+          <div className="filter-section" style={{ display: 'none' }}>
             <div className="filter-label">FILTER</div>
             <div className="filter-inputs">
               <input
