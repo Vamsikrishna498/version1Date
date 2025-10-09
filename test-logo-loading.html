@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Loading Test - Environment Debugging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            background: #3b82f6;
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .logo-test {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .logo-preview {
+            width: 120px;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            position: relative;
+        }
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .logo-info {
+            flex: 1;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success { background: #dcfce7; color: #166534; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+        .status.loading { background: #fef3c7; color: #92400e; }
+        .debug-info {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+        }
+        .environment-info {
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #059669;
+        }
+        .test-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🔍 Logo Loading Environment Test</h1>
+            <p>Test logo loading across different environments and configurations</p>
+        </div>
+
+        <div class="environment-info">
+            <h3>🌍 Environment Information</h3>
+            <div id="env-info"></div>
+        </div>
+
+        <div class="test-container">
+            <h3>🧪 Test Controls</h3>
+            <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+            <button class="test-button" onclick="clearResults()">Clear Results</button>
+            <button class="test-button" onclick="exportResults()">Export Debug Info</button>
+        </div>
+
+        <div class="test-container">
+            <h3>📊 Test Results</h3>
+            <div id="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock company data for testing
+        const testCompanies = [
+            {
+                id: 1,
+                name: 'Flipkart',
+                logoLight: 'uploads/company-logos/1/flipkart-light.png',
+                logoDark: 'uploads/company-logos/1/flipkart-dark.png',
+                logoSmallLight: 'uploads/company-logos/1/flipkart-small-light.png',
+                logoSmallDark: 'uploads/company-logos/1/flipkart-small-dark.png'
+            },
+            {
+                id: 2,
+                name: 'Amazon',
+                logoLight: '/uploads/company-logos/2/amazon-light.png',
+                logoDark: '/uploads/company-logos/2/amazon-dark.png'
+            },
+            {
+                id: 3,
+                name: 'Testing',
+                logoLight: 'company-logos/3/testing-light.png'
+            }
+        ];
+
+        // Environment detection utilities
+        const EnvironmentUtils = {
+            isStagingEnvironment: () => {
+                const hostname = window.location.hostname;
+                return hostname !== 'localhost' && hostname !== '127.0.0.1';
+            },
+            
+            getEffectiveApiOrigin: (defaultApiOrigin) => {
+                const isStaging = EnvironmentUtils.isStagingEnvironment();
+                
+                if (isStaging) {
+                    const protocol = window.location.protocol;
+                    const hostname = window.location.hostname;
+                    const port = window.location.port;
+                    return `${protocol}//${hostname}${port ? ':' + port : ''}`;
+                }
+                
+                const currentOrigin = window.location.origin;
+                return currentOrigin !== defaultApiOrigin ? currentOrigin : defaultApiOrigin;
+            },
+            
+            buildLogoCandidates: (basePath, companyId, filename, apiOrigin) => {
+                const candidates = [];
+                
+                if (!basePath || !filename) return candidates;
+                
+                if (basePath.startsWith('http')) {
+                    candidates.push(basePath);
+                    return candidates;
+                }
+                
+                const tail = filename.split('/').pop();
+                
+                if (companyId) {
+                    candidates.push(`${apiOrigin}/api/public/uploads/company-logos/${companyId}/${tail}`);
+                    candidates.push(`${apiOrigin}/uploads/company-logos/${companyId}/${tail}`);
+                    candidates.push(`${apiOrigin}/api/public/files/company-logos/${companyId}/${tail}`);
+                    candidates.push(`${apiOrigin}/files/company-logos/${companyId}/${tail}`);
+                    candidates.push(`${apiOrigin}/api/companies/${companyId}/logos/${tail}`);
+                    candidates.push(`${apiOrigin}/companies/${companyId}/logos/${tail}`);
+                    candidates.push(`${apiOrigin}/static/uploads/company-logos/${companyId}/${tail}`);
+                    candidates.push(`${apiOrigin}/static/files/company-logos/${companyId}/${tail}`);
+                }
+                
+                if (basePath.startsWith('/uploads/')) {
+                    candidates.push(`${apiOrigin}/api/public${basePath}`);
+                    candidates.push(`${apiOrigin}${basePath}`);
+                    candidates.push(`${apiOrigin}/static${basePath}`);
+                }
+                
+                if (basePath.startsWith('/files/')) {
+                    candidates.push(`${apiOrigin}/api/public${basePath}`);
+                    candidates.push(`${apiOrigin}${basePath}`);
+                    candidates.push(`${apiOrigin}/static${basePath}`);
+                }
+                
+                candidates.push(`${apiOrigin}/api/public/${basePath.replace(/^\//, '')}`);
+                candidates.push(`${apiOrigin}/${basePath.replace(/^\//, '')}`);
+                candidates.push(`${apiOrigin}/static/${basePath.replace(/^\//, '')}`);
+                
+                return Array.from(new Set(candidates));
+            }
+        };
+
+        // Test logo loading
+        async function testLogoLoading(company, logoType) {
+            const logoPath = company[logoType];
+            if (!logoPath) return { status: 'no-logo', message: 'No logo path available' };
+
+            const defaultApiOrigin = 'http://localhost:8080';
+            const apiOrigin = EnvironmentUtils.getEffectiveApiOrigin(defaultApiOrigin);
+            const candidates = EnvironmentUtils.buildLogoCandidates(logoPath, company.id, logoPath, apiOrigin);
+
+            console.log(`Testing ${company.name} ${logoType}:`, {
+                originalPath: logoPath,
+                apiOrigin: apiOrigin,
+                candidates: candidates
+            });
+
+            for (let i = 0; i < candidates.length; i++) {
+                const candidate = candidates[i];
+                try {
+                    const response = await fetch(candidate, { method: 'HEAD' });
+                    if (response.ok) {
+                        return {
+                            status: 'success',
+                            message: `Logo loaded successfully`,
+                            workingUrl: candidate,
+                            candidateIndex: i,
+                            candidates: candidates
+                        };
+                    }
+                } catch (error) {
+                    console.log(`Candidate ${i} failed:`, candidate, error.message);
+                }
+            }
+
+            return {
+                status: 'error',
+                message: `All ${candidates.length} candidates failed to load`,
+                candidates: candidates
+            };
+        }
+
+        // Display environment information
+        function displayEnvironmentInfo() {
+            const envInfo = {
+                hostname: window.location.hostname,
+                protocol: window.location.protocol,
+                port: window.location.port,
+                origin: window.location.origin,
+                userAgent: navigator.userAgent,
+                isStaging: EnvironmentUtils.isStagingEnvironment(),
+                timestamp: new Date().toISOString()
+            };
+
+            document.getElementById('env-info').innerHTML = `
+                <div class="debug-info">${JSON.stringify(envInfo, null, 2)}</div>
+            `;
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div>Running tests...</div>';
+
+            const results = [];
+
+            for (const company of testCompanies) {
+                const companyResults = {
+                    company: company.name,
+                    id: company.id,
+                    logos: {}
+                };
+
+                // Test all logo types
+                const logoTypes = ['logoLight', 'logoDark', 'logoSmallLight', 'logoSmallDark'];
+                
+                for (const logoType of logoTypes) {
+                    if (company[logoType]) {
+                        companyResults.logos[logoType] = await testLogoLoading(company, logoType);
+                    }
+                }
+
+                results.push(companyResults);
+            }
+
+            displayResults(results);
+        }
+
+        // Display test results
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('test-results');
+            
+            let html = '';
+            
+            results.forEach(result => {
+                html += `
+                    <div class="test-container">
+                        <h4>🏢 ${result.company} (ID: ${result.id})</h4>
+                `;
+
+                Object.entries(result.logos).forEach(([logoType, testResult]) => {
+                    const statusClass = testResult.status;
+                    const statusIcon = testResult.status === 'success' ? '✅' : 
+                                     testResult.status === 'error' ? '❌' : '⚠️';
+                    
+                    html += `
+                        <div class="logo-test">
+                            <div class="logo-preview">
+                                ${testResult.status === 'success' ? 
+                                    `<img src="${testResult.workingUrl}" alt="${logoType}" onerror="this.parentElement.innerHTML='❌'">` : 
+                                    '❌'
+                                }
+                            </div>
+                            <div class="logo-info">
+                                <strong>${logoType}</strong>
+                                <div class="status ${statusClass}">
+                                    ${statusIcon} ${testResult.message}
+                                </div>
+                                ${testResult.workingUrl ? `<div style="font-size: 11px; color: #6b7280;">Working URL: ${testResult.workingUrl}</div>` : ''}
+                                ${testResult.candidates ? `
+                                    <details style="margin-top: 5px;">
+                                        <summary style="cursor: pointer; font-size: 11px;">Show all candidates (${testResult.candidates.length})</summary>
+                                        <div class="debug-info" style="margin-top: 5px;">
+${testResult.candidates.map((url, i) => `${i + 1}. ${url}`).join('\n')}
+                                        </div>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Clear results
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+
+        // Export results
+        function exportResults() {
+            const envInfo = {
+                hostname: window.location.hostname,
+                protocol: window.location.protocol,
+                port: window.location.port,
+                origin: window.location.origin,
+                userAgent: navigator.userAgent,
+                isStaging: EnvironmentUtils.isStagingEnvironment(),
+                timestamp: new Date().toISOString()
+            };
+
+            const exportData = {
+                environment: envInfo,
+                testResults: document.getElementById('test-results').innerHTML
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logo-test-results-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            displayEnvironmentInfo();
+            console.log('Logo loading test page initialized');
+            console.log('Environment utils:', EnvironmentUtils);
+        });
+    </script>
+</body>
+</html>
