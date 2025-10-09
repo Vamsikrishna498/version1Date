@@ -611,7 +611,7 @@ const FPOAdminDashboard = () => {
                               className: 'info',
                               onClick: async (row) => {
                                 try {
-                                  const dto = await farmersAPI.getFarmerById(row.farmerId || row.id);
+                                  const dto = await farmersAPI.getFarmerById(row.farmerId);
                                   setFarmerViewData(dto);
                                   setShowFarmerView(true);
                                 } catch (e) { alert('Failed to load farmer details'); }
@@ -622,7 +622,7 @@ const FPOAdminDashboard = () => {
                               className: 'primary',
                               onClick: async (row) => {
                                 try {
-                                  const dto = await farmersAPI.getFarmerById(row.farmerId || row.id);
+                                  const dto = await farmersAPI.getFarmerById(row.farmerId);
                                   setEditFarmerData(dto);
                                   setShowEditFarmer(true);
                                 } catch (e) { alert('Failed to load farmer'); }
@@ -634,7 +634,7 @@ const FPOAdminDashboard = () => {
                               onClick: async (row) => {
                                 if (!window.confirm('Delete this farmer permanently?')) return;
                                 try {
-                                  await farmersAPI.deleteFarmer(row.farmerId || row.id);
+                                  await farmersAPI.deleteFarmer(row.farmerId);
                                   await loadFarmers();
                                   alert('Farmer deleted');
                                 } catch (e) { alert(e.response?.data?.message || 'Failed to delete'); }
@@ -645,7 +645,7 @@ const FPOAdminDashboard = () => {
                               className: 'success',
                               onClick: async (row) => {
                                 try {
-                                  await fpoAPI.approveKyc(row.farmerId || row.id);
+                                  await fpoAPI.approveKyc(row.farmerId);
                                   alert('KYC approved');
                                 } catch (e) { alert(e.response?.data?.message || 'Failed to approve'); }
                               }
@@ -657,7 +657,7 @@ const FPOAdminDashboard = () => {
                                 const reason = prompt('Enter rejection reason');
                                 if (!reason) return;
                                 try {
-                                  await fpoAPI.rejectKyc(row.farmerId || row.id, { reason });
+                                  await fpoAPI.rejectKyc(row.farmerId, { reason });
                                   alert('KYC rejected');
                                 } catch (e) { alert(e.response?.data?.message || 'Failed to reject'); }
                               }
@@ -669,7 +669,7 @@ const FPOAdminDashboard = () => {
                                 const reason = prompt('Enter refer-back reason');
                                 if (!reason) return;
                                 try {
-                                  await fpoAPI.referBackKyc(row.farmerId || row.id, { reason });
+                                  await fpoAPI.referBackKyc(row.farmerId, { reason });
                                   alert('Referred back to employee');
                                 } catch (e) { console.error(e); alert('Failed to refer back'); }
                               }

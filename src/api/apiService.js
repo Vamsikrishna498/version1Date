@@ -1789,8 +1789,8 @@ export const fpoUsersAPI = {
   // Employee-specific FPO user creation endpoint
   createEmployee: async (fpoId, user) => {
     try {
-      // Try employee-specific endpoint first
-      const response = await api.post(`/employees/fpo/${fpoId}/users`, {
+      // Use the correct FPO employee creation endpoint
+      const response = await api.post(`/fpo/${fpoId}/employees`, {
         email: user.email,
         phoneNumber: user.phoneNumber,
         firstName: user.firstName,
