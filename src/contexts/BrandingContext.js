@@ -35,6 +35,24 @@ export const BrandingProvider = ({ children }) => {
   });
   const apiBase = (process.env.REACT_APP_API_URL || 'http://localhost:8080/api');
   const apiOrigin = apiBase.replace(/\/?api\/?$/, '');
+  
+  // Enhanced API origin detection for staging environments
+  const getApiOrigin = () => {
+    // Local development: ALWAYS use backend origin (http://localhost:8080)
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal) {
+      console.log('Local environment detected, using backend origin:', apiOrigin);
+      return apiOrigin;
+    }
+    
+    // Staging/production: use same-origin
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    const stagingOrigin = `${protocol}//${hostname}${port ? ':' + port : ''}`;
+    console.log('Non-local environment detected, using origin:', stagingOrigin);
+    return stagingOrigin;
+  };
 
   const loadBranding = async (currentTenant = tenant) => {
       try {
@@ -77,6 +95,10 @@ export const BrandingProvider = ({ children }) => {
             return url;
           }
           console.log('🔗 absolutize: processing URL:', url);
+          
+          // Use the effective API origin for better staging support
+          const effectiveOrigin = getApiOrigin();
+          
         // Already absolute
           if (url.startsWith('http://') || url.startsWith('https://')) {
             console.log('🔗 absolutize: already absolute, returning:', url);
@@ -84,32 +106,52 @@ export const BrandingProvider = ({ children }) => {
           }
         // Common backend public paths
         if (url.startsWith('/api/public/')) {
-          const result = apiOrigin + url;
+          const result = effectiveOrigin + url;
           console.log('🔗 absolutize: /api/public/ pattern, returning:', result);
           return result;
         }
         if (url.startsWith('/uploads/')) {
-          const result = `${apiOrigin}/api/public${url}`;
+          const result = `${effectiveOrigin}/api/public${url}`;
           console.log('🔗 absolutize: /uploads/ pattern, returning:', result);
           return result;
         }
         if (url.startsWith('uploads/')) {
-          const result = `${apiOrigin}/api/public/${url}`;
+          const result = `${effectiveOrigin}/api/public/${url}`;
           console.log('🔗 absolutize: uploads/ pattern, returning:', result);
           return result;
         }
         if (url.startsWith('/company-logos/')) {
-          const result = `${apiOrigin}/api/public${url}`;
+          const result = `${effectiveOrigin}/api/public${url}`;
           console.log('🔗 absolutize: /company-logos/ pattern, returning:', result);
           return result;
         }
         if (url.startsWith('company-logos/')) {
-          const result = `${apiOrigin}/api/public/${url}`;
+          const result = `${effectiveOrigin}/api/public/${url}`;
           console.log('🔗 absolutize: company-logos/ pattern, returning:', result);
           return result;
         }
+        if (url.startsWith('/files/')) {
+          const result = `${effectiveOrigin}/api/public${url}`;
+          console.log('🔗 absolutize: /files/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('files/')) {
+          const result = `${effectiveOrigin}/api/public/${url}`;
+          console.log('🔗 absolutize: files/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('/static/')) {
+          const result = `${effectiveOrigin}${url}`;
+          console.log('🔗 absolutize: /static/ pattern, returning:', result);
+          return result;
+        }
+        if (url.startsWith('static/')) {
+          const result = `${effectiveOrigin}/${url}`;
+          console.log('🔗 absolutize: static/ pattern, returning:', result);
+          return result;
+        }
         // Fallback: treat as relative upload path
-        const result = `${apiOrigin}/api/public/${url.replace(/^\//, '')}`;
+        const result = `${effectiveOrigin}/api/public/${url.replace(/^\//, '')}`;
         console.log('🔗 absolutize: fallback pattern, returning:', result);
         return result;
       };
@@ -256,11 +298,81 @@ export const buildCompanyLogoCandidates = (company, apiOrigin, version) => {
   const tail = (pick || '').split('/').pop();
   const addV = (u) => (u ? `${u}${u.includes('?') ? '&' : '?'}v=${version || company.updatedAt || company.logoUpdatedAt || Date.now()}` : u);
   const candidates = [];
-  if (pick.startsWith('http')) candidates.push(addV(pick));
-  if (cid) candidates.push(addV(`${apiOrigin}/api/public/uploads/company-logos/${cid}/${tail}`));
-  if (pick.startsWith('/uploads/')) candidates.push(addV(`${apiOrigin}/api/public${pick}`));
-  candidates.push(addV(`${apiOrigin}/api/public/${pick.replace(/^\//, '')}`));
-  return Array.from(new Set(candidates));
+  
+  // Enhanced API origin detection for staging
+  const getEffectiveApiOrigin = () => {
+    // Local development: ALWAYS use backend origin
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (isLocal) {
+      console.log('Local environment for logos, using backend origin:', apiOrigin);
+      return apiOrigin;
+    }
+    
+    // Staging/production: use same-origin
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    const stagingOrigin = `${protocol}//${hostname}${port ? ':' + port : ''}`;
+    console.log('Non-local environment for logos, using origin:', stagingOrigin);
+    return stagingOrigin;
+  };
+  
+  const effectiveApiOrigin = getEffectiveApiOrigin();
+  
+  // Enhanced logging for staging debugging
+  console.log('buildCompanyLogoCandidates Debug:', {
+    company: company?.name,
+    companyId: cid,
+    pick: pick,
+    tail: tail,
+    originalApiOrigin: apiOrigin,
+    effectiveApiOrigin: effectiveApiOrigin,
+    version: version || company.updatedAt || company.logoUpdatedAt || Date.now(),
+    isStaging: typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1',
+    windowLocation: typeof window !== 'undefined' ? window.location.href : 'undefined'
+  });
+  
+  // Build multiple URL candidates for better staging compatibility
+  if (pick.startsWith('http')) {
+    candidates.push(addV(pick));
+  }
+  
+  if (cid) {
+    // Primary staging-friendly paths - try multiple variations
+    candidates.push(addV(`${effectiveApiOrigin}/api/public/uploads/company-logos/${cid}/${tail}`));
+    candidates.push(addV(`${effectiveApiOrigin}/uploads/company-logos/${cid}/${tail}`));
+    candidates.push(addV(`${effectiveApiOrigin}/api/public/files/company-logos/${cid}/${tail}`));
+    candidates.push(addV(`${effectiveApiOrigin}/files/company-logos/${cid}/${tail}`));
+    
+    // Additional variations for different backend configurations
+    candidates.push(addV(`${effectiveApiOrigin}/api/companies/${cid}/logos/${tail}`));
+    candidates.push(addV(`${effectiveApiOrigin}/companies/${cid}/logos/${tail}`));
+    candidates.push(addV(`${effectiveApiOrigin}/static/uploads/company-logos/${cid}/${tail}`));
+    candidates.push(addV(`${effectiveApiOrigin}/static/files/company-logos/${cid}/${tail}`));
+  }
+  
+  if (pick.startsWith('/uploads/')) {
+    candidates.push(addV(`${effectiveApiOrigin}/api/public${pick}`));
+    candidates.push(addV(`${effectiveApiOrigin}${pick}`));
+    candidates.push(addV(`${effectiveApiOrigin}/static${pick}`));
+  }
+  
+  if (pick.startsWith('/files/')) {
+    candidates.push(addV(`${effectiveApiOrigin}/api/public${pick}`));
+    candidates.push(addV(`${effectiveApiOrigin}${pick}`));
+    candidates.push(addV(`${effectiveApiOrigin}/static${pick}`));
+  }
+  
+  // Generic fallback paths with multiple variations
+  candidates.push(addV(`${effectiveApiOrigin}/api/public/${pick.replace(/^\//, '')}`));
+  candidates.push(addV(`${effectiveApiOrigin}/${pick.replace(/^\//, '')}`));
+  candidates.push(addV(`${effectiveApiOrigin}/static/${pick.replace(/^\//, '')}`));
+  
+  // Remove duplicates and log final candidates
+  const uniqueCandidates = Array.from(new Set(candidates));
+  console.log('Final logo candidates:', uniqueCandidates);
+  
+  return uniqueCandidates;
 };
 
 

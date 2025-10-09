@@ -144,7 +144,7 @@ const FPOEmployeeDashboard = () => {
 
   const approveKyc = async (farmer) => {
     try {
-      await fpoAPI.approveKyc(farmer.id);
+      await fpoAPI.approveKyc(farmer.farmerId);
       setFarmers(prev => prev.map(x => x.id === farmer.id ? { ...x, kycStatus: 'APPROVED' } : x));
     } catch (e) {
       console.error('KYC approval error:', e);
@@ -154,7 +154,7 @@ const FPOEmployeeDashboard = () => {
 
   const rejectKyc = async (farmer) => {
     try {
-      await fpoAPI.rejectKyc(farmer.id, { reason: 'Rejected by FPO employee' });
+      await fpoAPI.rejectKyc(farmer.farmerId, { reason: 'Rejected by FPO employee' });
       setFarmers(prev => prev.map(x => x.id === farmer.id ? { ...x, kycStatus: 'REJECTED' } : x));
     } catch (e) {
       console.error('KYC rejection error:', e);
