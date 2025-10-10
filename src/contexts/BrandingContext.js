@@ -45,13 +45,10 @@ export const BrandingProvider = ({ children }) => {
       return apiOrigin;
     }
     
-    // Staging/production: use same-origin
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-    const stagingOrigin = `${protocol}//${hostname}${port ? ':' + port : ''}`;
-    console.log('Non-local environment detected, using origin:', stagingOrigin);
-    return stagingOrigin;
+    // Staging/production: use backend origin from environment variable
+    const backendOrigin = apiOrigin.replace('/api', '');
+    console.log('Non-local environment detected, using backend origin:', backendOrigin);
+    return backendOrigin;
   };
 
   const loadBranding = async (currentTenant = tenant) => {
@@ -308,13 +305,10 @@ export const buildCompanyLogoCandidates = (company, apiOrigin, version) => {
       return apiOrigin;
     }
     
-    // Staging/production: use same-origin
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-    const stagingOrigin = `${protocol}//${hostname}${port ? ':' + port : ''}`;
-    console.log('Non-local environment for logos, using origin:', stagingOrigin);
-    return stagingOrigin;
+    // Staging/production: use backend origin from environment variable
+    const backendOrigin = apiOrigin.replace('/api', '');
+    console.log('Non-local environment for logos, using backend origin:', backendOrigin);
+    return backendOrigin;
   };
   
   const effectiveApiOrigin = getEffectiveApiOrigin();
