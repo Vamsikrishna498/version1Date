@@ -521,6 +521,49 @@ const CompaniesTab = () => {
     const [idx, setIdx] = useState(0);
     const [hasError, setHasError] = useState(false);
     const [loadingAttempts, setLoadingAttempts] = useState(0);
+    const [imageLoaded, setImageLoaded] = useState(false);
+
+    const handleLoad = () => {
+      console.log('Logo loaded successfully for company:', company?.name, 'candidate:', candidates[idx]);
+      setHasError(false);
+      setLoadingAttempts(0);
+    };
+
+    const handleError = (e) => {
+      console.log('Logo load error for company:', company?.name, 'candidate:', candidates[idx], 'error:', e);
+      console.log('Current index:', idx, 'Total candidates:', candidates.length);
+      
+      setLoadingAttempts(prev => prev + 1);
+      
+      if (idx < candidates.length - 1) {
+        console.log('Trying next candidate...');
+        setIdx(idx + 1);
+        setImageLoaded(false); // Reset image loaded state for new candidate
+      } else {
+        console.log('All logo candidates failed, showing fallback');
+        setHasError(true);
+      }
+    };
+
+    // Timeout fallback for cases where neither onLoad nor onError fires
+    useEffect(() => {
+      if (candidates.length > 0 && !imageLoaded && !hasError) {
+        const timer = setTimeout(() => {
+          // Check if image is actually loaded but events didn't fire
+          const img = new Image();
+          img.onload = () => {
+            setImageLoaded(true);
+            handleLoad();
+          };
+          img.onerror = () => {
+            handleError(new Event('timeout'));
+          };
+          img.src = candidates[idx];
+        }, 2000); // 2 second timeout
+
+        return () => clearTimeout(timer);
+      }
+    }, [idx, candidates, imageLoaded, hasError, handleLoad, handleError]);
     
     // Enhanced debug logging for staging environment
     console.log('LogoCell Debug:', {
@@ -584,26 +627,16 @@ const CompaniesTab = () => {
       return fallbackLogo();
     }
     
-    const handleError = (e) => {
-      console.log('Logo load error for company:', company?.name, 'candidate:', candidates[idx], 'error:', e);
-      console.log('Current index:', idx, 'Total candidates:', candidates.length);
-      
-      setLoadingAttempts(prev => prev + 1);
-      
-      if (idx < candidates.length - 1) {
-        console.log('Trying next candidate...');
-        setIdx(idx + 1);
-      } else {
-        console.log('All logo candidates failed, showing fallback');
-        setHasError(true);
+
+    // Handle 304 Not Modified responses (cached images)
+    const handleImageLoad = (e) => {
+      // Check if image actually loaded (including 304 responses)
+      if (e.target.complete && e.target.naturalHeight !== 0) {
+        setImageLoaded(true);
+        handleLoad();
       }
     };
-    
-    const handleLoad = () => {
-      console.log('Logo loaded successfully for company:', company?.name, 'candidate:', candidates[idx]);
-      setHasError(false);
-      setLoadingAttempts(0);
-    };
+
     
     return (
       <div style={{ position: 'relative' }}>
@@ -619,8 +652,8 @@ const CompaniesTab = () => {
           background: '#fff',
           padding: '4px'
         }}
-          onError={handleError}
-          onLoad={handleLoad}
+        onError={handleError}
+        onLoad={handleImageLoad}
         />
         {loadingAttempts > 0 && !hasError && (
           <div style={{
